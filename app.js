@@ -16,6 +16,8 @@ const oddBorderColorInput = document.getElementById("oddBorderColor");
 const oddBorderSizeInput = document.getElementById("oddBorderSize");
 const oddBgColorInput = document.getElementById("oddBgColor");
 const storyTextColorInput = document.getElementById("storyTextColor");
+const visualComplexityInput = document.getElementById("visualComplexity");
+const includeTeachingActivitiesInput = document.getElementById("includeTeachingActivities");
 const aiInput = document.getElementById("aiInput");
 const printablePreviewSection = previewContainer.closest(".panel");
 
@@ -35,12 +37,14 @@ function addSpread(initial = {}) {
   const fragment = spreadTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".spread-card");
   const storyText = fragment.querySelector(".story-text");
+  const salientFeatures = fragment.querySelector(".salient-features");
   const oddText = fragment.querySelector(".odd-text");
   const imageInput = fragment.querySelector(".odd-images");
   const selectedImagesText = fragment.querySelector(".selected-images");
   const removeButton = fragment.querySelector(".remove-spread");
 
   storyText.value = initial.storyText || "";
+  salientFeatures.value = initial.salientFeatures || "";
   oddText.value = initial.oddText || "";
 
   imageInput.addEventListener("change", () => {
@@ -81,12 +85,14 @@ function parseAiFormattedText(raw) {
   const spreads = [];
 
   for (const chunk of chunks) {
-    const storyMatch = chunk.match(/^\s*STORY:\s*([\s\S]*?)(?=^\s*ODD_TEXT:|\s*$)/im);
+    const storyMatch = chunk.match(/^\s*STORY:\s*([\s\S]*?)(?=^\s*SALIENT_FEATURES:|^\s*ODD_TEXT:|\s*$)/im);
+    const salientMatch = chunk.match(/^\s*SALIENT_FEATURES:\s*([\s\S]*?)(?=^\s*ODD_TEXT:|\s*$)/im);
     const oddMatch = chunk.match(/^\s*ODD_TEXT:\s*(.+)\s*$/im);
     const storyText = storyMatch ? storyMatch[1].trim() : "";
+    const salientFeatures = salientMatch ? salientMatch[1].trim() : "";
     const oddText = oddMatch ? oddMatch[1].trim() : "";
-    if (storyText || oddText) {
-      spreads.push({ storyText, oddText });
+    if (storyText || oddText || salientFeatures) {
+      spreads.push({ storyText, salientFeatures, oddText });
     }
   }
 
@@ -97,11 +103,13 @@ function collectSpreadsFromForm() {
   const cards = Array.from(spreadsContainer.querySelectorAll(".spread-card"));
   return cards.map((card, index) => {
     const storyText = card.querySelector(".story-text").value.trim();
+    const salientFeatures = card.querySelector(".salient-features").value.trim();
     const oddText = card.querySelector(".odd-text").value.trim();
     const imageFiles = Array.from(card.querySelector(".odd-images").files || []).slice(0, 4);
     return {
       index,
       storyText,
+      salientFeatures,
       oddText,
       imageFiles
     };
@@ -130,43 +138,52 @@ function getTextOutlineCss(borderSize, borderColor) {
   return shadows.join(", ");
 }
 
-function distributeImagesInRect(count, area) {
-  const gap = 0.12;
+function distributeImagesInRect(count, area, options = {}) {
+  const imagePadding = 0.18;
+  const paddedArea = {
+    x: area.x + imagePadding,
+    y: area.y + imagePadding,
+    w: Math.max(0, area.w - imagePadding * 2),
+    h: Math.max(0, area.h - imagePadding * 2)
+  };
+  const gap = options.highSupport
+    ? Math.min(paddedArea.w, paddedArea.h) * 0.20
+    : 0.12;
   const rects = [];
 
   if (count <= 0) return rects;
-  if (count === 1) return [{ ...area }];
+  if (count === 1) return [{ ...paddedArea }];
 
   if (count === 2) {
-    const w = (area.w - gap) / 2;
-    rects.push({ x: area.x, y: area.y, w, h: area.h });
-    rects.push({ x: area.x + w + gap, y: area.y, w, h: area.h });
+    const w = (paddedArea.w - gap) / 2;
+    rects.push({ x: paddedArea.x, y: paddedArea.y, w, h: paddedArea.h });
+    rects.push({ x: paddedArea.x + w + gap, y: paddedArea.y, w, h: paddedArea.h });
     return rects;
   }
 
   if (count === 3) {
-    const topH = area.h * 0.54;
-    const bottomH = area.h - topH - gap;
-    rects.push({ x: area.x, y: area.y, w: area.w, h: topH });
-    const bottomW = (area.w - gap) / 2;
-    rects.push({ x: area.x, y: area.y + topH + gap, w: bottomW, h: bottomH });
-    rects.push({ x: area.x + bottomW + gap, y: area.y + topH + gap, w: bottomW, h: bottomH });
+    const topH = paddedArea.h * 0.54;
+    const bottomH = paddedArea.h - topH - gap;
+    rects.push({ x: paddedArea.x, y: paddedArea.y, w: paddedArea.w, h: topH });
+    const bottomW = (paddedArea.w - gap) / 2;
+    rects.push({ x: paddedArea.x, y: paddedArea.y + topH + gap, w: bottomW, h: bottomH });
+    rects.push({ x: paddedArea.x + bottomW + gap, y: paddedArea.y + topH + gap, w: bottomW, h: bottomH });
     return rects;
   }
 
-  const w = (area.w - gap) / 2;
-  const h = (area.h - gap) / 2;
-  rects.push({ x: area.x, y: area.y, w, h });
-  rects.push({ x: area.x + w + gap, y: area.y, w, h });
-  rects.push({ x: area.x, y: area.y + h + gap, w, h });
-  rects.push({ x: area.x + w + gap, y: area.y + h + gap, w, h });
+  const w = (paddedArea.w - gap) / 2;
+  const h = (paddedArea.h - gap) / 2;
+  rects.push({ x: paddedArea.x, y: paddedArea.y, w, h });
+  rects.push({ x: paddedArea.x + w + gap, y: paddedArea.y, w, h });
+  rects.push({ x: paddedArea.x, y: paddedArea.y + h + gap, w, h });
+  rects.push({ x: paddedArea.x + w + gap, y: paddedArea.y + h + gap, w, h });
   return rects;
 }
 
 function getOddRegions(position) {
   const slide = { w: 11, h: 8.5 };
-  const margin = 0.35;
-  const gap = 0.14;
+  const margin = 0.55;
+  const gap = 0.22;
   const textRatio = 0.3;
   const textMin = 2.0;
 
@@ -287,6 +304,9 @@ function renderPreview() {
 
     const imageFiles = spread.imageFiles.slice(0, 4);
     oddImagesZone.classList.add(`count-${Math.max(1, imageFiles.length)}`);
+    if (visualComplexityInput.value === "highSupport") {
+      oddImagesZone.classList.add("high-support");
+    }
     imageFiles.forEach((file) => {
       const wrap = document.createElement("div");
       wrap.className = "preview-img-wrap";
@@ -310,17 +330,102 @@ function renderPreview() {
 
     const evenPage = document.createElement("div");
     evenPage.className = "preview-page";
-    const story = document.createElement("div");
-    story.className = "preview-story";
-    story.style.color = storyTextColor;
-    story.textContent = spread.storyText || "";
-    evenPage.appendChild(story);
+    evenPage.style.background = "#FFFFFF";
+    const storyWrapper = document.createElement("div");
+    storyWrapper.className = "preview-story";
+    storyWrapper.style.flexDirection = "column";
+    storyWrapper.style.gap = "0.5em";
+    storyWrapper.style.fontSize = "34px";
+    const storyText = document.createElement("span");
+    storyText.style.color = storyTextColor;
+    storyText.textContent = spread.storyText || "";
+    storyWrapper.appendChild(storyText);
+    if (spread.salientFeatures) {
+      const salient = document.createElement("div");
+      salient.className = "preview-salient-features";
+      salient.style.color = "#CC0000";
+      salient.style.fontSize = "34px";
+      salient.textContent = spread.salientFeatures;
+      storyWrapper.appendChild(salient);
+    }
+    evenPage.appendChild(storyWrapper);
     previewContainer.appendChild(evenPage);
 
     const evenLabel = document.createElement("p");
     evenLabel.className = "preview-label";
     evenLabel.textContent = `Spread ${spreadIndex + 1} - Even page (rotated)`;
     previewContainer.appendChild(evenLabel);
+  });
+}
+
+/**
+ * Appends a final slide with standard CVI teaching activity extensions.
+ * @param {PptxGenJS} pptx - The PptxGenJS instance
+ * @param {Object} options - Styling options
+ * @param {string} options.oddBgColor - Background color (hex without #)
+ * @param {string} options.oddTextColor - Text color (hex without #)
+ * @param {string} options.oddBorderColor - Text outline color (hex without #)
+ * @param {number} options.oddBorderSize - Text outline size in pt
+ */
+function addFinalActivitySlide(pptx, options) {
+  const { oddBgColor, oddTextColor, oddBorderColor, oddBorderSize } = options;
+  const TITLE_FONT_SIZE = 44;
+  const HEADING_FONT_SIZE = 28;
+  const BODY_FONT_SIZE = 22;
+
+  const slide = pptx.addSlide();
+  slide.background = { color: oddBgColor };
+
+  slide.addText("Activity Extensions", {
+    x: 0.5,
+    y: 0.5,
+    w: 10,
+    h: 1,
+    align: "center",
+    valign: "mid",
+    bold: true,
+    fontSize: TITLE_FONT_SIZE,
+    color: oddTextColor,
+    outline: { color: oddBorderColor, pt: oddBorderSize }
+  });
+
+  const activities = [
+    {
+      title: "Gather, Discuss & Explore",
+      body: "Collect real objects related to the story. Discuss textures, shapes, and features. Let the child explore items in a clutter-free space."
+    },
+    {
+      title: "Create a Feely Box",
+      body: "Place story-related objects in a box with a hand-sized opening. The child reaches in to feel and identify items by touch, reinforcing concepts."
+    }
+  ];
+
+  const startY = 2;
+  const activityHeight = 2.6;
+  const gap = 0.3;
+
+  activities.forEach((activity, i) => {
+    const y = startY + i * (activityHeight + gap);
+    slide.addText(activity.title, {
+      x: 0.6,
+      y,
+      w: 9.8,
+      h: 0.5,
+      bold: true,
+      fontSize: HEADING_FONT_SIZE,
+      color: oddTextColor,
+      outline: { color: oddBorderColor, pt: Math.max(0, oddBorderSize - 1) }
+    });
+    slide.addText(activity.body, {
+      x: 0.6,
+      y: y + 0.55,
+      w: 9.8,
+      h: activityHeight - 0.55,
+      fontSize: BODY_FONT_SIZE,
+      color: oddTextColor,
+      valign: "top",
+      fit: "shrink"
+    });
   });
 }
 
@@ -368,6 +473,11 @@ async function exportPptx() {
 
     setStatus("Building PowerPoint...");
 
+    const TITLE_FONT_SIZE = 52;
+    const STORY_FONT_SIZE = 34;
+    const SALIENT_FEATURES_COLOR = "CC0000"; // High-contrast red on white
+    const EVEN_PAGE_BG = "FFFFFF";
+
     const titleSlide = pptx.addSlide();
     titleSlide.background = { color: oddBgColor };
     titleSlide.addText(bookTitle, {
@@ -378,7 +488,7 @@ async function exportPptx() {
       align: "center",
       valign: "mid",
       bold: true,
-      fontSize: 52,
+      fontSize: TITLE_FONT_SIZE,
       color: oddTextColor,
       outline: { color: oddBorderColor, pt: oddBorderSize }
     });
@@ -397,7 +507,7 @@ async function exportPptx() {
           align: "center",
           valign: "mid",
           bold: true,
-          fontSize: oddTextSize,
+          fontSize: TITLE_FONT_SIZE,
           color: oddTextColor,
           fit: "shrink",
           outline: { color: oddBorderColor, pt: oddBorderSize }
@@ -405,7 +515,8 @@ async function exportPptx() {
       }
 
       const useImages = spread.imageData.slice(0, 4);
-      const imgRects = distributeImagesInRect(useImages.length, imageRect);
+      const highSupport = visualComplexityInput.value === "highSupport";
+      const imgRects = distributeImagesInRect(useImages.length, imageRect, { highSupport });
       useImages.forEach((img, i) => {
         const r = imgRects[i];
         oddSlide.addImage({
@@ -415,8 +526,26 @@ async function exportPptx() {
       });
 
       const evenSlide = pptx.addSlide();
-      evenSlide.background = { color: "FFFFFF" };
-      evenSlide.addText(spread.storyText || " ", {
+      evenSlide.background = { color: EVEN_PAGE_BG };
+
+      const evenTextRuns = [];
+      if (spread.storyText) {
+        evenTextRuns.push({
+          text: spread.storyText + (spread.salientFeatures ? "\n\n" : ""),
+          options: { color: storyTextColor, fontSize: STORY_FONT_SIZE }
+        });
+      }
+      if (spread.salientFeatures) {
+        evenTextRuns.push({
+          text: spread.salientFeatures,
+          options: { color: SALIENT_FEATURES_COLOR, fontSize: STORY_FONT_SIZE }
+        });
+      }
+      if (evenTextRuns.length === 0) {
+        evenTextRuns.push({ text: " ", options: { color: storyTextColor, fontSize: STORY_FONT_SIZE } });
+      }
+
+      evenSlide.addText(evenTextRuns, {
         x: 0.55,
         y: 0.55,
         w: 9.9,
@@ -424,10 +553,17 @@ async function exportPptx() {
         align: "center",
         valign: "mid",
         margin: 0.08,
-        fontSize: 34,
-        color: storyTextColor,
         rotate: 180,
         fit: "shrink"
+      });
+    }
+
+    if (includeTeachingActivitiesInput.checked) {
+      addFinalActivitySlide(pptx, {
+        oddBgColor,
+        oddTextColor,
+        oddBorderColor,
+        oddBorderSize
       });
     }
 

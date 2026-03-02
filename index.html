@@ -30,6 +30,17 @@
             <option value="right">Right</option>
           </select>
         </label>
+        <label>
+          Visual complexity
+          <select id="visualComplexity">
+            <option value="normal">Normal</option>
+            <option value="highSupport">High Support</option>
+          </select>
+        </label>
+        <label class="checkbox-label">
+          <input id="includeTeachingActivities" type="checkbox" checked>
+          Include Teaching Activities
+        </label>
       </div>
     </section>
 
@@ -73,10 +84,12 @@
         <textarea id="aiInput" rows="10" placeholder="TITLE: My Book
 SPREAD:
 STORY: The ball is red.
+SALIENT_FEATURES: Round shape, bright red color, bounces
 ODD_TEXT: BALL
 
 SPREAD:
 STORY: The dog runs fast.
+SALIENT_FEATURES: Four legs, furry coat, runs
 ODD_TEXT: DOG"></textarea>
       </label>
       <button id="parseAiButton" type="button">Parse Into Spreads</button>
@@ -114,6 +127,10 @@ ODD_TEXT: DOG"></textarea>
       <label>
         Story text (even page, rotated 180 degrees)
         <textarea class="story-text" rows="5" placeholder="Enter even-page story text..."></textarea>
+      </label>
+      <label>
+        Salient features (even page, below story)
+        <textarea class="salient-features" rows="3" placeholder="Key visual features to highlight..."></textarea>
       </label>
       <label>
         Accessible text (odd page)

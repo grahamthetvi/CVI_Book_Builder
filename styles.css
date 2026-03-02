@@ -64,6 +64,18 @@ label {
   font-size: 14px;
 }
 
+label.checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+}
+
+label.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  margin-right: 8px;
+}
+
 input,
 select,
 textarea,
@@ -204,6 +216,10 @@ button:hover {
 .preview-odd-images {
   display: grid;
   gap: 8px;
+}
+
+.preview-odd-images.high-support {
+  gap: 20%;
 }
 
 .preview-odd-images.count-1 {
