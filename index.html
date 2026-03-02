@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVI Book Builder</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+  <main class="container">
+    <header class="page-header">
+      <h1>CVI Book Builder</h1>
+      <p>Create a downloadable PowerPoint in Letter landscape format.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Book Setup</h2>
+      <div class="grid two-col">
+        <label>
+          Book title
+          <input id="bookTitle" type="text" placeholder="My CVI Story Book">
+        </label>
+        <label>
+          Odd page text position
+          <select id="oddTextPosition">
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Accessibility Text Style (Odd Pages)</h2>
+      <div class="grid four-col">
+        <label>
+          Text color
+          <input id="oddTextColor" type="color" value="#FFFFFF">
+        </label>
+        <label>
+          Text size
+          <input id="oddTextSize" type="number" min="18" max="220" step="1" value="72">
+        </label>
+        <label>
+          Border color
+          <input id="oddBorderColor" type="color" value="#FFFF00">
+        </label>
+        <label>
+          Border size
+          <input id="oddBorderSize" type="number" min="0" max="12" step="1" value="3">
+        </label>
+      </div>
+      <div class="grid two-col top-gap">
+        <label>
+          Odd page background color
+          <input id="oddBgColor" type="color" value="#000000">
+        </label>
+        <label>
+          Story text color (even pages)
+          <input id="storyTextColor" type="color" value="#111111">
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Story Input</h2>
+      <p class="hint">Use one or both: parse formatted text, then edit each spread manually.</p>
+      <label>
+        AI formatted text (optional)
+        <textarea id="aiInput" rows="10" placeholder="TITLE: My Book
+SPREAD:
+STORY: The ball is red.
+ODD_TEXT: BALL
+
+SPREAD:
+STORY: The dog runs fast.
+ODD_TEXT: DOG"></textarea>
+      </label>
+      <button id="parseAiButton" type="button">Parse Into Spreads</button>
+    </section>
+
+    <section class="panel">
+      <div class="section-header-row">
+        <h2>Spreads</h2>
+        <button id="addSpreadButton" type="button">Add Spread</button>
+      </div>
+      <p class="hint">Each spread creates 2 slides: odd accessible slide + even rotated story slide.</p>
+      <div id="spreadsContainer" class="spreads"></div>
+    </section>
+
+    <section class="panel actions">
+      <button id="refreshPreviewButton" type="button">Refresh Preview</button>
+      <button id="printPdfButton" type="button">Print / Save as PDF</button>
+      <button id="exportPptxButton" type="button" class="primary">Download PowerPoint (.pptx)</button>
+      <p id="statusMessage" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Live Preview</h2>
+      <p class="hint">Preview uses the same odd/even layout rules as export.</p>
+      <div id="previewContainer" class="preview-container"></div>
+    </section>
+  </main>
+
+  <template id="spreadTemplate">
+    <article class="spread-card">
+      <div class="spread-title-row">
+        <h3>Spread <span class="spread-number"></span></h3>
+        <button type="button" class="danger remove-spread">Remove</button>
+      </div>
+      <label>
+        Story text (even page, rotated 180 degrees)
+        <textarea class="story-text" rows="5" placeholder="Enter even-page story text..."></textarea>
+      </label>
+      <label>
+        Accessible text (odd page)
+        <input class="odd-text" type="text" placeholder="Example: DOG">
+      </label>
+      <label>
+        Odd page images (1 to 4)
+        <input class="odd-images" type="file" accept="image/*" multiple>
+      </label>
+      <p class="selected-images"></p>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
