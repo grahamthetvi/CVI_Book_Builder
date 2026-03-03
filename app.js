@@ -606,12 +606,24 @@ function copyFvaLmaSummary() {
   const spreadCount = spreadsContainer.querySelectorAll(".spread-card").length;
   const date = new Date().toLocaleDateString();
 
+  const textColor = oddTextColorInput.value || "#FFFFFF";
+  const bgColor = oddBgColorInput.value || "#000000";
+  const textSize = oddTextSizeInput.value || "72";
+  const complexityValue = visualComplexityInput.value || "normal";
+  const complexityLabel = complexityValue === "highSupport" ? "High Support" : "Normal";
+
   const parts = [
     `CVI Book: ${bookTitle}`,
     eccArea ? `ECC Focus: ${eccArea}` : "",
     `Spreads: ${spreadCount}`,
     `Date: ${date}`
   ].filter(Boolean);
+
+  parts.push(
+    "",
+    "Visual Presentation",
+    `Materials were presented using ${textColor} text at ${textSize}pt font on a ${bgColor} background. Images were spaced using ${complexityLabel} complexity settings.`
+  );
 
   if (activityPrompt) {
     parts.push("", `Activity: ${activityPrompt}`);
@@ -620,6 +632,12 @@ function copyFvaLmaSummary() {
   if (studentTips) {
     parts.push("", "Student-specific CVI tips:", studentTips);
   }
+
+  parts.push(
+    "",
+    "Latency to visual attention: ___ seconds",
+    "Preferred viewing distance: ___ inches"
+  );
 
   const summary = parts.join("\n");
 
