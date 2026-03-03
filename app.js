@@ -22,6 +22,7 @@ const eccAreaInput = document.getElementById("eccArea");
 const activityPromptInput = document.getElementById("activityPrompt");
 const studentCviTipsInput = document.getElementById("studentCviTips");
 const copyFvaLmaButton = document.getElementById("copyFvaLmaButton");
+const copyGeminiPromptButton = document.getElementById("copyGeminiPromptButton");
 const presetMaxContrastButton = document.getElementById("presetMaxContrast");
 const presetHighContrastButton = document.getElementById("presetHighContrast");
 const presetStandardPrintButton = document.getElementById("presetStandardPrint");
@@ -601,6 +602,33 @@ async function exportPptx() {
   }
 }
 
+const GEMINI_PROMPT = `You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
+
+TITLE: [Book title]
+
+ECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]
+
+ACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]
+
+SPREAD:
+STORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]
+ODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]
+SALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]
+
+SPREAD:
+STORY: [Next spread's story text.]
+ODD_TEXT: [Keyword for this spread.]
+SALIENT_FEATURES: [Salient features for this spread.]
+
+[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES for each spread.]`;
+
+function copyGeminiPrompt() {
+  navigator.clipboard.writeText(GEMINI_PROMPT).then(
+    () => setStatus("Gemini prompt copied. Paste into Gemini, then paste the AI output back here."),
+    () => setStatus("Failed to copy. Check clipboard permissions.", true)
+  );
+}
+
 function copyFvaLmaSummary() {
   const bookTitle = (bookTitleInput.value || "CVI Book").trim();
   const eccArea = (eccAreaInput.value || "").trim();
@@ -685,6 +713,7 @@ parseAiButton.addEventListener("click", () => {
 
 exportPptxButton.addEventListener("click", exportPptx);
 copyFvaLmaButton.addEventListener("click", copyFvaLmaSummary);
+copyGeminiPromptButton.addEventListener("click", copyGeminiPrompt);
 
 presetMaxContrastButton.addEventListener("click", () => {
   oddTextColorInput.value = "#FFFF00";

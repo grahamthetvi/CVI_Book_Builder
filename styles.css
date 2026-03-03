@@ -168,7 +168,8 @@ button:hover {
   font-size: 13px;
 }
 
-.actions {
+.actions,
+.story-input-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
