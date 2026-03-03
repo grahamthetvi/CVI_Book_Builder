@@ -24,6 +24,10 @@ body {
   padding: 16px;
 }
 
+.modal-overlay[hidden] {
+  display: none !important;
+}
+
 .modal-card {
   width: min(680px, 100%);
   background: #1a1d24;
