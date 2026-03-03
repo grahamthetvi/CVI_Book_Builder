@@ -27,7 +27,7 @@
         </label>
         <label>
           Activity Prompt
-          <textarea id="activityPrompt" rows="2" placeholder="One-sentence sensory activity from AI (e.g., Feely box with story objects)"></textarea>
+          <textarea id="activityPrompt" rows="1" placeholder="One-sentence sensory activity from AI (e.g., Feely box with story objects)"></textarea>
         </label>
         <label>
           Odd page text position
@@ -64,32 +64,48 @@
     <section class="panel">
       <h2>Accessibility Text Style (Odd Pages)</h2>
       <div class="grid four-col">
-        <label>
-          Text color
-          <input id="oddTextColor" type="color" value="#FFFFFF">
-        </label>
+        <div class="color-picker-group">
+          <label for="oddTextColor">Text color</label>
+          <div class="color-input-row">
+            <input id="oddTextColor" type="color" value="#FFFFFF" aria-label="Text color for odd pages" aria-describedby="oddTextColor-name">
+            <input id="oddTextColor-hex" type="text" class="color-hex" value="#FFFFFF" maxlength="7" aria-label="Text color hex value">
+          </div>
+          <span id="oddTextColor-name" class="color-name" aria-live="polite">White</span>
+        </div>
         <label>
           Text size
           <input id="oddTextSize" type="number" min="18" max="220" step="1" value="72">
         </label>
-        <label>
-          Border color
-          <input id="oddBorderColor" type="color" value="#FFFF00">
-        </label>
+        <div class="color-picker-group">
+          <label for="oddBorderColor">Border color</label>
+          <div class="color-input-row">
+            <input id="oddBorderColor" type="color" value="#FFFF00" aria-label="Border color for odd page text" aria-describedby="oddBorderColor-name">
+            <input id="oddBorderColor-hex" type="text" class="color-hex" value="#FFFF00" maxlength="7" aria-label="Border color hex value">
+          </div>
+          <span id="oddBorderColor-name" class="color-name" aria-live="polite">Yellow</span>
+        </div>
         <label>
           Border size
           <input id="oddBorderSize" type="number" min="0" max="12" step="1" value="3">
         </label>
       </div>
       <div class="grid two-col top-gap">
-        <label>
-          Odd page background color
-          <input id="oddBgColor" type="color" value="#000000">
-        </label>
-        <label>
-          Story text color (even pages)
-          <input id="storyTextColor" type="color" value="#111111">
-        </label>
+        <div class="color-picker-group">
+          <label for="oddBgColor">Odd page background color</label>
+          <div class="color-input-row">
+            <input id="oddBgColor" type="color" value="#000000" aria-label="Odd page background color" aria-describedby="oddBgColor-name">
+            <input id="oddBgColor-hex" type="text" class="color-hex" value="#000000" maxlength="7" aria-label="Background color hex value">
+          </div>
+          <span id="oddBgColor-name" class="color-name" aria-live="polite">Black</span>
+        </div>
+        <div class="color-picker-group">
+          <label for="storyTextColor">Story text color (even pages)</label>
+          <div class="color-input-row">
+            <input id="storyTextColor" type="color" value="#111111" aria-label="Story text color on even pages" aria-describedby="storyTextColor-name">
+            <input id="storyTextColor-hex" type="text" class="color-hex" value="#111111" maxlength="7" aria-label="Story text color hex value">
+          </div>
+          <span id="storyTextColor-name" class="color-name" aria-live="polite">Very dark gray</span>
+        </div>
       </div>
     </section>
 
@@ -98,7 +114,7 @@
       <p class="hint">Use one or both: parse formatted text, then edit each spread manually.</p>
       <label>
         AI formatted text (optional)
-        <textarea id="aiInput" rows="10" placeholder="TITLE: My Book
+        <textarea id="aiInput" rows="6" placeholder="TITLE: My Book
 ECC_AREA: Compensatory Access
 ACTIVITY_PROMPT: Create a feely box with a ball and a dog toy.
 
@@ -139,14 +155,14 @@ SALIENT_FEATURES: Four legs, furry coat, runs"></textarea>
       <p class="hint">Build tips for this student; include in FVA/LMA summary when you copy.</p>
       <label>
         Student-specific CVI tips
-        <textarea id="studentCviTips" rows="4" placeholder="Add student-specific CVI considerations, adaptations, or recommendations..."></textarea>
+        <textarea id="studentCviTips" rows="2" placeholder="Add student-specific CVI considerations, adaptations, or recommendations..."></textarea>
       </label>
       <button id="copyFvaLmaButton" type="button">Copy FVA/LMA Summary</button>
     </section>
 
     <section class="panel">
       <h2>Live Preview</h2>
-      <p class="hint">Preview uses the same odd/even layout rules as export.</p>
+      <p class="hint">Preview updates as you edit. Uses the same odd/even layout rules as export.</p>
       <div id="previewContainer" class="preview-container"></div>
     </section>
   </main>
@@ -159,11 +175,11 @@ SALIENT_FEATURES: Four legs, furry coat, runs"></textarea>
       </div>
       <label>
         Story text (even page, rotated 180 degrees)
-        <textarea class="story-text" rows="5" placeholder="Enter even-page story text..."></textarea>
+        <textarea class="story-text" rows="3" placeholder="Enter even-page story text..."></textarea>
       </label>
       <label>
         Salient features (even page, below story)
-        <textarea class="salient-features" rows="3" placeholder="Key visual features to highlight..."></textarea>
+        <textarea class="salient-features" rows="2" placeholder="Key visual features to highlight..."></textarea>
       </label>
       <label>
         Accessible text (odd page)

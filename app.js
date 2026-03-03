@@ -30,6 +30,84 @@ const aiInput = document.getElementById("aiInput");
 const printablePreviewSection = previewContainer.closest(".panel");
 
 let previewObjectUrls = [];
+let livePreviewTimer = null;
+
+function scheduleLivePreview(immediate = false) {
+  if (immediate) {
+    if (livePreviewTimer) clearTimeout(livePreviewTimer);
+    livePreviewTimer = null;
+    renderPreview();
+    return;
+  }
+  if (livePreviewTimer) clearTimeout(livePreviewTimer);
+  livePreviewTimer = setTimeout(() => {
+    livePreviewTimer = null;
+    renderPreview();
+  }, 200);
+}
+
+/* Color name lookup for colorblind-friendly display (hex -> name) */
+const COLOR_NAMES = {
+  "#FFFFFF": "White", "#FFF": "White", "#000000": "Black", "#000": "Black",
+  "#FFFF00": "Yellow", "#FF0": "Yellow", "#FF0000": "Red", "#F00": "Red",
+  "#00FF00": "Green", "#0F0": "Green", "#0000FF": "Blue", "#00F": "Blue",
+  "#FF00FF": "Magenta", "#F0F": "Magenta", "#00FFFF": "Cyan", "#0FF": "Cyan",
+  "#111111": "Very dark gray", "#222222": "Dark gray", "#333333": "Gray",
+  "#666666": "Medium gray", "#999999": "Light gray", "#CCCCCC": "Light gray",
+  "#C6D0DD": "Light gray-blue", "#FF9E9E": "Light red", "#B9C2CE": "Gray-blue",
+  "#2D5BD1": "Blue", "#4C5D75": "Slate", "#384353": "Dark slate"
+};
+
+function hexToColorName(hex) {
+  if (!hex) return "Unknown";
+  let h = hex.toUpperCase().trim();
+  if (!h.startsWith("#")) h = "#" + h;
+  if (h.length === 4) h = "#" + h.slice(1).split("").map((c) => c + c).join("");
+  return COLOR_NAMES[h] || `Custom (${h})`;
+}
+
+function syncColorDisplay(colorInputId) {
+  const colorInput = document.getElementById(colorInputId);
+  const hexInput = document.getElementById(colorInputId + "-hex");
+  const nameSpan = document.getElementById(colorInputId + "-name");
+  if (!colorInput || !hexInput || !nameSpan) return;
+  const hex = colorInput.value.toUpperCase();
+  const withHash = hex.startsWith("#") ? hex : "#" + hex;
+  hexInput.value = withHash;
+  nameSpan.textContent = hexToColorName(withHash);
+  nameSpan.setAttribute("aria-label", `Color name: ${hexToColorName(withHash)}`);
+}
+
+function initColorPickers() {
+  const colorIds = ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"];
+  colorIds.forEach((id) => {
+    const colorInput = document.getElementById(id);
+    const hexInput = document.getElementById(id + "-hex");
+    if (!colorInput || !hexInput) return;
+    colorInput.addEventListener("input", () => {
+      syncColorDisplay(id);
+      scheduleLivePreview(true);
+    });
+    hexInput.addEventListener("input", () => {
+      const val = hexInput.value.trim();
+      if (/^#?[0-9A-Fa-f]{6}$/.test(val.replace("#", "")) || /^#?[0-9A-Fa-f]{3}$/.test(val.replace("#", ""))) {
+        colorInput.value = val.startsWith("#") ? val : "#" + val;
+        syncColorDisplay(id);
+        scheduleLivePreview(true);
+      }
+    });
+    hexInput.addEventListener("blur", () => {
+      const val = hexInput.value.trim().replace(/^#?/, "");
+      if (val.length === 3) {
+        const expanded = val.split("").map((c) => c + c).join("");
+        colorInput.value = "#" + expanded;
+      }
+      syncColorDisplay(id);
+      scheduleLivePreview(true);
+    });
+    syncColorDisplay(id);
+  });
+}
 
 function setStatus(text, isError = false) {
   statusMessage.textContent = text;
@@ -67,15 +145,18 @@ function addSpread(initial = {}) {
     selectedImagesText.textContent = finalFiles.length
       ? `${finalFiles.length} image(s): ${finalFiles.map((f) => f.name).join(", ")}`
       : "No images selected.";
+    scheduleLivePreview(true);
   });
 
   removeButton.addEventListener("click", () => {
     card.remove();
     renumberSpreads();
+    scheduleLivePreview(true);
   });
 
   spreadsContainer.appendChild(fragment);
   renumberSpreads();
+  scheduleLivePreview(true);
 }
 
 function renumberSpreads() {
@@ -290,6 +371,34 @@ function renderPreview() {
   previewContainer.appendChild(titlePage);
 
   spreads.forEach((spread, spreadIndex) => {
+    const evenPage = document.createElement("div");
+    evenPage.className = "preview-page";
+    evenPage.style.background = "#FFFFFF";
+    const storyWrapper = document.createElement("div");
+    storyWrapper.className = "preview-story";
+    storyWrapper.style.flexDirection = "column";
+    storyWrapper.style.gap = "0.5em";
+    storyWrapper.style.fontSize = "34px";
+    const storyText = document.createElement("span");
+    storyText.style.color = storyTextColor;
+    storyText.textContent = spread.storyText || "";
+    storyWrapper.appendChild(storyText);
+    if (spread.salientFeatures) {
+      const salient = document.createElement("div");
+      salient.className = "preview-salient-features";
+      salient.style.color = "#CC0000";
+      salient.style.fontSize = "34px";
+      salient.textContent = spread.salientFeatures;
+      storyWrapper.appendChild(salient);
+    }
+    evenPage.appendChild(storyWrapper);
+    previewContainer.appendChild(evenPage);
+
+    const evenLabel = document.createElement("p");
+    evenLabel.className = "preview-label";
+    evenLabel.textContent = `Spread ${spreadIndex + 1} - Even page (rotated)`;
+    previewContainer.appendChild(evenLabel);
+
     const oddPage = document.createElement("div");
     oddPage.className = "preview-page odd";
     oddPage.style.background = oddBgColor;
@@ -341,34 +450,6 @@ function renderPreview() {
     oddLabel.className = "preview-label";
     oddLabel.textContent = `Spread ${spreadIndex + 1} - Odd page`;
     previewContainer.appendChild(oddLabel);
-
-    const evenPage = document.createElement("div");
-    evenPage.className = "preview-page";
-    evenPage.style.background = "#FFFFFF";
-    const storyWrapper = document.createElement("div");
-    storyWrapper.className = "preview-story";
-    storyWrapper.style.flexDirection = "column";
-    storyWrapper.style.gap = "0.5em";
-    storyWrapper.style.fontSize = "34px";
-    const storyText = document.createElement("span");
-    storyText.style.color = storyTextColor;
-    storyText.textContent = spread.storyText || "";
-    storyWrapper.appendChild(storyText);
-    if (spread.salientFeatures) {
-      const salient = document.createElement("div");
-      salient.className = "preview-salient-features";
-      salient.style.color = "#CC0000";
-      salient.style.fontSize = "34px";
-      salient.textContent = spread.salientFeatures;
-      storyWrapper.appendChild(salient);
-    }
-    evenPage.appendChild(storyWrapper);
-    previewContainer.appendChild(evenPage);
-
-    const evenLabel = document.createElement("p");
-    evenLabel.className = "preview-label";
-    evenLabel.textContent = `Spread ${spreadIndex + 1} - Even page (rotated)`;
-    previewContainer.appendChild(evenLabel);
   });
 }
 
@@ -720,6 +801,7 @@ presetMaxContrastButton.addEventListener("click", () => {
   oddBgColorInput.value = "#000000";
   oddBorderColorInput.value = "#FFFF00";
   storyTextColorInput.value = "#111111";
+  ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   renderPreview();
 });
 
@@ -728,6 +810,7 @@ presetHighContrastButton.addEventListener("click", () => {
   oddBgColorInput.value = "#000000";
   oddBorderColorInput.value = "#FF0000";
   storyTextColorInput.value = "#111111";
+  ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   renderPreview();
 });
 
@@ -736,6 +819,7 @@ presetStandardPrintButton.addEventListener("click", () => {
   oddBgColorInput.value = "#FFFFFF";
   oddBorderColorInput.value = "#000000";
   storyTextColorInput.value = "#000000";
+  ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   renderPreview();
 });
 
@@ -748,6 +832,29 @@ printPdfButton.addEventListener("click", () => {
   printablePreviewSection.classList.add("preview-printable");
   window.print();
   printablePreviewSection.classList.remove("preview-printable");
+});
+
+initColorPickers();
+
+function initLivePreview() {
+  if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());
+  if (oddTextPositionInput) oddTextPositionInput.addEventListener("change", () => scheduleLivePreview(true));
+  if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", () => scheduleLivePreview(true));
+  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", () => scheduleLivePreview(true));
+  if (visualComplexityInput) visualComplexityInput.addEventListener("change", () => scheduleLivePreview(true));
+  spreadsContainer.addEventListener("input", (e) => {
+    if (e.target.matches(".story-text, .salient-features, .odd-text")) scheduleLivePreview();
+  });
+}
+
+initLivePreview();
+
+document.body.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (btn && !btn.disabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    btn.classList.add("animate-pop");
+    btn.addEventListener("animationend", () => btn.classList.remove("animate-pop"), { once: true });
+  }
 });
 
 addSpread();
