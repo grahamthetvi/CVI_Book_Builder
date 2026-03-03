@@ -65,10 +65,20 @@
       <h2>Accessibility Text Style (Odd Pages)</h2>
       <div class="grid four-col">
         <div class="color-picker-group">
-          <label for="oddTextColor">Text color</label>
+          <label for="oddTextColorPreset">Text color</label>
           <div class="color-input-row">
-            <input id="oddTextColor" type="color" value="#FFFFFF" aria-label="Text color for odd pages" aria-describedby="oddTextColor-name">
-            <input id="oddTextColor-hex" type="text" class="color-hex" value="#FFFFFF" maxlength="7" aria-label="Text color hex value">
+            <select id="oddTextColorPreset" class="color-preset" aria-label="Text color preset" aria-describedby="oddTextColor-name">
+              <option value="#FFFFFF">White</option>
+              <option value="#FFFF00">Yellow</option>
+              <option value="#FF0000">Red</option>
+              <option value="#00FF00">Green</option>
+              <option value="#00FFFF">Cyan</option>
+              <option value="#0000FF">Blue</option>
+              <option value="#111111">Very dark gray</option>
+              <option value="#000000">Black</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input id="oddTextColor" type="color" value="#FFFFFF" aria-label="Custom text color for odd pages" aria-describedby="oddTextColor-name">
           </div>
           <span id="oddTextColor-name" class="color-name" aria-live="polite">White</span>
         </div>
@@ -77,10 +87,20 @@
           <input id="oddTextSize" type="number" min="18" max="220" step="1" value="72">
         </label>
         <div class="color-picker-group">
-          <label for="oddBorderColor">Border color</label>
+          <label for="oddBorderColorPreset">Border color</label>
           <div class="color-input-row">
-            <input id="oddBorderColor" type="color" value="#FFFF00" aria-label="Border color for odd page text" aria-describedby="oddBorderColor-name">
-            <input id="oddBorderColor-hex" type="text" class="color-hex" value="#FFFF00" maxlength="7" aria-label="Border color hex value">
+            <select id="oddBorderColorPreset" class="color-preset" aria-label="Border color preset" aria-describedby="oddBorderColor-name">
+              <option value="#FFFFFF">White</option>
+              <option value="#FFFF00" selected>Yellow</option>
+              <option value="#FF0000">Red</option>
+              <option value="#00FF00">Green</option>
+              <option value="#00FFFF">Cyan</option>
+              <option value="#0000FF">Blue</option>
+              <option value="#111111">Very dark gray</option>
+              <option value="#000000">Black</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input id="oddBorderColor" type="color" value="#FFFF00" aria-label="Custom border color for odd page text" aria-describedby="oddBorderColor-name">
           </div>
           <span id="oddBorderColor-name" class="color-name" aria-live="polite">Yellow</span>
         </div>
@@ -91,18 +111,35 @@
       </div>
       <div class="grid two-col top-gap">
         <div class="color-picker-group">
-          <label for="oddBgColor">Odd page background color</label>
+          <label for="oddBgColorPreset">Odd page background color</label>
           <div class="color-input-row">
-            <input id="oddBgColor" type="color" value="#000000" aria-label="Odd page background color" aria-describedby="oddBgColor-name">
-            <input id="oddBgColor-hex" type="text" class="color-hex" value="#000000" maxlength="7" aria-label="Background color hex value">
+            <select id="oddBgColorPreset" class="color-preset" aria-label="Odd page background color preset" aria-describedby="oddBgColor-name">
+              <option value="#000000" selected>Black</option>
+              <option value="#111111">Very dark gray</option>
+              <option value="#0000FF">Blue</option>
+              <option value="#003300">Dark green</option>
+              <option value="#FFFFFF">White</option>
+              <option value="#FFFF00">Yellow</option>
+              <option value="#FF0000">Red</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input id="oddBgColor" type="color" value="#000000" aria-label="Custom odd page background color" aria-describedby="oddBgColor-name">
           </div>
           <span id="oddBgColor-name" class="color-name" aria-live="polite">Black</span>
         </div>
         <div class="color-picker-group">
-          <label for="storyTextColor">Story text color (even pages)</label>
+          <label for="storyTextColorPreset">Story text color (even pages)</label>
           <div class="color-input-row">
-            <input id="storyTextColor" type="color" value="#111111" aria-label="Story text color on even pages" aria-describedby="storyTextColor-name">
-            <input id="storyTextColor-hex" type="text" class="color-hex" value="#111111" maxlength="7" aria-label="Story text color hex value">
+            <select id="storyTextColorPreset" class="color-preset" aria-label="Story text color preset" aria-describedby="storyTextColor-name">
+              <option value="#111111" selected>Very dark gray</option>
+              <option value="#000000">Black</option>
+              <option value="#0000FF">Blue</option>
+              <option value="#006600">Green</option>
+              <option value="#CC0000">Red</option>
+              <option value="#FFFFFF">White</option>
+              <option value="custom">Custom...</option>
+            </select>
+            <input id="storyTextColor" type="color" value="#111111" aria-label="Custom story text color on even pages" aria-describedby="storyTextColor-name">
           </div>
           <span id="storyTextColor-name" class="color-name" aria-live="polite">Very dark gray</span>
         </div>

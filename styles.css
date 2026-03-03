@@ -105,7 +105,7 @@ textarea {
   resize: vertical;
 }
 
-/* Color picker group: colorblind-friendly with hex + name */
+/* Color picker group: named presets + custom picker */
 .color-picker-group {
   display: flex;
   flex-direction: column;
@@ -134,10 +134,9 @@ textarea {
   padding: 2px;
 }
 
-.color-input-row .color-hex {
+.color-input-row .color-preset {
   flex: 1;
   min-width: 0;
-  font-family: ui-monospace, monospace;
   font-size: 13px;
 }
 

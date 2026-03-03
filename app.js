@@ -68,43 +68,54 @@ function hexToColorName(hex) {
 
 function syncColorDisplay(colorInputId) {
   const colorInput = document.getElementById(colorInputId);
-  const hexInput = document.getElementById(colorInputId + "-hex");
+  const presetSelect = document.getElementById(colorInputId + "Preset");
   const nameSpan = document.getElementById(colorInputId + "-name");
-  if (!colorInput || !hexInput || !nameSpan) return;
+  if (!colorInput || !nameSpan) return;
   const hex = colorInput.value.toUpperCase();
   const withHash = hex.startsWith("#") ? hex : "#" + hex;
-  hexInput.value = withHash;
-  nameSpan.textContent = hexToColorName(withHash);
-  nameSpan.setAttribute("aria-label", `Color name: ${hexToColorName(withHash)}`);
+  let label = hexToColorName(withHash);
+
+  if (presetSelect) {
+    const exactOption = Array.from(presetSelect.options).find((opt) => opt.value.toUpperCase() === withHash);
+    if (exactOption) {
+      presetSelect.value = exactOption.value;
+      if (exactOption.value !== "custom") {
+        label = exactOption.textContent;
+      }
+    } else {
+      presetSelect.value = "custom";
+    }
+  }
+
+  nameSpan.textContent = label;
+  nameSpan.setAttribute("aria-label", `Color name: ${label}`);
 }
 
 function initColorPickers() {
   const colorIds = ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"];
   colorIds.forEach((id) => {
     const colorInput = document.getElementById(id);
-    const hexInput = document.getElementById(id + "-hex");
-    if (!colorInput || !hexInput) return;
+    const presetSelect = document.getElementById(id + "Preset");
+    if (!colorInput) return;
+
     colorInput.addEventListener("input", () => {
       syncColorDisplay(id);
       scheduleLivePreview(true);
     });
-    hexInput.addEventListener("input", () => {
-      const val = hexInput.value.trim();
-      if (/^#?[0-9A-Fa-f]{6}$/.test(val.replace("#", "")) || /^#?[0-9A-Fa-f]{3}$/.test(val.replace("#", ""))) {
-        colorInput.value = val.startsWith("#") ? val : "#" + val;
+
+    if (presetSelect) {
+      presetSelect.addEventListener("change", () => {
+        if (presetSelect.value !== "custom") {
+          colorInput.value = presetSelect.value;
+        }
         syncColorDisplay(id);
+        if (presetSelect.value === "custom") {
+          colorInput.focus();
+        }
         scheduleLivePreview(true);
-      }
-    });
-    hexInput.addEventListener("blur", () => {
-      const val = hexInput.value.trim().replace(/^#?/, "");
-      if (val.length === 3) {
-        const expanded = val.split("").map((c) => c + c).join("");
-        colorInput.value = "#" + expanded;
-      }
-      syncColorDisplay(id);
-      scheduleLivePreview(true);
-    });
+      });
+    }
+
     syncColorDisplay(id);
   });
 }
