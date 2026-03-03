@@ -8,6 +8,23 @@
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
+  <div id="welcomeModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeModalTitle" hidden>
+    <div class="modal-card">
+      <h2 id="welcomeModalTitle">Welcome to CVI Book Builder</h2>
+      <p class="hint">Quick start:</p>
+      <ol class="modal-list">
+        <li>Set your Book Setup options at the top.</li>
+        <li>Click <strong>Copy AI Formatting Prompt</strong> and paste it into your AI tool.</li>
+        <li>Paste the AI output into <strong>AI formatted text</strong>, then click <strong>Parse Into Spreads</strong>.</li>
+        <li>Add images to each spread and review the live preview.</li>
+        <li>Download PowerPoint or Print/Save as PDF.</li>
+      </ol>
+      <div class="story-input-actions">
+        <button id="closeWelcomeButton" type="button" class="primary">Got It</button>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
     <header class="page-header">
       <h1>CVI Book Builder</h1>

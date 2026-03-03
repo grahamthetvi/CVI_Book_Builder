@@ -13,6 +13,35 @@ body {
   color: #f2f4f8;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  padding: 16px;
+}
+
+.modal-card {
+  width: min(680px, 100%);
+  background: #1a1d24;
+  border: 1px solid #2b3340;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.modal-card h2 {
+  margin: 0 0 8px;
+}
+
+.modal-list {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  line-height: 1.4;
+}
+
 .container {
   max-width: 1050px;
   margin: 0 auto;

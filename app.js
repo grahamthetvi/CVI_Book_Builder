@@ -27,6 +27,8 @@ const presetMaxContrastButton = document.getElementById("presetMaxContrast");
 const presetHighContrastButton = document.getElementById("presetHighContrast");
 const presetStandardPrintButton = document.getElementById("presetStandardPrint");
 const aiInput = document.getElementById("aiInput");
+const welcomeModal = document.getElementById("welcomeModal");
+const closeWelcomeButton = document.getElementById("closeWelcomeButton");
 const printablePreviewSection = previewContainer.closest(".panel");
 
 let previewObjectUrls = [];
@@ -123,6 +125,17 @@ function initColorPickers() {
 function setStatus(text, isError = false) {
   statusMessage.textContent = text;
   statusMessage.style.color = isError ? "#ff9e9e" : "#c6d0dd";
+}
+
+function showWelcomeModal() {
+  if (!welcomeModal) return;
+  welcomeModal.hidden = false;
+  if (closeWelcomeButton) closeWelcomeButton.focus();
+}
+
+function hideWelcomeModal() {
+  if (!welcomeModal) return;
+  welcomeModal.hidden = true;
 }
 
 function safePptColor(hex) {
@@ -694,7 +707,7 @@ async function exportPptx() {
   }
 }
 
-const AI_FORMATTING_PROMPT = `You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
+const AI_FORMATTING_PROMPT_TEMPLATE = `You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
 
 TITLE: [Book title]
 
@@ -714,9 +727,37 @@ SALIENT_FEATURES: [Salient features for this spread.]
 
 [Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES for each spread.]`;
 
+function getSelectedOptionLabel(selectElement) {
+  if (!selectElement) return "";
+  const selected = selectElement.options[selectElement.selectedIndex];
+  return selected ? selected.textContent : "";
+}
+
+function buildAiFormattingPromptWithSetup() {
+  const bookTitle = (bookTitleInput.value || "").trim();
+  const eccArea = (eccAreaInput.value || "").trim();
+  const activityPrompt = (activityPromptInput.value || "").trim();
+  const oddTextPosition = getSelectedOptionLabel(oddTextPositionInput) || oddTextPositionInput.value;
+  const visualComplexity = getSelectedOptionLabel(visualComplexityInput) || visualComplexityInput.value;
+  const includeActivities = includeTeachingActivitiesInput.checked ? "Yes" : "No";
+
+  return `Use the current Book Setup values below when you generate content.
+
+Current Book Setup
+- TITLE preference: ${bookTitle || "[Book title]"}
+- ECC_AREA preference: ${eccArea || "[ECC area]"}
+- ACTIVITY_PROMPT preference: ${activityPrompt || "[One-sentence sensory activity]"}
+- Odd page text position: ${oddTextPosition}
+- Visual complexity: ${visualComplexity}
+- Include Teaching Activities: ${includeActivities}
+
+${AI_FORMATTING_PROMPT_TEMPLATE}`.trim();
+}
+
 function copyAiFormattingPrompt() {
-  navigator.clipboard.writeText(AI_FORMATTING_PROMPT).then(
-    () => setStatus("AI formatting prompt copied. Paste into any AI, then paste the AI output back here."),
+  const prompt = buildAiFormattingPromptWithSetup();
+  navigator.clipboard.writeText(prompt).then(
+    () => setStatus("AI prompt + current Book Setup copied. Paste into any AI, then paste the AI output back here."),
     () => setStatus("Failed to copy. Check clipboard permissions.", true)
   );
 }
@@ -845,6 +886,24 @@ printPdfButton.addEventListener("click", () => {
   printablePreviewSection.classList.remove("preview-printable");
 });
 
+if (closeWelcomeButton) {
+  closeWelcomeButton.addEventListener("click", hideWelcomeModal);
+}
+
+if (welcomeModal) {
+  welcomeModal.addEventListener("click", (e) => {
+    if (e.target === welcomeModal) {
+      hideWelcomeModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && welcomeModal && !welcomeModal.hidden) {
+    hideWelcomeModal();
+  }
+});
+
 initColorPickers();
 
 function initLivePreview() {
@@ -870,4 +929,5 @@ document.body.addEventListener("click", (e) => {
 
 addSpread();
 renderPreview();
+showWelcomeModal();
 setStatus("Ready. Add spreads and export PowerPoint.");
