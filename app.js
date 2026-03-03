@@ -130,12 +130,16 @@ function setStatus(text, isError = false) {
 function showWelcomeModal() {
   if (!welcomeModal) return;
   welcomeModal.hidden = false;
+  welcomeModal.style.display = "flex";
+  welcomeModal.setAttribute("aria-hidden", "false");
   if (closeWelcomeButton) closeWelcomeButton.focus();
 }
 
 function hideWelcomeModal() {
   if (!welcomeModal) return;
   welcomeModal.hidden = true;
+  welcomeModal.style.display = "none";
+  welcomeModal.setAttribute("aria-hidden", "true");
 }
 
 function safePptColor(hex) {
@@ -900,6 +904,12 @@ if (welcomeModal) {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && welcomeModal && !welcomeModal.hidden) {
+    hideWelcomeModal();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "closeWelcomeButton") {
     hideWelcomeModal();
   }
 });
