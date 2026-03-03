@@ -68,7 +68,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 label.checkbox-label {
@@ -196,7 +196,28 @@ button:hover {
   margin-top: 0;
   margin-bottom: 0;
   color: #b9c2ce;
+  font-size: 12px;
+}
+
+.live-preview-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 2px 8px;
+  border-radius: 999px;
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #d8fbe1;
+  background: #1b6f3a;
+  border: 1px solid #2aa861;
 }
 
 .spreads {

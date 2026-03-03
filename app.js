@@ -598,37 +598,6 @@ async function exportPptx() {
     });
 
     for (const spread of spreadsWithData) {
-      const oddSlide = pptx.addSlide();
-      oddSlide.background = { color: oddBgColor };
-      const { textRect, imageRect } = getOddRegions(position);
-
-      if (spread.oddText) {
-        oddSlide.addText(spread.oddText, {
-          x: textRect.x,
-          y: textRect.y,
-          w: textRect.w,
-          h: textRect.h,
-          align: "center",
-          valign: "mid",
-          bold: true,
-          fontSize: TITLE_FONT_SIZE,
-          color: oddTextColor,
-          fit: "shrink",
-          outline: { color: oddBorderColor, pt: oddBorderSize }
-        });
-      }
-
-      const useImages = spread.imageData.slice(0, 4);
-      const highSupport = visualComplexityInput.value === "highSupport";
-      const imgRects = distributeImagesInRect(useImages.length, imageRect, { highSupport });
-      useImages.forEach((img, i) => {
-        const r = imgRects[i];
-        oddSlide.addImage({
-          data: img,
-          sizing: { type: "contain", x: r.x, y: r.y, w: r.w, h: r.h }
-        });
-      });
-
       const evenSlide = pptx.addSlide();
       evenSlide.background = { color: EVEN_PAGE_BG };
 
@@ -659,6 +628,37 @@ async function exportPptx() {
         margin: 0.08,
         rotate: 180,
         fit: "shrink"
+      });
+
+      const oddSlide = pptx.addSlide();
+      oddSlide.background = { color: oddBgColor };
+      const { textRect, imageRect } = getOddRegions(position);
+
+      if (spread.oddText) {
+        oddSlide.addText(spread.oddText, {
+          x: textRect.x,
+          y: textRect.y,
+          w: textRect.w,
+          h: textRect.h,
+          align: "center",
+          valign: "mid",
+          bold: true,
+          fontSize: TITLE_FONT_SIZE,
+          color: oddTextColor,
+          fit: "shrink",
+          outline: { color: oddBorderColor, pt: oddBorderSize }
+        });
+      }
+
+      const useImages = spread.imageData.slice(0, 4);
+      const highSupport = visualComplexityInput.value === "highSupport";
+      const imgRects = distributeImagesInRect(useImages.length, imageRect, { highSupport });
+      useImages.forEach((img, i) => {
+        const r = imgRects[i];
+        oddSlide.addImage({
+          data: img,
+          sizing: { type: "contain", x: r.x, y: r.y, w: r.w, h: r.h }
+        });
       });
     }
 
