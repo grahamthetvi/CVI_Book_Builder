@@ -896,7 +896,10 @@ if (closeWelcomeButton) {
 
 if (welcomeModal) {
   welcomeModal.addEventListener("click", (e) => {
-    if (e.target === welcomeModal) {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+
+    if (target === welcomeModal || target.closest("#closeWelcomeButton")) {
       hideWelcomeModal();
     }
   });
@@ -904,12 +907,6 @@ if (welcomeModal) {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && welcomeModal && !welcomeModal.hidden) {
-    hideWelcomeModal();
-  }
-});
-
-document.addEventListener("click", (e) => {
-  if (e.target && e.target.id === "closeWelcomeButton") {
     hideWelcomeModal();
   }
 });
@@ -930,6 +927,7 @@ function initLivePreview() {
 initLivePreview();
 
 document.body.addEventListener("click", (e) => {
+  if (!(e.target instanceof Element)) return;
   const btn = e.target.closest("button");
   if (btn && !btn.disabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     btn.classList.add("animate-pop");
