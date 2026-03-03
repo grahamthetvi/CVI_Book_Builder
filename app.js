@@ -22,6 +22,9 @@ const eccAreaInput = document.getElementById("eccArea");
 const activityPromptInput = document.getElementById("activityPrompt");
 const studentCviTipsInput = document.getElementById("studentCviTips");
 const copyFvaLmaButton = document.getElementById("copyFvaLmaButton");
+const presetMaxContrastButton = document.getElementById("presetMaxContrast");
+const presetHighContrastButton = document.getElementById("presetHighContrast");
+const presetStandardPrintButton = document.getElementById("presetStandardPrint");
 const aiInput = document.getElementById("aiInput");
 const printablePreviewSection = previewContainer.closest(".panel");
 
@@ -682,6 +685,31 @@ parseAiButton.addEventListener("click", () => {
 
 exportPptxButton.addEventListener("click", exportPptx);
 copyFvaLmaButton.addEventListener("click", copyFvaLmaSummary);
+
+presetMaxContrastButton.addEventListener("click", () => {
+  oddTextColorInput.value = "#FFFF00";
+  oddBgColorInput.value = "#000000";
+  oddBorderColorInput.value = "#FFFF00";
+  storyTextColorInput.value = "#111111";
+  renderPreview();
+});
+
+presetHighContrastButton.addEventListener("click", () => {
+  oddTextColorInput.value = "#FF0000";
+  oddBgColorInput.value = "#000000";
+  oddBorderColorInput.value = "#FF0000";
+  storyTextColorInput.value = "#111111";
+  renderPreview();
+});
+
+presetStandardPrintButton.addEventListener("click", () => {
+  oddTextColorInput.value = "#000000";
+  oddBgColorInput.value = "#FFFFFF";
+  oddBorderColorInput.value = "#000000";
+  storyTextColorInput.value = "#000000";
+  renderPreview();
+});
+
 refreshPreviewButton.addEventListener("click", () => {
   renderPreview();
   setStatus("Preview refreshed.");
