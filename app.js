@@ -18,6 +18,10 @@ const oddBgColorInput = document.getElementById("oddBgColor");
 const storyTextColorInput = document.getElementById("storyTextColor");
 const visualComplexityInput = document.getElementById("visualComplexity");
 const includeTeachingActivitiesInput = document.getElementById("includeTeachingActivities");
+const eccAreaInput = document.getElementById("eccArea");
+const activityPromptInput = document.getElementById("activityPrompt");
+const studentCviTipsInput = document.getElementById("studentCviTips");
+const copyFvaLmaButton = document.getElementById("copyFvaLmaButton");
 const aiInput = document.getElementById("aiInput");
 const printablePreviewSection = previewContainer.closest(".panel");
 
@@ -81,6 +85,12 @@ function parseAiFormattedText(raw) {
   const titleMatch = raw.match(/^\s*TITLE:\s*(.+)\s*$/im);
   const title = titleMatch ? titleMatch[1].trim() : "";
 
+  const eccMatch = raw.match(/^\s*ECC_AREA:\s*(.+)\s*$/im);
+  const eccArea = eccMatch ? eccMatch[1].trim() : "";
+
+  const activityMatch = raw.match(/^\s*ACTIVITY_PROMPT:\s*(.+)\s*$/im);
+  const activityPrompt = activityMatch ? activityMatch[1].trim() : "";
+
   const chunks = raw.split(/^\s*SPREAD:\s*$/gim).map((c) => c.trim()).filter(Boolean);
   const spreads = [];
 
@@ -96,7 +106,7 @@ function parseAiFormattedText(raw) {
     }
   }
 
-  return { title, spreads };
+  return { title, eccArea, activityPrompt, spreads };
 }
 
 function collectSpreadsFromForm() {
@@ -366,9 +376,10 @@ function renderPreview() {
  * @param {string} options.oddTextColor - Text color (hex without #)
  * @param {string} options.oddBorderColor - Text outline color (hex without #)
  * @param {number} options.oddBorderSize - Text outline size in pt
+ * @param {string} [options.activityPrompt] - Optional story-specific activity from AI
  */
 function addFinalActivitySlide(pptx, options) {
-  const { oddBgColor, oddTextColor, oddBorderColor, oddBorderSize } = options;
+  const { oddBgColor, oddTextColor, oddBorderColor, oddBorderSize, activityPrompt } = options;
   const TITLE_FONT_SIZE = 44;
   const HEADING_FONT_SIZE = 28;
   const BODY_FONT_SIZE = 22;
@@ -400,9 +411,17 @@ function addFinalActivitySlide(pptx, options) {
     }
   ];
 
+  if (activityPrompt && activityPrompt.trim()) {
+    activities.push({
+      title: "Story-Specific Activity",
+      body: activityPrompt.trim()
+    });
+  }
+
   const startY = 2;
-  const activityHeight = 2.6;
-  const gap = 0.3;
+  const availableHeight = 6;
+  const gap = 0.25;
+  const activityHeight = (availableHeight - gap * (activities.length - 1)) / activities.length;
 
   activities.forEach((activity, i) => {
     const y = startY + i * (activityHeight + gap);
@@ -410,7 +429,7 @@ function addFinalActivitySlide(pptx, options) {
       x: 0.6,
       y,
       w: 9.8,
-      h: 0.5,
+      h: 0.45,
       bold: true,
       fontSize: HEADING_FONT_SIZE,
       color: oddTextColor,
@@ -418,9 +437,9 @@ function addFinalActivitySlide(pptx, options) {
     });
     slide.addText(activity.body, {
       x: 0.6,
-      y: y + 0.55,
+      y: y + 0.5,
       w: 9.8,
-      h: activityHeight - 0.55,
+      h: Math.max(0.8, activityHeight - 0.5),
       fontSize: BODY_FONT_SIZE,
       color: oddTextColor,
       valign: "top",
@@ -563,7 +582,8 @@ async function exportPptx() {
         oddBgColor,
         oddTextColor,
         oddBorderColor,
-        oddBorderSize
+        oddBorderSize,
+        activityPrompt: (activityPromptInput.value || "").trim()
       });
     }
 
@@ -578,6 +598,37 @@ async function exportPptx() {
   }
 }
 
+function copyFvaLmaSummary() {
+  const bookTitle = (bookTitleInput.value || "CVI Book").trim();
+  const eccArea = (eccAreaInput.value || "").trim();
+  const activityPrompt = (activityPromptInput.value || "").trim();
+  const studentTips = (studentCviTipsInput.value || "").trim();
+  const spreadCount = spreadsContainer.querySelectorAll(".spread-card").length;
+  const date = new Date().toLocaleDateString();
+
+  const parts = [
+    `CVI Book: ${bookTitle}`,
+    eccArea ? `ECC Focus: ${eccArea}` : "",
+    `Spreads: ${spreadCount}`,
+    `Date: ${date}`
+  ].filter(Boolean);
+
+  if (activityPrompt) {
+    parts.push("", `Activity: ${activityPrompt}`);
+  }
+
+  if (studentTips) {
+    parts.push("", "Student-specific CVI tips:", studentTips);
+  }
+
+  const summary = parts.join("\n");
+
+  navigator.clipboard.writeText(summary).then(
+    () => setStatus("FVA/LMA summary copied to clipboard"),
+    () => setStatus("Failed to copy. Check clipboard permissions.", true)
+  );
+}
+
 addSpreadButton.addEventListener("click", () => addSpread());
 
 parseAiButton.addEventListener("click", () => {
@@ -590,6 +641,12 @@ parseAiButton.addEventListener("click", () => {
   const parsed = parseAiFormattedText(raw);
   if (parsed.title) {
     bookTitleInput.value = parsed.title;
+  }
+  if (parsed.eccArea) {
+    eccAreaInput.value = parsed.eccArea;
+  }
+  if (parsed.activityPrompt) {
+    activityPromptInput.value = parsed.activityPrompt;
   }
 
   spreadsContainer.innerHTML = "";
@@ -606,6 +663,7 @@ parseAiButton.addEventListener("click", () => {
 });
 
 exportPptxButton.addEventListener("click", exportPptx);
+copyFvaLmaButton.addEventListener("click", copyFvaLmaSummary);
 refreshPreviewButton.addEventListener("click", () => {
   renderPreview();
   setStatus("Preview refreshed.");

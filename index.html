@@ -22,6 +22,14 @@
           <input id="bookTitle" type="text" placeholder="My CVI Story Book">
         </label>
         <label>
+          ECC Area
+          <input id="eccArea" type="text" placeholder="e.g., Compensatory Access, Self-Determination">
+        </label>
+        <label>
+          Activity Prompt
+          <textarea id="activityPrompt" rows="2" placeholder="One-sentence sensory activity from AI (e.g., Feely box with story objects)"></textarea>
+        </label>
+        <label>
           Odd page text position
           <select id="oddTextPosition">
             <option value="top">Top</option>
@@ -82,15 +90,18 @@
       <label>
         AI formatted text (optional)
         <textarea id="aiInput" rows="10" placeholder="TITLE: My Book
+ECC_AREA: Compensatory Access
+ACTIVITY_PROMPT: Create a feely box with a ball and a dog toy.
+
 SPREAD:
 STORY: The ball is red.
-SALIENT_FEATURES: Round shape, bright red color, bounces
 ODD_TEXT: BALL
+SALIENT_FEATURES: Round shape, bright red color, bounces
 
 SPREAD:
 STORY: The dog runs fast.
-SALIENT_FEATURES: Four legs, furry coat, runs
-ODD_TEXT: DOG"></textarea>
+ODD_TEXT: DOG
+SALIENT_FEATURES: Four legs, furry coat, runs"></textarea>
       </label>
       <button id="parseAiButton" type="button">Parse Into Spreads</button>
     </section>
@@ -109,6 +120,16 @@ ODD_TEXT: DOG"></textarea>
       <button id="printPdfButton" type="button">Print / Save as PDF</button>
       <button id="exportPptxButton" type="button" class="primary">Download PowerPoint (.pptx)</button>
       <p id="statusMessage" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <h2>TVI Session Notes</h2>
+      <p class="hint">Build tips for this student; include in FVA/LMA summary when you copy.</p>
+      <label>
+        Student-specific CVI tips
+        <textarea id="studentCviTips" rows="4" placeholder="Add student-specific CVI considerations, adaptations, or recommendations..."></textarea>
+      </label>
+      <button id="copyFvaLmaButton" type="button">Copy FVA/LMA Summary</button>
     </section>
 
     <section class="panel">
