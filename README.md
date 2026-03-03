@@ -34,9 +34,9 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 6. Click **Print / Save as PDF** for PDF output, or **Download PowerPoint (.pptx)**.
 7. Use **Copy FVA/LMA Summary** to copy session notes for the TVI.
 
-## Gemini System Prompt
+## AI Formatting Prompt
 
-Use this prompt with Gemini (or similar AI) to generate formatted text for the CVI Book Builder. Paste the AI output into the **AI formatted text** field and click **Parse Into Spreads**.
+Use this prompt with any AI assistant (Gemini, ChatGPT, Claude, etc.) to generate formatted text for the CVI Book Builder. Paste the AI output into the **AI formatted text** field and click **Parse Into Spreads**.
 
 ```
 You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
