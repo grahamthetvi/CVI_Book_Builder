@@ -176,11 +176,13 @@ SPREAD:
 STORY: The ball is red.
 ODD_TEXT: BALL
 SALIENT_FEATURES: Round shape, bright red color, bounces
+IMAGE_PROMPT: A single red ball on plain white background, soft lighting
 
 SPREAD:
 STORY: The dog runs fast.
 ODD_TEXT: DOG
-SALIENT_FEATURES: Four legs, furry coat, runs"></textarea>
+SALIENT_FEATURES: Four legs, furry coat, runs
+IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
       </label>
       <div class="story-input-actions">
         <button id="copyAiPromptButton" type="button">Copy AI Formatting Prompt</button>
@@ -239,6 +241,13 @@ SALIENT_FEATURES: Four legs, furry coat, runs"></textarea>
         Accessible text (odd page)
         <input class="odd-text" type="text" placeholder="Example: DOG">
       </label>
+      <div class="image-prompt-row">
+        <label class="image-prompt-label">
+          Image prompt (for AI image generator)
+          <textarea class="image-prompt" rows="2" placeholder="e.g., A single red ball on plain white background, soft lighting"></textarea>
+        </label>
+        <button type="button" class="copy-image-prompt" aria-label="Copy this spread’s image prompt to clipboard">Copy image prompt</button>
+      </div>
       <label>
         Odd page images (1 to 4)
         <input class="odd-images" type="file" accept="image/*" multiple>

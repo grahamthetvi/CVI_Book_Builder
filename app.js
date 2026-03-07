@@ -153,6 +153,7 @@ function addSpread(initial = {}) {
   const storyText = fragment.querySelector(".story-text");
   const salientFeatures = fragment.querySelector(".salient-features");
   const oddText = fragment.querySelector(".odd-text");
+  const imagePromptEl = fragment.querySelector(".image-prompt");
   const imageInput = fragment.querySelector(".odd-images");
   const selectedImagesText = fragment.querySelector(".selected-images");
   const removeButton = fragment.querySelector(".remove-spread");
@@ -160,6 +161,7 @@ function addSpread(initial = {}) {
   storyText.value = initial.storyText || "";
   salientFeatures.value = initial.salientFeatures || "";
   oddText.value = initial.oddText || "";
+  if (imagePromptEl) imagePromptEl.value = initial.imagePrompt || "";
 
   imageInput.addEventListener("change", () => {
     const files = Array.from(imageInput.files || []);
@@ -181,6 +183,21 @@ function addSpread(initial = {}) {
     renumberSpreads();
     scheduleLivePreview(true);
   });
+
+  const copyImagePromptBtn = fragment.querySelector(".copy-image-prompt");
+  if (copyImagePromptBtn && imagePromptEl) {
+    copyImagePromptBtn.addEventListener("click", () => {
+      const text = imagePromptEl.value.trim();
+      if (!text) {
+        setStatus("This spread has no image prompt to copy.", true);
+        return;
+      }
+      navigator.clipboard.writeText(text).then(
+        () => setStatus("Image prompt copied. Paste into your AI image generator."),
+        () => setStatus("Failed to copy. Check clipboard permissions.", true)
+      );
+    });
+  }
 
   spreadsContainer.appendChild(fragment);
   renumberSpreads();
@@ -208,14 +225,16 @@ function parseAiFormattedText(raw) {
   const spreads = [];
 
   for (const chunk of chunks) {
-    const storyMatch = chunk.match(/^\s*STORY:\s*([\s\S]*?)(?=^\s*SALIENT_FEATURES:|^\s*ODD_TEXT:|\s*$)/im);
-    const salientMatch = chunk.match(/^\s*SALIENT_FEATURES:\s*([\s\S]*?)(?=^\s*ODD_TEXT:|\s*$)/im);
+    const storyMatch = chunk.match(/^\s*STORY:\s*([\s\S]*?)(?=^\s*SALIENT_FEATURES:|^\s*ODD_TEXT:|^\s*IMAGE_PROMPT:|\s*$)/im);
+    const salientMatch = chunk.match(/^\s*SALIENT_FEATURES:\s*([\s\S]*?)(?=^\s*ODD_TEXT:|^\s*IMAGE_PROMPT:|\s*$)/im);
     const oddMatch = chunk.match(/^\s*ODD_TEXT:\s*(.+)\s*$/im);
+    const imagePromptMatch = chunk.match(/^\s*IMAGE_PROMPT:\s*([\s\S]*?)(?=^\s*SPREAD:|\s*$)/im);
     const storyText = storyMatch ? storyMatch[1].trim() : "";
     const salientFeatures = salientMatch ? salientMatch[1].trim() : "";
     const oddText = oddMatch ? oddMatch[1].trim() : "";
-    if (storyText || oddText || salientFeatures) {
-      spreads.push({ storyText, salientFeatures, oddText });
+    const imagePrompt = imagePromptMatch ? imagePromptMatch[1].trim() : "";
+    if (storyText || oddText || salientFeatures || imagePrompt) {
+      spreads.push({ storyText, salientFeatures, oddText, imagePrompt });
     }
   }
 
@@ -228,12 +247,15 @@ function collectSpreadsFromForm() {
     const storyText = card.querySelector(".story-text").value.trim();
     const salientFeatures = card.querySelector(".salient-features").value.trim();
     const oddText = card.querySelector(".odd-text").value.trim();
+    const imagePromptEl = card.querySelector(".image-prompt");
+    const imagePrompt = imagePromptEl ? imagePromptEl.value.trim() : "";
     const imageFiles = Array.from(card.querySelector(".odd-images").files || []).slice(0, 4);
     return {
       index,
       storyText,
       salientFeatures,
       oddText,
+      imagePrompt,
       imageFiles
     };
   });
@@ -373,6 +395,28 @@ function clearPreviewUrls() {
   previewObjectUrls = [];
 }
 
+const EVEN_PAGE_MIN_FONT_PX = 12;
+const EVEN_PAGE_INITIAL_FONT_PX = 34;
+
+/**
+ * Reduces even-page story font size until content fits within the page (no overflow).
+ * @param {HTMLElement} storyWrapper - The .preview-story container for the even page
+ */
+function shrinkEvenPageStoryToFit(storyWrapper) {
+  if (!storyWrapper || !storyWrapper.parentElement) return;
+  const salient = storyWrapper.querySelector(".preview-salient-features");
+  let fontSize = EVEN_PAGE_INITIAL_FONT_PX;
+  storyWrapper.style.fontSize = `${fontSize}px`;
+  if (salient) salient.style.fontSize = `${fontSize}px`;
+
+  while (fontSize > EVEN_PAGE_MIN_FONT_PX) {
+    if (storyWrapper.scrollHeight <= storyWrapper.clientHeight) break;
+    fontSize -= 2;
+    storyWrapper.style.fontSize = `${fontSize}px`;
+    if (salient) salient.style.fontSize = `${fontSize}px`;
+  }
+}
+
 function renderPreview() {
   clearPreviewUrls();
   previewContainer.innerHTML = "";
@@ -421,6 +465,8 @@ function renderPreview() {
     }
     evenPage.appendChild(storyWrapper);
     previewContainer.appendChild(evenPage);
+
+    requestAnimationFrame(() => shrinkEvenPageStoryToFit(storyWrapper));
 
     const evenLabel = document.createElement("p");
     evenLabel.className = "preview-label";
@@ -723,13 +769,15 @@ SPREAD:
 STORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]
 ODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]
 SALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]
+IMAGE_PROMPT: [Short prompt for an AI image generator: describe one clear, simple image for this spread. CVI-friendly: high contrast, uncluttered, single main subject. Example: A single red ball on plain white background, soft lighting.]
 
 SPREAD:
 STORY: [Next spread's story text.]
 ODD_TEXT: [Keyword for this spread.]
 SALIENT_FEATURES: [Salient features for this spread.]
+IMAGE_PROMPT: [AI image generator prompt for this spread.]
 
-[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES for each spread.]`;
+[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES / IMAGE_PROMPT for each spread.]`;
 
 function getSelectedOptionLabel(selectElement) {
   if (!selectElement) return "";
@@ -920,7 +968,7 @@ function initLivePreview() {
   if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", () => scheduleLivePreview(true));
   if (visualComplexityInput) visualComplexityInput.addEventListener("change", () => scheduleLivePreview(true));
   spreadsContainer.addEventListener("input", (e) => {
-    if (e.target.matches(".story-text, .salient-features, .odd-text")) scheduleLivePreview();
+    if (e.target.matches(".story-text, .salient-features, .odd-text, .image-prompt")) scheduleLivePreview();
   });
 }
 
