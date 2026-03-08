@@ -27,12 +27,31 @@ const presetMaxContrastButton = document.getElementById("presetMaxContrast");
 const presetHighContrastButton = document.getElementById("presetHighContrast");
 const presetStandardPrintButton = document.getElementById("presetStandardPrint");
 const aiInput = document.getElementById("aiInput");
+const localImageInput = document.getElementById("local-image-input");
+const wikimediaQueryInput = document.getElementById("wikimedia-query");
+const wikimediaSearchButton = document.getElementById("wikimedia-search-btn");
+const wikimediaResults = document.getElementById("wikimedia-results");
+const outlineEnabledInput = document.getElementById("outline-enabled");
+const outlineColorInput = document.getElementById("outline-color");
+const outlineThicknessInput = document.getElementById("outline-thickness");
+const outlineThicknessValue = document.getElementById("outline-thickness-value");
+const processImageButton = document.getElementById("process-image-btn");
+const downloadProcessedButton = document.getElementById("download-processed-btn");
+const imageToolStatus = document.getElementById("image-tool-status");
+const sourcePreviewImage = document.getElementById("source-preview");
+const sourcePlaceholder = document.getElementById("source-placeholder");
+const processedPreviewImage = document.getElementById("processed-preview");
+const processedPlaceholder = document.getElementById("processed-placeholder");
 const welcomeModal = document.getElementById("welcomeModal");
 const closeWelcomeButton = document.getElementById("closeWelcomeButton");
 const printablePreviewSection = previewContainer.closest(".panel");
 
 let previewObjectUrls = [];
 let livePreviewTimer = null;
+let currentSourceUrl = "";
+let currentSourceObjectUrl = null;
+let processedResultObjectUrl = null;
+let removeBackgroundFnPromise = null;
 
 function scheduleLivePreview(immediate = false) {
   if (immediate) {
@@ -147,6 +166,319 @@ function safePptColor(hex) {
   return hex.replace("#", "").toUpperCase();
 }
 
+function setImageToolStatus(text, isError = false) {
+  if (!imageToolStatus) return;
+  imageToolStatus.textContent = text;
+  imageToolStatus.style.color = isError ? "#ff9e9e" : "#b9c2ce";
+}
+
+function revokeCurrentSourceObjectUrl() {
+  if (currentSourceObjectUrl) {
+    URL.revokeObjectURL(currentSourceObjectUrl);
+    currentSourceObjectUrl = null;
+  }
+}
+
+function revokeProcessedResultUrl() {
+  if (processedResultObjectUrl) {
+    URL.revokeObjectURL(processedResultObjectUrl);
+    processedResultObjectUrl = null;
+  }
+}
+
+function resetProcessedPreview() {
+  revokeProcessedResultUrl();
+  if (processedPreviewImage) {
+    processedPreviewImage.removeAttribute("src");
+    processedPreviewImage.hidden = true;
+  }
+  if (processedPlaceholder) {
+    processedPlaceholder.hidden = false;
+  }
+  if (downloadProcessedButton) {
+    downloadProcessedButton.setAttribute("href", "#");
+    downloadProcessedButton.setAttribute("aria-disabled", "true");
+    downloadProcessedButton.classList.add("disabled");
+  }
+}
+
+function setSourcePreview(url, options = {}) {
+  const { isObjectUrl = false, statusText = "" } = options;
+  if (!url) return;
+
+  revokeCurrentSourceObjectUrl();
+  currentSourceUrl = url;
+  if (isObjectUrl) {
+    currentSourceObjectUrl = url;
+  }
+
+  if (sourcePreviewImage) {
+    sourcePreviewImage.src = url;
+    sourcePreviewImage.hidden = false;
+  }
+  if (sourcePlaceholder) {
+    sourcePlaceholder.hidden = true;
+  }
+
+  resetProcessedPreview();
+  if (statusText) setImageToolStatus(statusText);
+}
+
+function normalizeReturnedBlob(result) {
+  if (result instanceof Blob) {
+    return Promise.resolve(result);
+  }
+  if (result && result.blob instanceof Blob) {
+    return Promise.resolve(result.blob);
+  }
+  if (result instanceof ArrayBuffer) {
+    return Promise.resolve(new Blob([result], { type: "image/png" }));
+  }
+  if (result && typeof result.arrayBuffer === "function") {
+    return result.arrayBuffer().then((ab) => new Blob([ab], { type: result.type || "image/png" }));
+  }
+  return Promise.reject(new Error("Unexpected output from background remover."));
+}
+
+function loadImageFromBlob(blob) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to decode image for outlining."));
+    };
+    img.src = url;
+  });
+}
+
+async function applyOutlineToBlob(blob, color, thickness) {
+  const img = await loadImageFromBlob(blob);
+  const width = img.naturalWidth || img.width;
+  const height = img.naturalHeight || img.height;
+  const radius = Math.max(1, Number(thickness) || 1);
+  const pad = radius + 2;
+
+  const tintCanvas = document.createElement("canvas");
+  tintCanvas.width = width;
+  tintCanvas.height = height;
+  const tintCtx = tintCanvas.getContext("2d");
+  tintCtx.drawImage(img, 0, 0);
+  tintCtx.globalCompositeOperation = "source-in";
+  tintCtx.fillStyle = color || "#FFFF00";
+  tintCtx.fillRect(0, 0, width, height);
+  tintCtx.globalCompositeOperation = "source-over";
+
+  const outCanvas = document.createElement("canvas");
+  outCanvas.width = width + pad * 2;
+  outCanvas.height = height + pad * 2;
+  const outCtx = outCanvas.getContext("2d");
+  const steps = Math.max(16, Math.ceil(2 * Math.PI * radius * 2));
+
+  for (let i = 0; i < steps; i += 1) {
+    const angle = (i / steps) * Math.PI * 2;
+    const dx = Math.cos(angle) * radius;
+    const dy = Math.sin(angle) * radius;
+    outCtx.drawImage(tintCanvas, pad + dx, pad + dy);
+  }
+
+  outCtx.drawImage(img, pad, pad);
+
+  return new Promise((resolve, reject) => {
+    outCanvas.toBlob((finalBlob) => {
+      if (!finalBlob) {
+        reject(new Error("Failed to create outlined PNG."));
+        return;
+      }
+      resolve(finalBlob);
+    }, "image/png");
+  });
+}
+
+async function getBackgroundRemover() {
+  if (removeBackgroundFnPromise) return removeBackgroundFnPromise;
+
+  removeBackgroundFnPromise = import("https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm")
+    .then((mod) => {
+      const candidates = [
+        mod.default,
+        mod.removeBackground,
+        mod.removeBg,
+        mod.default && mod.default.removeBackground
+      ];
+      const fn = candidates.find((candidate) => typeof candidate === "function");
+      if (!fn) {
+        throw new Error(`Could not find remover function. Module keys: ${Object.keys(mod).join(", ")}`);
+      }
+      return fn;
+    })
+    .catch((err) => {
+      removeBackgroundFnPromise = null;
+      throw err;
+    });
+
+  return removeBackgroundFnPromise;
+}
+
+function renderWikimediaResults(items) {
+  if (!wikimediaResults) return;
+  wikimediaResults.innerHTML = "";
+
+  if (!items.length) {
+    wikimediaResults.innerHTML = `<p class="hint">No Wikimedia image results found. Try a different search.</p>`;
+    return;
+  }
+
+  items.forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "wikimedia-result-card";
+    const img = document.createElement("img");
+    img.src = item.thumbUrl;
+    img.alt = item.title;
+    const title = document.createElement("div");
+    title.className = "wikimedia-title";
+    title.textContent = item.title;
+    button.appendChild(img);
+    button.appendChild(title);
+    button.addEventListener("click", () => {
+      setSourcePreview(item.fullUrl, { statusText: `Selected Wikimedia image: ${item.title}` });
+    });
+    wikimediaResults.appendChild(button);
+  });
+}
+
+async function searchWikimediaCommons() {
+  if (!wikimediaQueryInput || !wikimediaSearchButton) return;
+  const query = (wikimediaQueryInput.value || "").trim();
+  if (!query) {
+    setImageToolStatus("Enter a Wikimedia search term first.", true);
+    return;
+  }
+
+  wikimediaSearchButton.disabled = true;
+  setImageToolStatus("Searching Wikimedia Commons...");
+  if (wikimediaResults) {
+    wikimediaResults.innerHTML = "";
+  }
+
+  try {
+    const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12&gsrsearch=${encodeURIComponent(query)}&prop=imageinfo&iiprop=url|mime|thumburl&iiurlwidth=320`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Wikimedia request failed (${res.status}).`);
+    }
+    const data = await res.json();
+    const pages = Object.values(data.query?.pages || {});
+    const items = pages
+      .map((page) => {
+        const info = page.imageinfo && page.imageinfo[0];
+        if (!info || !info.url) return null;
+        return {
+          title: (page.title || "").replace(/^File:/i, ""),
+          fullUrl: info.url,
+          thumbUrl: info.thumburl || info.url
+        };
+      })
+      .filter(Boolean);
+
+    renderWikimediaResults(items);
+    setImageToolStatus(`Found ${items.length} Wikimedia image(s). Click one to select.`);
+  } catch (err) {
+    console.error(err);
+    setImageToolStatus(`Wikimedia search failed: ${err.message || "Unknown error"}`, true);
+  } finally {
+    wikimediaSearchButton.disabled = false;
+  }
+}
+
+async function processCurrentImage() {
+  if (!currentSourceUrl) {
+    setImageToolStatus("Choose an image source first.", true);
+    return;
+  }
+
+  if (!processImageButton) return;
+  processImageButton.disabled = true;
+  setImageToolStatus("Processing image...");
+
+  try {
+    const removeBackground = await getBackgroundRemover();
+    const sourceResponse = await fetch(currentSourceUrl);
+    if (!sourceResponse.ok) {
+      throw new Error(`Failed to load source image (${sourceResponse.status}).`);
+    }
+    const sourceBlob = await sourceResponse.blob();
+    let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob));
+
+    if (outlineEnabledInput && outlineEnabledInput.checked) {
+      const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
+      const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
+      finalBlob = await applyOutlineToBlob(finalBlob, color, thickness);
+    }
+
+    revokeProcessedResultUrl();
+    processedResultObjectUrl = URL.createObjectURL(finalBlob);
+
+    if (processedPreviewImage) {
+      processedPreviewImage.src = processedResultObjectUrl;
+      processedPreviewImage.hidden = false;
+    }
+    if (processedPlaceholder) {
+      processedPlaceholder.hidden = true;
+    }
+    if (downloadProcessedButton) {
+      downloadProcessedButton.href = processedResultObjectUrl;
+      downloadProcessedButton.setAttribute("aria-disabled", "false");
+      downloadProcessedButton.classList.remove("disabled");
+    }
+
+    setImageToolStatus("Done. Background removed and preview updated.");
+  } catch (err) {
+    console.error(err);
+    setImageToolStatus(`Image processing failed: ${err.message || "Unknown error"}`, true);
+  } finally {
+    processImageButton.disabled = false;
+  }
+}
+
+function initImageIsolator() {
+  if (!localImageInput || !processImageButton) return;
+
+  localImageInput.addEventListener("change", () => {
+    const file = localImageInput.files && localImageInput.files[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    setSourcePreview(objectUrl, { isObjectUrl: true, statusText: `Selected local image: ${file.name}` });
+  });
+
+  if (wikimediaSearchButton) {
+    wikimediaSearchButton.addEventListener("click", searchWikimediaCommons);
+  }
+
+  if (wikimediaQueryInput) {
+    wikimediaQueryInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        searchWikimediaCommons();
+      }
+    });
+  }
+
+  if (outlineThicknessInput && outlineThicknessValue) {
+    outlineThicknessValue.textContent = `${outlineThicknessInput.value}px`;
+    outlineThicknessInput.addEventListener("input", () => {
+      outlineThicknessValue.textContent = `${outlineThicknessInput.value}px`;
+    });
+  }
+
+  processImageButton.addEventListener("click", processCurrentImage);
+}
+
 function addSpread(initial = {}) {
   const fragment = spreadTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".spread-card");
@@ -192,7 +524,8 @@ function addSpread(initial = {}) {
         setStatus("This spread has no image prompt to copy.", true);
         return;
       }
-      navigator.clipboard.writeText(text).then(
+      const toCopy = `generate image: ${text}`;
+      navigator.clipboard.writeText(toCopy).then(
         () => setStatus("Image prompt copied. Paste into your AI image generator."),
         () => setStatus("Failed to copy. Check clipboard permissions.", true)
       );
@@ -960,6 +1293,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 initColorPickers();
+initImageIsolator();
 
 function initLivePreview() {
   if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());
@@ -987,3 +1321,9 @@ addSpread();
 renderPreview();
 showWelcomeModal();
 setStatus("Ready. Add spreads and export PowerPoint.");
+
+window.addEventListener("beforeunload", () => {
+  clearPreviewUrls();
+  revokeCurrentSourceObjectUrl();
+  revokeProcessedResultUrl();
+});

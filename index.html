@@ -199,6 +199,74 @@ IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
       <div id="spreadsContainer" class="spreads"></div>
     </section>
 
+    <section class="panel">
+      <h2>Image Isolator</h2>
+      <p class="hint">Upload an image or pick from Wikimedia, remove the background, and optionally add an outline.</p>
+
+      <div class="grid two-col">
+        <label>
+          Upload local image
+          <input id="local-image-input" type="file" accept="image/*">
+        </label>
+        <div class="wikimedia-search-block">
+          <label for="wikimedia-query">Search Wikimedia Commons</label>
+          <div class="wikimedia-search-row">
+            <input id="wikimedia-query" type="text" placeholder="e.g., red ball isolated">
+            <button id="wikimedia-search-btn" type="button">Search</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="wikimedia-results" class="wikimedia-results" aria-live="polite"></div>
+
+      <div class="grid three-col top-gap">
+        <label class="checkbox-label">
+          <input id="outline-enabled" type="checkbox" checked>
+          Add object outline
+        </label>
+        <label>
+          Outline color
+          <select id="outline-color">
+            <option value="#FFFF00">Yellow</option>
+            <option value="#FFFFFF">White</option>
+            <option value="#FF0000">Red</option>
+            <option value="#00FFFF">Cyan</option>
+            <option value="#00FF00">Green</option>
+            <option value="#0000FF">Blue</option>
+            <option value="#000000">Black</option>
+          </select>
+        </label>
+        <label>
+          Outline thickness
+          <input id="outline-thickness" type="range" min="1" max="24" value="6">
+          <span id="outline-thickness-value" class="hint">6px</span>
+        </label>
+      </div>
+
+      <div class="story-input-actions top-gap">
+        <button id="process-image-btn" type="button">Remove Background</button>
+        <a id="download-processed-btn" class="download-link disabled" href="#" download="isolated-object.png" aria-disabled="true">Download Result</a>
+      </div>
+      <p id="image-tool-status" class="hint" aria-live="polite">Choose an image source to begin.</p>
+
+      <div class="grid two-col top-gap">
+        <div class="image-preview-card">
+          <h3>Source Image</h3>
+          <div class="image-preview-box">
+            <img id="source-preview" alt="Selected source preview" hidden>
+            <p id="source-placeholder" class="hint">No source image selected.</p>
+          </div>
+        </div>
+        <div class="image-preview-card">
+          <h3>Processed Result</h3>
+          <div class="image-preview-box">
+            <img id="processed-preview" alt="Background-removed result preview" hidden>
+            <p id="processed-placeholder" class="hint">Run Remove Background to preview the output.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel actions">
       <button id="refreshPreviewButton" type="button">Refresh Preview</button>
       <button id="printPdfButton" type="button">Print / Save as PDF</button>
