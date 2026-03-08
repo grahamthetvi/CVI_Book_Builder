@@ -76,6 +76,16 @@ body {
   font-size: 1rem;
 }
 
+.sticky-panel-title {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  background: #1a1d24;
+  border-bottom: 1px solid #2b3340;
+}
+
 .grid {
   display: grid;
   gap: 8px;
