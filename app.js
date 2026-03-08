@@ -112,6 +112,65 @@ function syncColorDisplay(colorInputId) {
   nameSpan.setAttribute("aria-label", `Color name: ${label}`);
 }
 
+function setSidebarColorName(colorInputId, nameSpanId) {
+  const colorInput = document.getElementById(colorInputId);
+  const presetSelect = document.getElementById(colorInputId + "Preset");
+  const nameSpan = document.getElementById(nameSpanId);
+  if (!colorInput || !nameSpan) return;
+  const hex = colorInput.value.toUpperCase();
+  const withHash = hex.startsWith("#") ? hex : "#" + hex;
+  let label = hexToColorName(withHash);
+  if (presetSelect) {
+    const exactOption = Array.from(presetSelect.options).find((opt) => opt.value.toUpperCase() === withHash);
+    if (exactOption && exactOption.value !== "custom") label = exactOption.textContent;
+    else if (exactOption) presetSelect.value = exactOption.value;
+  }
+  nameSpan.textContent = label;
+}
+
+const MAIN_TO_SIDEBAR_IDS = [
+  ["oddTextColor", "oddTextColorSidebar", "oddTextColorNameSidebar", "oddTextColorPresetSidebar"],
+  ["oddBorderColor", "oddBorderColorSidebar", "oddBorderColorNameSidebar", "oddBorderColorPresetSidebar"],
+  ["oddBgColor", "oddBgColorSidebar", "oddBgColorNameSidebar", "oddBgColorPresetSidebar"],
+  ["storyTextColor", "storyTextColorSidebar", "storyTextColorNameSidebar", "storyTextColorPresetSidebar"]
+];
+
+const MAIN_TO_SIDEBAR_NUMBER_IDS = [
+  ["oddTextSize", "oddTextSizeSidebar"],
+  ["oddBorderSize", "oddBorderSizeSidebar"]
+];
+
+function syncMainToSidebar() {
+  MAIN_TO_SIDEBAR_IDS.forEach(([mainId, sidebarId, nameSpanId, presetSidebarId]) => {
+    const main = document.getElementById(mainId);
+    const sidebar = document.getElementById(sidebarId);
+    const presetMain = document.getElementById(mainId + "Preset");
+    const presetSidebar = document.getElementById(presetSidebarId);
+    if (main && sidebar) {
+      sidebar.value = main.value;
+      if (presetMain && presetSidebar) presetSidebar.value = presetMain.value;
+    }
+    setSidebarColorName(mainId, nameSpanId);
+  });
+  MAIN_TO_SIDEBAR_NUMBER_IDS.forEach(([mainId, sidebarId]) => {
+    const main = document.getElementById(mainId);
+    const sidebar = document.getElementById(sidebarId);
+    if (main && sidebar) sidebar.value = main.value;
+  });
+}
+
+function syncSidebarToMain(sidebarColorId, mainColorId) {
+  const sidebar = document.getElementById(sidebarColorId);
+  const main = document.getElementById(mainColorId);
+  if (!sidebar || !main) return;
+  main.value = sidebar.value;
+  const presetSidebar = document.getElementById(sidebarColorId.replace("Sidebar", "PresetSidebar"));
+  const presetMain = document.getElementById(mainColorId + "Preset");
+  if (presetSidebar && presetMain) presetMain.value = presetSidebar.value;
+  syncColorDisplay(mainColorId);
+  scheduleLivePreview(true);
+}
+
 function initColorPickers() {
   const colorIds = ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"];
   colorIds.forEach((id) => {
@@ -122,6 +181,7 @@ function initColorPickers() {
     colorInput.addEventListener("input", () => {
       syncColorDisplay(id);
       scheduleLivePreview(true);
+      syncMainToSidebar();
     });
 
     if (presetSelect) {
@@ -134,11 +194,49 @@ function initColorPickers() {
           colorInput.focus();
         }
         scheduleLivePreview(true);
+        syncMainToSidebar();
       });
     }
 
     syncColorDisplay(id);
   });
+  syncMainToSidebar();
+  initAccessibilitySidebar();
+}
+
+function initAccessibilitySidebar() {
+  MAIN_TO_SIDEBAR_IDS.forEach(([mainId, sidebarId, nameSpanId, presetSidebarId]) => {
+    const sidebarColor = document.getElementById(sidebarId);
+    const sidebarPreset = document.getElementById(presetSidebarId);
+    if (!sidebarColor) return;
+    sidebarColor.addEventListener("input", () => syncSidebarToMain(sidebarId, mainId));
+    sidebarColor.addEventListener("change", () => syncSidebarToMain(sidebarId, mainId));
+    if (sidebarPreset) {
+      sidebarPreset.addEventListener("change", () => {
+        if (sidebarPreset.value !== "custom") sidebarColor.value = sidebarPreset.value;
+        syncSidebarToMain(sidebarId, mainId);
+      });
+    }
+  });
+  MAIN_TO_SIDEBAR_NUMBER_IDS.forEach(([mainId, sidebarId]) => {
+    const main = document.getElementById(mainId);
+    const sidebar = document.getElementById(sidebarId);
+    if (!sidebar || !main) return;
+    sidebar.addEventListener("input", () => {
+      main.value = sidebar.value;
+      scheduleLivePreview(true);
+    });
+    sidebar.addEventListener("change", () => {
+      main.value = sidebar.value;
+      scheduleLivePreview(true);
+    });
+  });
+  const oddTextSizeInput = document.getElementById("oddTextSize");
+  const oddBorderSizeInput = document.getElementById("oddBorderSize");
+  if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", syncMainToSidebar);
+  if (oddTextSizeInput) oddTextSizeInput.addEventListener("change", syncMainToSidebar);
+  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", syncMainToSidebar);
+  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("change", syncMainToSidebar);
 }
 
 function setStatus(text, isError = false) {

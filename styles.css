@@ -76,14 +76,35 @@ body {
   font-size: 1rem;
 }
 
-.sticky-panel-title {
+.book-section-wrap {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+.book-section-main {
+  min-width: 0;
+}
+
+.book-section-sidebar {
   position: sticky;
-  top: 0;
-  z-index: 20;
-  padding: 6px 0;
-  margin-bottom: 8px;
-  background: #1a1d24;
-  border-bottom: 1px solid #2b3340;
+  top: 12px;
+}
+
+.accessibility-sidebar-panel .accessibility-sidebar-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 900px) {
+  .book-section-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .book-section-sidebar {
+    position: static;
+  }
 }
 
 .grid {

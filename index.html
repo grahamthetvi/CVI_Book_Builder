@@ -79,7 +79,7 @@
     </section>
 
     <section class="panel">
-      <h2 class="sticky-panel-title">Accessibility Text Style (Odd Pages)</h2>
+      <h2>Accessibility Text Style (Odd Pages)</h2>
       <div class="grid four-col">
         <div class="color-picker-group">
           <label for="oddTextColorPreset">Text color</label>
@@ -258,6 +258,8 @@ IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
       </div>
     </section>
 
+    <div class="book-section-wrap">
+      <div class="book-section-main">
     <section class="panel">
       <div class="section-header-row">
         <h2>Spreads</h2>
@@ -289,6 +291,95 @@ IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
       <p class="hint">Preview updates as you edit. Uses the same odd/even layout rules as export.</p>
       <div id="previewContainer" class="preview-container"></div>
     </section>
+      </div>
+
+      <aside class="book-section-sidebar" aria-label="Accessibility text style (odd pages)">
+        <section class="panel accessibility-sidebar-panel">
+          <h2>Accessibility Text Style (Odd Pages)</h2>
+          <div class="grid four-col accessibility-sidebar-grid">
+            <div class="color-picker-group">
+              <label for="oddTextColorPresetSidebar">Text color</label>
+              <div class="color-input-row">
+                <select id="oddTextColorPresetSidebar" class="color-preset" aria-label="Text color preset (sidebar)">
+                  <option value="#FFFFFF">White</option>
+                  <option value="#FFFF00">Yellow</option>
+                  <option value="#FF0000">Red</option>
+                  <option value="#00FF00">Green</option>
+                  <option value="#00FFFF">Cyan</option>
+                  <option value="#0000FF">Blue</option>
+                  <option value="#111111">Very dark gray</option>
+                  <option value="#000000">Black</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input id="oddTextColorSidebar" type="color" value="#FFFFFF" aria-label="Custom text color for odd pages (sidebar)">
+              </div>
+              <span id="oddTextColorNameSidebar" class="color-name" aria-live="polite">White</span>
+            </div>
+            <label>
+              Text size
+              <input id="oddTextSizeSidebar" type="number" min="18" max="220" step="1" value="72">
+            </label>
+            <div class="color-picker-group">
+              <label for="oddBorderColorPresetSidebar">Border color</label>
+              <div class="color-input-row">
+                <select id="oddBorderColorPresetSidebar" class="color-preset" aria-label="Border color preset (sidebar)">
+                  <option value="#FFFFFF">White</option>
+                  <option value="#FFFF00" selected>Yellow</option>
+                  <option value="#FF0000">Red</option>
+                  <option value="#00FF00">Green</option>
+                  <option value="#00FFFF">Cyan</option>
+                  <option value="#0000FF">Blue</option>
+                  <option value="#111111">Very dark gray</option>
+                  <option value="#000000">Black</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input id="oddBorderColorSidebar" type="color" value="#FFFF00" aria-label="Custom border color (sidebar)">
+              </div>
+              <span id="oddBorderColorNameSidebar" class="color-name" aria-live="polite">Yellow</span>
+            </div>
+            <label>
+              Border size
+              <input id="oddBorderSizeSidebar" type="number" min="0" max="12" step="1" value="3">
+            </label>
+          </div>
+          <div class="grid two-col top-gap">
+            <div class="color-picker-group">
+              <label for="oddBgColorPresetSidebar">Odd page background color</label>
+              <div class="color-input-row">
+                <select id="oddBgColorPresetSidebar" class="color-preset" aria-label="Odd page background color (sidebar)">
+                  <option value="#000000" selected>Black</option>
+                  <option value="#111111">Very dark gray</option>
+                  <option value="#0000FF">Blue</option>
+                  <option value="#003300">Dark green</option>
+                  <option value="#FFFFFF">White</option>
+                  <option value="#FFFF00">Yellow</option>
+                  <option value="#FF0000">Red</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input id="oddBgColorSidebar" type="color" value="#000000" aria-label="Custom odd page background (sidebar)">
+              </div>
+              <span id="oddBgColorNameSidebar" class="color-name" aria-live="polite">Black</span>
+            </div>
+            <div class="color-picker-group">
+              <label for="storyTextColorPresetSidebar">Story text color (even pages)</label>
+              <div class="color-input-row">
+                <select id="storyTextColorPresetSidebar" class="color-preset" aria-label="Story text color (sidebar)">
+                  <option value="#111111" selected>Very dark gray</option>
+                  <option value="#000000">Black</option>
+                  <option value="#0000FF">Blue</option>
+                  <option value="#006600">Green</option>
+                  <option value="#CC0000">Red</option>
+                  <option value="#FFFFFF">White</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                <input id="storyTextColorSidebar" type="color" value="#111111" aria-label="Custom story text color (sidebar)">
+              </div>
+              <span id="storyTextColorNameSidebar" class="color-name" aria-live="polite">Very dark gray</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <template id="spreadTemplate">
