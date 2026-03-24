@@ -265,6 +265,53 @@ function safePptColor(hex) {
   return hex.replace("#", "").toUpperCase();
 }
 
+function isHeicLikeFile(file) {
+  if (!file || !file.name) return false;
+  const lower = file.name.toLowerCase();
+  const t = (file.type || "").toLowerCase();
+  return (
+    lower.endsWith(".heic") ||
+    lower.endsWith(".heif") ||
+    t === "image/heic" ||
+    t === "image/heif" ||
+    t === "image/heif-sequence"
+  );
+}
+
+let heic2anyLoadPromise = null;
+function loadHeic2any() {
+  if (!heic2anyLoadPromise) {
+    heic2anyLoadPromise = import("https://cdn.jsdelivr.net/npm/heic2any@0.0.4/+esm").then((mod) => {
+      const fn = mod.default;
+      if (typeof fn !== "function") {
+        throw new Error("HEIC converter did not load correctly.");
+      }
+      return fn;
+    });
+  }
+  return heic2anyLoadPromise;
+}
+
+async function convertHeicLikeToJpegFile(file) {
+  const heic2any = await loadHeic2any();
+  const result = await heic2any({
+    blob: file,
+    toType: "image/jpeg",
+    quality: 0.92
+  });
+  const blob = Array.isArray(result) ? result[0] : result;
+  if (!blob || !(blob instanceof Blob)) {
+    throw new Error("HEIC conversion produced no image data.");
+  }
+  const base = file.name.replace(/\.[^/.]+$/i, "") || "image";
+  return new File([blob], `${base}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+}
+
+async function ensureBrowserCompatibleImageFile(file) {
+  if (!isHeicLikeFile(file)) return file;
+  return convertHeicLikeToJpegFile(file);
+}
+
 function setImageToolStatus(text, isError = false) {
   if (!imageToolStatus) return;
   imageToolStatus.textContent = text;
@@ -551,11 +598,25 @@ async function processCurrentImage() {
 function initImageIsolator() {
   if (!localImageInput || !processImageButton) return;
 
-  localImageInput.addEventListener("change", () => {
+  localImageInput.addEventListener("change", async () => {
     const file = localImageInput.files && localImageInput.files[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    setSourcePreview(objectUrl, { isObjectUrl: true, statusText: `Selected local image: ${file.name}`, sourceName: file.name });
+    try {
+      if (isHeicLikeFile(file)) {
+        setImageToolStatus("Converting HEIC to JPEG…");
+      }
+      const readyFile = await ensureBrowserCompatibleImageFile(file);
+      const objectUrl = URL.createObjectURL(readyFile);
+      const note = readyFile !== file ? ` (converted from HEIC)` : "";
+      setSourcePreview(objectUrl, {
+        isObjectUrl: true,
+        statusText: `Selected local image: ${readyFile.name}${note}`,
+        sourceName: readyFile.name
+      });
+    } catch (err) {
+      console.error(err);
+      setImageToolStatus(`Could not load image: ${err.message || "Unknown error"}`, true);
+    }
   });
 
   if (wikimediaSearchButton) {
@@ -665,22 +726,39 @@ function addSpread(initial = {}) {
       : "No images selected.";
   };
 
-  imageInput.addEventListener("change", () => {
+  imageInput.addEventListener("change", async () => {
     const newFiles = Array.from(imageInput.files || []);
+    const showHeicWait = newFiles.some(isHeicLikeFile);
+    if (showHeicWait) {
+      setStatus("Converting HEIC…", false);
+    }
+
     let added = 0;
-    
+    let hadError = false;
+
     for (const file of newFiles) {
-      if (card.currentFiles.length < 4) {
-        card.currentFiles.push(file);
-        added++;
-      } else {
+      if (card.currentFiles.length >= 4) {
         setStatus("Only up to 4 images are allowed on odd pages.", true);
+        hadError = true;
         break;
       }
+      try {
+        const readyFile = await ensureBrowserCompatibleImageFile(file);
+        card.currentFiles.push(readyFile);
+        added += 1;
+      } catch (err) {
+        console.error(err);
+        hadError = true;
+        setStatus(`Could not add ${file.name}: ${err.message || "Unknown error"}`, true);
+      }
     }
-    
+
     imageInput.value = "";
-    
+
+    if (showHeicWait && !hadError) {
+      setStatus("", false);
+    }
+
     if (added > 0) {
       renderImageList();
       updateSelectedImagesText();
