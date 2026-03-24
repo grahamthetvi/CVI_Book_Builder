@@ -46,6 +46,71 @@ body {
   line-height: 1.4;
 }
 
+.modal-attribution {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #8a96a8;
+}
+
+.modal-help-overlay {
+  z-index: 1000;
+}
+
+.modal-help-card {
+  max-height: min(85vh, 640px);
+  overflow-y: auto;
+}
+
+.modal-help-section h3 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e8ecf2;
+}
+
+.modal-help-section p {
+  margin: 0 0 12px;
+  line-height: 1.45;
+  font-size: 13px;
+  color: #d0d6de;
+}
+
+.modal-help-section p:last-child {
+  margin-bottom: 0;
+}
+
+.modal-help-section + .modal-help-section {
+  margin-top: 16px;
+}
+
+.modal-help-section a {
+  color: #7eb8ff;
+  word-break: break-all;
+}
+
+.modal-help-section a:hover {
+  text-decoration: underline;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-button {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
 .container {
   max-width: 1050px;
   margin: 0 auto;

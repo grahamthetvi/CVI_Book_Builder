@@ -20,16 +20,63 @@
         <li>Add images to each spread and review the live preview.</li>
         <li>Download PowerPoint or Print/Save as PDF.</li>
       </ol>
+      <p class="hint modal-attribution" role="note">
+        HEIC (iPhone) photo conversion runs in your browser using open-source libraries, including components under
+        <strong>LGPL-3.0</strong>. Your book content and this app&rsquo;s own code are not LGPL; see the
+        <strong>README</strong> in the repository for license details and credits.
+      </p>
       <div class="story-input-actions">
         <button id="closeWelcomeButton" type="button" class="primary">Got It</button>
       </div>
     </div>
   </div>
 
+  <div id="helpModal" class="modal-overlay modal-help-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" hidden>
+    <div class="modal-card modal-help-card">
+      <h2 id="helpModalTitle">Get help</h2>
+
+      <div class="modal-help-section">
+        <h3>About this site</h3>
+        <p>
+          CVI Book Builder helps teachers and families create <strong>CVI-friendly</strong> story books for children with
+          cortical visual impairment. You can build a letter-sized landscape PowerPoint with high-contrast odd pages,
+          story text on even pages, salient feature notes, optional activity ideas, and a live preview. The tool runs
+          entirely in your browser; your book text and images stay on your device unless you choose to export or print.
+        </p>
+      </div>
+
+      <div class="modal-help-section">
+        <h3>Contact</h3>
+        <p>
+          Questions, feedback, or support:
+          <a href="mailto:grahamthetvi@icloud.com">grahamthetvi@icloud.com</a>
+        </p>
+      </div>
+
+      <div class="modal-help-section">
+        <h3>License</h3>
+        <p>
+          <strong>CVI Book Builder</strong> (this app&rsquo;s own code) is provided under the
+          <strong>MIT License</strong>. Third-party libraries loaded in the browser (for example HEIC photo conversion
+          and PowerPoint export) may use other licenses such as MIT or LGPL-3.0. If you use the project from its GitHub
+          repository, see the <strong>README</strong> and <strong>LICENSE</strong> files there for full attribution and
+          license texts.
+        </p>
+      </div>
+
+      <div class="story-input-actions">
+        <button id="closeHelpButton" type="button" class="primary">Close</button>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
     <header class="page-header">
-      <h1>CVI Book Builder</h1>
-      <p>Create a downloadable PowerPoint in Letter landscape format.</p>
+      <div class="page-header-text">
+        <h1>CVI Book Builder</h1>
+        <p>Create a downloadable PowerPoint in Letter landscape format.</p>
+      </div>
+      <button type="button" id="helpButton" class="help-button">Get help</button>
     </header>
 
     <section class="panel">

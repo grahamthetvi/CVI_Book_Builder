@@ -44,6 +44,9 @@ const processedPreviewImage = document.getElementById("processed-preview");
 const processedPlaceholder = document.getElementById("processed-placeholder");
 const welcomeModal = document.getElementById("welcomeModal");
 const closeWelcomeButton = document.getElementById("closeWelcomeButton");
+const helpModal = document.getElementById("helpModal");
+const helpButton = document.getElementById("helpButton");
+const closeHelpButton = document.getElementById("closeHelpButton");
 const printablePreviewSection = previewContainer.closest(".panel");
 
 let previewObjectUrls = [];
@@ -260,6 +263,22 @@ function hideWelcomeModal() {
   welcomeModal.setAttribute("aria-hidden", "true");
 }
 
+function showHelpModal() {
+  if (!helpModal) return;
+  hideWelcomeModal();
+  helpModal.hidden = false;
+  helpModal.style.display = "flex";
+  helpModal.setAttribute("aria-hidden", "false");
+  if (closeHelpButton) closeHelpButton.focus();
+}
+
+function hideHelpModal() {
+  if (!helpModal) return;
+  helpModal.hidden = true;
+  helpModal.style.display = "none";
+  helpModal.setAttribute("aria-hidden", "true");
+}
+
 function safePptColor(hex) {
   if (!hex) return "000000";
   return hex.replace("#", "").toUpperCase();
@@ -278,13 +297,30 @@ function isHeicLikeFile(file) {
   );
 }
 
+/** Newer libheif (tracks upstream); handles many iPhone HEICs that fail in heic2any. */
+const HEIC_TO_CDN = "https://cdn.jsdelivr.net/npm/heic-to@1.4.2/+esm";
+
+let heicToLoadPromise = null;
+function loadHeicTo() {
+  if (!heicToLoadPromise) {
+    heicToLoadPromise = import(HEIC_TO_CDN).then((mod) => {
+      const fn = mod.heicTo;
+      if (typeof fn !== "function") {
+        throw new Error("HEIC converter (heic-to) did not load correctly.");
+      }
+      return fn;
+    });
+  }
+  return heicToLoadPromise;
+}
+
 let heic2anyLoadPromise = null;
 function loadHeic2any() {
   if (!heic2anyLoadPromise) {
     heic2anyLoadPromise = import("https://cdn.jsdelivr.net/npm/heic2any@0.0.4/+esm").then((mod) => {
       const fn = mod.default;
       if (typeof fn !== "function") {
-        throw new Error("HEIC converter did not load correctly.");
+        throw new Error("HEIC converter (heic2any) did not load correctly.");
       }
       return fn;
     });
@@ -293,18 +329,46 @@ function loadHeic2any() {
 }
 
 async function convertHeicLikeToJpegFile(file) {
-  const heic2any = await loadHeic2any();
-  const result = await heic2any({
-    blob: file,
-    toType: "image/jpeg",
-    quality: 0.92
-  });
-  const blob = Array.isArray(result) ? result[0] : result;
-  if (!blob || !(blob instanceof Blob)) {
-    throw new Error("HEIC conversion produced no image data.");
-  }
   const base = file.name.replace(/\.[^/.]+$/i, "") || "image";
-  return new File([blob], `${base}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+  const toJpegFile = (blob) => {
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error("HEIC conversion produced no image data.");
+    }
+    return new File([blob], `${base}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
+  };
+
+  const attempts = [];
+
+  try {
+    const heicTo = await loadHeicTo();
+    const blob = await heicTo({ blob: file, type: "image/jpeg", quality: 0.92 });
+    return toJpegFile(blob);
+  } catch (e) {
+    attempts.push(e);
+    console.warn("heic-to conversion failed:", e);
+  }
+
+  try {
+    const heic2any = await loadHeic2any();
+    const result = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.92
+    });
+    const blob = Array.isArray(result) ? result[0] : result;
+    return toJpegFile(blob);
+  } catch (e) {
+    attempts.push(e);
+    console.warn("heic2any conversion failed:", e);
+  }
+
+  const detail = attempts
+    .map((e) => (e && e.message ? e.message : String(e)))
+    .filter(Boolean)
+    .join(" · ");
+  throw new Error(
+    `${detail || "HEIC conversion failed"}. If this persists, export the photo as JPEG from your device (e.g. iPhone: Settings → Camera → Formats → Most Compatible, or duplicate as JPEG in Photos).`
+  );
 }
 
 async function ensureBrowserCompatibleImageFile(file) {
@@ -1584,6 +1648,14 @@ if (closeWelcomeButton) {
   closeWelcomeButton.addEventListener("click", hideWelcomeModal);
 }
 
+if (helpButton) {
+  helpButton.addEventListener("click", showHelpModal);
+}
+
+if (closeHelpButton) {
+  closeHelpButton.addEventListener("click", hideHelpModal);
+}
+
 if (welcomeModal) {
   welcomeModal.addEventListener("click", (e) => {
     const target = e.target;
@@ -1595,8 +1667,24 @@ if (welcomeModal) {
   });
 }
 
+if (helpModal) {
+  helpModal.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+
+    if (target === helpModal || target.closest("#closeHelpButton")) {
+      hideHelpModal();
+    }
+  });
+}
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && welcomeModal && !welcomeModal.hidden) {
+  if (e.key !== "Escape") return;
+  if (helpModal && !helpModal.hidden) {
+    hideHelpModal();
+    return;
+  }
+  if (welcomeModal && !welcomeModal.hidden) {
     hideWelcomeModal();
   }
 });

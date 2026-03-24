@@ -73,3 +73,21 @@ SALIENT_FEATURES: [Salient features for this spread.]
 | `SALIENT_FEATURES:` | Comma-separated salient features for CVI |
 
 After parsing, add images in each spread before export.
+
+## License
+
+**This repository (CVI Book Builder code written here)** is under the [MIT License](LICENSE).
+
+### Third-party software
+
+The static web app loads additional libraries from CDNs at runtime. Notable terms:
+
+| Component | Use | License |
+|-----------|-----|---------|
+| [heic-to](https://github.com/hoppergee/heic-to) | HEIC/HEIF → JPEG in the browser (primary converter) | [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html) |
+| [heic2any](https://github.com/alexcorvi/heic2any) | HEIC fallback conversion | MIT |
+| [PptxGenJS](https://github.com/gitbrent/PptxGenJS) | PowerPoint (`.pptx`) generation | MIT |
+
+Copies of **LGPL-3.0** and **GPL-3.0** (the LGPL refers to the GPL) are in the [`licenses/`](licenses/) folder for anyone who receives this project. Source for LGPL components: [heic-to on GitHub](https://github.com/hoppergee/heic-to).
+
+*This is not legal advice.* If you redistribute the app or change how libraries are bundled, double-check LGPL-3.0 obligations for your situation (for example, how the library is linked or loaded).
