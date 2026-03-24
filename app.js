@@ -50,6 +50,7 @@ let previewObjectUrls = [];
 let livePreviewTimer = null;
 let currentSourceUrl = "";
 let currentSourceObjectUrl = null;
+let currentSourceName = "";
 let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
 
@@ -301,11 +302,12 @@ function resetProcessedPreview() {
 }
 
 function setSourcePreview(url, options = {}) {
-  const { isObjectUrl = false, statusText = "" } = options;
+  const { isObjectUrl = false, statusText = "", sourceName = "" } = options;
   if (!url) return;
 
   revokeCurrentSourceObjectUrl();
   currentSourceUrl = url;
+  currentSourceName = sourceName;
   if (isObjectUrl) {
     currentSourceObjectUrl = url;
   }
@@ -444,7 +446,7 @@ function renderWikimediaResults(items) {
     button.appendChild(img);
     button.appendChild(title);
     button.addEventListener("click", () => {
-      setSourcePreview(item.fullUrl, { statusText: `Selected Wikimedia image: ${item.title}` });
+      setSourcePreview(item.fullUrl, { statusText: `Selected Wikimedia image: ${item.title}`, sourceName: item.title });
     });
     wikimediaResults.appendChild(button);
   });
@@ -531,6 +533,8 @@ async function processCurrentImage() {
     }
     if (downloadProcessedButton) {
       downloadProcessedButton.href = processedResultObjectUrl;
+      const baseName = currentSourceName ? currentSourceName.replace(/\.[^/.]+$/, "") : "isolated-object";
+      downloadProcessedButton.download = `${baseName}-isolated.png`;
       downloadProcessedButton.setAttribute("aria-disabled", "false");
       downloadProcessedButton.classList.remove("disabled");
     }
@@ -551,7 +555,7 @@ function initImageIsolator() {
     const file = localImageInput.files && localImageInput.files[0];
     if (!file) return;
     const objectUrl = URL.createObjectURL(file);
-    setSourcePreview(objectUrl, { isObjectUrl: true, statusText: `Selected local image: ${file.name}` });
+    setSourcePreview(objectUrl, { isObjectUrl: true, statusText: `Selected local image: ${file.name}`, sourceName: file.name });
   });
 
   if (wikimediaSearchButton) {
@@ -586,27 +590,105 @@ function addSpread(initial = {}) {
   const imagePromptEl = fragment.querySelector(".image-prompt");
   const imageInput = fragment.querySelector(".odd-images");
   const selectedImagesText = fragment.querySelector(".selected-images");
+  const imagePreviewList = fragment.querySelector(".image-preview-list");
   const removeButton = fragment.querySelector(".remove-spread");
+
+  card.currentFiles = [];
 
   storyText.value = initial.storyText || "";
   salientFeatures.value = initial.salientFeatures || "";
   oddText.value = initial.oddText || "";
   if (imagePromptEl) imagePromptEl.value = initial.imagePrompt || "";
 
-  imageInput.addEventListener("change", () => {
-    const files = Array.from(imageInput.files || []);
-    if (files.length > 4) {
-      setStatus("Only 1 to 4 images are allowed on odd pages. Kept first 4.", true);
-      const dt = new DataTransfer();
-      files.slice(0, 4).forEach((f) => dt.items.add(f));
-      imageInput.files = dt.files;
-    }
-    const finalFiles = Array.from(imageInput.files || []);
-    selectedImagesText.textContent = finalFiles.length
-      ? `${finalFiles.length} image(s): ${finalFiles.map((f) => f.name).join(", ")}`
+  const renderImageList = () => {
+    imagePreviewList.innerHTML = "";
+    card.currentFiles.forEach((file, index) => {
+      const item = document.createElement("div");
+      item.className = "image-preview-item";
+
+      const img = document.createElement("img");
+      const url = URL.createObjectURL(file);
+      img.src = url;
+      img.onload = () => URL.revokeObjectURL(url);
+
+      const controls = document.createElement("div");
+      controls.className = "image-preview-controls";
+
+      const leftBtn = document.createElement("button");
+      leftBtn.type = "button";
+      leftBtn.textContent = "◀";
+      leftBtn.disabled = index === 0;
+      leftBtn.onclick = () => {
+        if (index > 0) {
+          [card.currentFiles[index - 1], card.currentFiles[index]] = [card.currentFiles[index], card.currentFiles[index - 1]];
+          renderImageList();
+          scheduleLivePreview(true);
+        }
+      };
+
+      const rightBtn = document.createElement("button");
+      rightBtn.type = "button";
+      rightBtn.textContent = "▶";
+      rightBtn.disabled = index === card.currentFiles.length - 1;
+      rightBtn.onclick = () => {
+        if (index < card.currentFiles.length - 1) {
+          [card.currentFiles[index + 1], card.currentFiles[index]] = [card.currentFiles[index], card.currentFiles[index + 1]];
+          renderImageList();
+          scheduleLivePreview(true);
+        }
+      };
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.textContent = "✖";
+      removeBtn.className = "danger";
+      removeBtn.onclick = () => {
+        card.currentFiles.splice(index, 1);
+        renderImageList();
+        updateSelectedImagesText();
+        scheduleLivePreview(true);
+      };
+
+      controls.appendChild(leftBtn);
+      controls.appendChild(removeBtn);
+      controls.appendChild(rightBtn);
+
+      item.appendChild(img);
+      item.appendChild(controls);
+      imagePreviewList.appendChild(item);
+    });
+  };
+
+  const updateSelectedImagesText = () => {
+    selectedImagesText.textContent = card.currentFiles.length
+      ? `${card.currentFiles.length} image(s) selected.`
       : "No images selected.";
-    scheduleLivePreview(true);
+  };
+
+  imageInput.addEventListener("change", () => {
+    const newFiles = Array.from(imageInput.files || []);
+    let added = 0;
+    
+    for (const file of newFiles) {
+      if (card.currentFiles.length < 4) {
+        card.currentFiles.push(file);
+        added++;
+      } else {
+        setStatus("Only up to 4 images are allowed on odd pages.", true);
+        break;
+      }
+    }
+    
+    imageInput.value = "";
+    
+    if (added > 0) {
+      renderImageList();
+      updateSelectedImagesText();
+      scheduleLivePreview(true);
+    }
   });
+
+  updateSelectedImagesText();
 
   removeButton.addEventListener("click", () => {
     card.remove();
@@ -623,9 +705,10 @@ function addSpread(initial = {}) {
         return;
       }
       const toCopy = `generate image: ${text}`;
-      navigator.clipboard.writeText(toCopy).then(
-        () => setStatus("Image prompt copied. Paste into your AI image generator."),
-        () => setStatus("Failed to copy. Check clipboard permissions.", true)
+      copyToClipboardFallback(
+        toCopy,
+        "Image prompt copied. Paste into your AI image generator.",
+        "Failed to copy. Check clipboard permissions."
       );
     });
   }
@@ -680,7 +763,7 @@ function collectSpreadsFromForm() {
     const oddText = card.querySelector(".odd-text").value.trim();
     const imagePromptEl = card.querySelector(".image-prompt");
     const imagePrompt = imagePromptEl ? imagePromptEl.value.trim() : "";
-    const imageFiles = Array.from(card.querySelector(".odd-images").files || []).slice(0, 4);
+    const imageFiles = card.currentFiles || [];
     return {
       index,
       storyText,
@@ -1148,10 +1231,10 @@ async function exportPptx() {
           align: "center",
           valign: "mid",
           bold: true,
-          fontSize: TITLE_FONT_SIZE,
+          fontSize: oddTextSize,
           color: oddTextColor,
           fit: "shrink",
-          outline: { color: oddBorderColor, pt: oddBorderSize }
+          outline: { color: oddBorderColor, pt: Math.max(3, oddBorderSize) }
         });
       }
 
@@ -1237,11 +1320,42 @@ Current Book Setup
 ${AI_FORMATTING_PROMPT_TEMPLATE}`.trim();
 }
 
+function copyToClipboardFallback(text, successMsg, failMsg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => setStatus(successMsg),
+      () => setStatus(failMsg, true)
+    );
+  } else {
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      if (successful) {
+        setStatus(successMsg);
+      } else {
+        setStatus(failMsg, true);
+      }
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err);
+      setStatus(failMsg, true);
+    }
+  }
+}
+
 function copyAiFormattingPrompt() {
   const prompt = buildAiFormattingPromptWithSetup();
-  navigator.clipboard.writeText(prompt).then(
-    () => setStatus("AI prompt + current Book Setup copied. Paste into any AI, then paste the AI output back here."),
-    () => setStatus("Failed to copy. Check clipboard permissions.", true)
+  copyToClipboardFallback(
+    prompt,
+    "AI prompt + current Book Setup copied. Paste into any AI, then paste the AI output back here.",
+    "Failed to copy. Check clipboard permissions."
   );
 }
 
@@ -1288,9 +1402,10 @@ function copyFvaLmaSummary() {
 
   const summary = parts.join("\n");
 
-  navigator.clipboard.writeText(summary).then(
-    () => setStatus("FVA/LMA summary copied to clipboard"),
-    () => setStatus("Failed to copy. Check clipboard permissions.", true)
+  copyToClipboardFallback(
+    summary,
+    "FVA/LMA summary copied to clipboard",
+    "Failed to copy. Check clipboard permissions."
   );
 }
 
