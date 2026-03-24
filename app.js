@@ -989,6 +989,22 @@ function clearPreviewUrls() {
 
 const EVEN_PAGE_MIN_FONT_PX = 12;
 const EVEN_PAGE_INITIAL_FONT_PX = 34;
+const ODD_TEXT_MIN_FONT_PX = 16;
+
+/**
+ * Reduces odd-page keyword font size until it fits its band (matches PPTX fit: "shrink" behavior).
+ * @param {HTMLElement} oddTextZone - The .preview-odd-text element
+ */
+function shrinkOddPageTextToFit(oddTextZone) {
+  if (!oddTextZone || !oddTextZone.parentElement) return;
+  let fontSize = Math.max(ODD_TEXT_MIN_FONT_PX, parseFloat(oddTextZone.style.fontSize) || 72);
+  oddTextZone.style.fontSize = `${fontSize}px`;
+  while (fontSize > ODD_TEXT_MIN_FONT_PX) {
+    if (oddTextZone.scrollHeight <= oddTextZone.clientHeight) break;
+    fontSize -= 2;
+    oddTextZone.style.fontSize = `${fontSize}px`;
+  }
+}
 
 /**
  * Reduces even-page story font size until content fits within the page (no overflow).
@@ -1111,6 +1127,8 @@ function renderPreview() {
     oddPage.appendChild(oddTextZone);
     oddPage.appendChild(oddImagesZone);
     previewContainer.appendChild(oddPage);
+
+    requestAnimationFrame(() => shrinkOddPageTextToFit(oddTextZone));
 
     const oddLabel = document.createElement("p");
     oddLabel.className = "preview-label";
