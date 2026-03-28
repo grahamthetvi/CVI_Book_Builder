@@ -648,6 +648,92 @@ button:hover {
   font-size: 13px;
 }
 
+.export-progress-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.export-progress-overlay[hidden] {
+  display: none !important;
+}
+
+.export-progress-card {
+  background: #1a1d24;
+  border: 1px solid #2b3340;
+  border-radius: 10px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 420px;
+}
+
+.export-progress-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border: 3px solid #384353;
+  border-top-color: #7eb8ff;
+  border-radius: 50%;
+  animation: export-spin 0.85s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .export-progress-spinner {
+    animation: none;
+  }
+}
+
+@keyframes export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.export-progress-message {
+  margin: 0;
+  font-size: 15px;
+  color: #e8ecf2;
+  line-height: 1.45;
+}
+
+.drafts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.draft-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border: 1px solid #344154;
+  border-radius: 6px;
+  background: #141820;
+}
+
+.draft-row-info {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: #c6d0dd;
+}
+
+.draft-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 @media print {
   @page {
     size: letter landscape;

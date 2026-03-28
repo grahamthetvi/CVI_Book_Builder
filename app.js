@@ -48,6 +48,11 @@ const helpModal = document.getElementById("helpModal");
 const helpButton = document.getElementById("helpButton");
 const closeHelpButton = document.getElementById("closeHelpButton");
 const printablePreviewSection = previewContainer.closest(".panel");
+const exportProgressOverlay = document.getElementById("exportProgressOverlay");
+const exportProgressMessage = document.getElementById("exportProgressMessage");
+const draftsListEl = document.getElementById("draftsList");
+const saveSnapshotButton = document.getElementById("saveSnapshotButton");
+const draftStatusMessage = document.getElementById("draftStatusMessage");
 
 let previewObjectUrls = [];
 let livePreviewTimer = null;
@@ -58,6 +63,7 @@ let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
 
 function scheduleLivePreview(immediate = false) {
+  scheduleAutosave();
   if (immediate) {
     if (livePreviewTimer) clearTimeout(livePreviewTimer);
     livePreviewTimer = null;
@@ -832,6 +838,19 @@ function addSpread(initial = {}) {
 
   updateSelectedImagesText();
 
+  if (initial.imageDataUrls && initial.imageDataUrls.length) {
+    initial.imageDataUrls.forEach(({ name, dataUrl }) => {
+      if (card.currentFiles.length >= 4) return;
+      try {
+        card.currentFiles.push(dataUrlToFile(dataUrl, name || "image.png"));
+      } catch (e) {
+        console.warn("Draft image restore failed", e);
+      }
+    });
+    renderImageList();
+    updateSelectedImagesText();
+  }
+
   removeButton.addEventListener("click", () => {
     card.remove();
     renumberSpreads();
@@ -924,6 +943,297 @@ function readFileAsDataUrl(file) {
     reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
     reader.readAsDataURL(file);
   });
+}
+
+const DRAFTS_STORAGE_KEY = "cviBookDraftsV1";
+const MAX_DRAFTS = 25;
+const AUTO_MERGE_MS = 45000;
+
+let autosaveTimer = null;
+let suppressAutosave = false;
+
+function scheduleAutosave() {
+  if (suppressAutosave) return;
+  if (autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    autosaveTimer = null;
+    performAutosaveDraft();
+  }, 3500);
+}
+
+function loadDraftsFromStorage() {
+  try {
+    const raw = localStorage.getItem(DRAFTS_STORAGE_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveDraftsToStorage(drafts) {
+  localStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify(drafts));
+}
+
+function newDraftId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `draft-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
+
+function dataUrlToFile(dataUrl, filename) {
+  const parts = dataUrl.split(",");
+  const header = parts[0];
+  const mimeMatch = header.match(/data:(.*?);base64/);
+  const mime = mimeMatch ? mimeMatch[1] : "image/png";
+  const raw = atob(parts[1]);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i += 1) arr[i] = raw.charCodeAt(i);
+  return new File([arr], filename || "image.png", { type: mime });
+}
+
+async function collectBookState() {
+  const spreads = [];
+  const cards = Array.from(spreadsContainer.querySelectorAll(".spread-card"));
+  for (const card of cards) {
+    const imageDataUrls = [];
+    for (const file of card.currentFiles || []) {
+      const dataUrl = await readFileAsDataUrl(file);
+      imageDataUrls.push({ name: file.name, dataUrl });
+    }
+    spreads.push({
+      storyText: card.querySelector(".story-text")?.value ?? "",
+      salientFeatures: card.querySelector(".salient-features")?.value ?? "",
+      oddText: card.querySelector(".odd-text")?.value ?? "",
+      imagePrompt: card.querySelector(".image-prompt")?.value ?? "",
+      imageDataUrls
+    });
+  }
+
+  return {
+    v: 1,
+    bookTitle: bookTitleInput?.value ?? "",
+    eccArea: eccAreaInput?.value ?? "",
+    activityPrompt: activityPromptInput?.value ?? "",
+    studentCviTips: studentCviTipsInput?.value ?? "",
+    aiInput: aiInput?.value ?? "",
+    oddTextPosition: oddTextPositionInput?.value ?? "top",
+    visualComplexity: visualComplexityInput?.value ?? "normal",
+    includeTeachingActivities: includeTeachingActivitiesInput?.checked ?? false,
+    oddTextColor: oddTextColorInput?.value ?? "#000000",
+    oddBorderColor: oddBorderColorInput?.value ?? "#FF0000",
+    oddBgColor: oddBgColorInput?.value ?? "#000000",
+    storyTextColor: storyTextColorInput?.value ?? "#111111",
+    oddTextSize: oddTextSizeInput?.value ?? "75",
+    oddBorderSize: oddBorderSizeInput?.value ?? "3",
+    spreads
+  };
+}
+
+function applyPresetAndColor(presetId, colorInputId, hex) {
+  const preset = document.getElementById(presetId);
+  const input = document.getElementById(colorInputId);
+  if (!input) return;
+  const h = (hex || "").startsWith("#") ? hex : `#${hex}`;
+  input.value = h;
+  if (preset) {
+    const match = Array.from(preset.options).find((o) => o.value.toUpperCase() === h.toUpperCase());
+    preset.value = match ? match.value : "custom";
+  }
+  syncColorDisplay(colorInputId);
+}
+
+async function applyBookState(state) {
+  if (!state || state.v !== 1) return;
+
+  suppressAutosave = true;
+  try {
+    if (bookTitleInput) bookTitleInput.value = state.bookTitle ?? "";
+    if (eccAreaInput) eccAreaInput.value = state.eccArea ?? "";
+    if (activityPromptInput) activityPromptInput.value = state.activityPrompt ?? "";
+    if (studentCviTipsInput) studentCviTipsInput.value = state.studentCviTips ?? "";
+    if (aiInput) aiInput.value = state.aiInput ?? "";
+
+    if (oddTextPositionInput) oddTextPositionInput.value = state.oddTextPosition ?? "top";
+    if (visualComplexityInput) visualComplexityInput.value = state.visualComplexity ?? "normal";
+    if (includeTeachingActivitiesInput) includeTeachingActivitiesInput.checked = !!state.includeTeachingActivities;
+
+    applyPresetAndColor("oddTextColorPreset", "oddTextColor", state.oddTextColor ?? "#000000");
+    applyPresetAndColor("oddBorderColorPreset", "oddBorderColor", state.oddBorderColor ?? "#FF0000");
+    applyPresetAndColor("oddBgColorPreset", "oddBgColor", state.oddBgColor ?? "#000000");
+    applyPresetAndColor("storyTextColorPreset", "storyTextColor", state.storyTextColor ?? "#111111");
+
+    if (oddTextSizeInput) oddTextSizeInput.value = state.oddTextSize ?? "75";
+    if (oddBorderSizeInput) oddBorderSizeInput.value = state.oddBorderSize ?? "3";
+
+    syncMainToSidebar();
+
+    spreadsContainer.innerHTML = "";
+    const spreadRows = state.spreads && state.spreads.length ? state.spreads : [{}];
+    spreadRows.forEach((s) => {
+      addSpread({
+        storyText: s.storyText,
+        salientFeatures: s.salientFeatures,
+        oddText: s.oddText,
+        imagePrompt: s.imagePrompt,
+        imageDataUrls: s.imageDataUrls || []
+      });
+    });
+    renderPreview();
+    setDraftStatus("Book loaded.", false);
+  } finally {
+    setTimeout(() => {
+      suppressAutosave = false;
+    }, 400);
+  }
+}
+
+async function performAutosaveDraft() {
+  if (suppressAutosave) return;
+  let state;
+  try {
+    state = await collectBookState();
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+
+  const drafts = loadDraftsFromStorage();
+  const now = Date.now();
+  const iso = new Date().toISOString();
+  const label = `Auto-save · ${new Date().toLocaleString()}`;
+
+  const newEntry = {
+    id: newDraftId(),
+    savedAt: iso,
+    name: label,
+    auto: true,
+    state
+  };
+
+  if (drafts[0] && drafts[0].auto && now - new Date(drafts[0].savedAt).getTime() < AUTO_MERGE_MS) {
+    newEntry.id = drafts[0].id;
+    drafts[0] = newEntry;
+  } else {
+    drafts.unshift(newEntry);
+  }
+  while (drafts.length > MAX_DRAFTS) drafts.pop();
+
+  try {
+    saveDraftsToStorage(drafts);
+    renderDraftsList();
+    setDraftStatus(`Autosaved · ${new Date().toLocaleTimeString()}`, false);
+  } catch (e) {
+    if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+      setDraftStatus("Autosave failed: storage full. Try fewer images, smaller files, or delete old drafts.", true);
+    } else {
+      setDraftStatus(`Autosave failed: ${e.message || "Unknown error"}`, true);
+    }
+  }
+}
+
+function setDraftStatus(msg, isError) {
+  if (!draftStatusMessage) return;
+  draftStatusMessage.textContent = msg;
+  draftStatusMessage.style.color = isError ? "#ff9e9e" : "#b9c2ce";
+}
+
+function renderDraftsList() {
+  if (!draftsListEl) return;
+  const drafts = loadDraftsFromStorage();
+  draftsListEl.innerHTML = "";
+  if (!drafts.length) {
+    draftsListEl.innerHTML =
+      '<p class="hint">No drafts saved yet. Editing saves automatically after a short pause.</p>';
+    return;
+  }
+  drafts.forEach((d, index) => {
+    const row = document.createElement("div");
+    row.className = "draft-row";
+    const info = document.createElement("div");
+    info.className = "draft-row-info";
+    const title = d.name || `Draft ${index + 1}`;
+    const short = d.state?.bookTitle ? ` — ${d.state.bookTitle}` : "";
+    info.textContent = `${title}${short}`;
+    info.title = d.savedAt || "";
+
+    const actions = document.createElement("div");
+    actions.className = "draft-row-actions";
+
+    const loadBtn = document.createElement("button");
+    loadBtn.type = "button";
+    loadBtn.textContent = "Load";
+    loadBtn.addEventListener("click", () => loadDraftById(d.id));
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.textContent = "Delete";
+    delBtn.className = "danger";
+    delBtn.addEventListener("click", () => deleteDraftById(d.id));
+
+    actions.appendChild(loadBtn);
+    actions.appendChild(delBtn);
+    row.appendChild(info);
+    row.appendChild(actions);
+    draftsListEl.appendChild(row);
+  });
+}
+
+function loadDraftById(id) {
+  const drafts = loadDraftsFromStorage();
+  const d = drafts.find((x) => x.id === id);
+  if (!d || !d.state) return;
+  if (!window.confirm("Replace the current book with this draft? Unsaved changes will be lost.")) return;
+  applyBookState(d.state);
+}
+
+function deleteDraftById(id) {
+  const next = loadDraftsFromStorage().filter((x) => x.id !== id);
+  saveDraftsToStorage(next);
+  renderDraftsList();
+  setDraftStatus("Draft deleted.", false);
+}
+
+async function saveSnapshotManual() {
+  let state;
+  try {
+    state = await collectBookState();
+  } catch (e) {
+    setDraftStatus(`Could not save: ${e.message}`, true);
+    return;
+  }
+  const name = window.prompt("Snapshot name (optional)", (state.bookTitle || "").trim() || "My snapshot");
+  if (name === null) return;
+
+  const drafts = loadDraftsFromStorage();
+  drafts.unshift({
+    id: newDraftId(),
+    savedAt: new Date().toISOString(),
+    name: name.trim() || `Snapshot · ${new Date().toLocaleString()}`,
+    auto: false,
+    state
+  });
+  while (drafts.length > MAX_DRAFTS) drafts.pop();
+  try {
+    saveDraftsToStorage(drafts);
+    renderDraftsList();
+    setDraftStatus("Snapshot saved.", false);
+  } catch (e) {
+    if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+      setDraftStatus("Save failed: storage full. Try fewer images or delete old drafts.", true);
+    } else {
+      setDraftStatus(`Save failed: ${e.message || "Unknown error"}`, true);
+    }
+  }
+}
+
+function showExportProgress(message) {
+  if (exportProgressMessage) exportProgressMessage.textContent = message;
+  if (exportProgressOverlay) exportProgressOverlay.hidden = false;
+}
+
+function hideExportProgress() {
+  if (exportProgressOverlay) exportProgressOverlay.hidden = true;
 }
 
 /** Maps border-size control (0–12) to preview text-shadow radius (px) for CVI salience. */
@@ -1298,12 +1608,14 @@ function addFinalActivitySlide(pptx, options) {
 async function exportPptx() {
   if (typeof PptxGenJS === "undefined") {
     setStatus("PowerPoint library did not load. Refresh and try again.", true);
+    hideExportProgress();
     return;
   }
 
   const spreads = collectSpreadsFromForm();
   if (!spreads.length) {
     setStatus("Add at least one spread before exporting.", true);
+    hideExportProgress();
     return;
   }
 
@@ -1317,11 +1629,16 @@ async function exportPptx() {
   const bookTitle = (bookTitleInput.value || "CVI Book").trim();
 
   exportPptxButton.disabled = true;
+  showExportProgress("Starting export…");
   setStatus("Preparing images...");
 
   try {
     const spreadsWithData = [];
-    for (const spread of spreads) {
+    const n = spreads.length;
+    for (let si = 0; si < spreads.length; si += 1) {
+      const spread = spreads[si];
+      showExportProgress(`Encoding images… spread ${si + 1} of ${n}`);
+      setStatus(`Preparing images (${si + 1}/${n})…`);
       const imageData = [];
       for (const file of spread.imageFiles) {
         const data = await readFileAsDataUrl(file);
@@ -1330,6 +1647,7 @@ async function exportPptx() {
       spreadsWithData.push({ ...spread, imageData });
     }
 
+    showExportProgress("Building PowerPoint slides…");
     const pptx = new PptxGenJS();
     pptx.defineLayout({ name: "LETTER_LAND", width: 11, height: 8.5 });
     pptx.layout = "LETTER_LAND";
@@ -1439,12 +1757,14 @@ async function exportPptx() {
     }
 
     const fileName = `${bookTitle.replace(/[^a-z0-9-_ ]/gi, "").trim() || "cvi-book"}.pptx`;
+    showExportProgress("Writing file…");
     await pptx.writeFile({ fileName });
     setStatus(`Done. Downloaded ${fileName}`);
   } catch (err) {
     console.error(err);
     setStatus(`Export failed: ${err.message || "Unknown error"}`, true);
   } finally {
+    hideExportProgress();
     exportPptxButton.disabled = false;
   }
 }
@@ -1614,10 +1934,12 @@ parseAiButton.addEventListener("click", () => {
     addSpread();
     setStatus("No spreads found. Check your formatting and edit manually.", true);
     renderPreview();
+    scheduleAutosave();
     return;
   }
   setStatus(`Parsed ${parsed.spreads.length} spread(s). Add images as needed.`);
   renderPreview();
+  scheduleAutosave();
 });
 
 exportPptxButton.addEventListener("click", exportPptx);
@@ -1630,7 +1952,9 @@ presetMaxContrastButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#FFFF00";
   storyTextColorInput.value = "#111111";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
+  syncMainToSidebar();
   renderPreview();
+  scheduleAutosave();
 });
 
 presetHighContrastButton.addEventListener("click", () => {
@@ -1639,7 +1963,9 @@ presetHighContrastButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#FF0000";
   storyTextColorInput.value = "#111111";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
+  syncMainToSidebar();
   renderPreview();
+  scheduleAutosave();
 });
 
 presetStandardPrintButton.addEventListener("click", () => {
@@ -1648,18 +1974,38 @@ presetStandardPrintButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#000000";
   storyTextColorInput.value = "#000000";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
+  syncMainToSidebar();
   renderPreview();
+  scheduleAutosave();
 });
 
 refreshPreviewButton.addEventListener("click", () => {
   renderPreview();
   setStatus("Preview refreshed.");
 });
+let printCleanupTimer = null;
+/** Restores normal UI after the system print dialog closes. `window.print()` returns as soon as the dialog opens; layout for PDF must keep print styles until `afterprint` (see README). */
 printPdfButton.addEventListener("click", () => {
   renderPreview();
   printablePreviewSection.classList.add("preview-printable");
+
+  let finished = false;
+  const cleanup = () => {
+    if (finished) return;
+    finished = true;
+    if (printCleanupTimer) {
+      clearTimeout(printCleanupTimer);
+      printCleanupTimer = null;
+    }
+    window.removeEventListener("afterprint", cleanup);
+    document.removeEventListener("afterprint", cleanup);
+    printablePreviewSection.classList.remove("preview-printable");
+  };
+
+  window.addEventListener("afterprint", cleanup);
+  document.addEventListener("afterprint", cleanup);
+  printCleanupTimer = setTimeout(cleanup, 120000);
   window.print();
-  printablePreviewSection.classList.remove("preview-printable");
 });
 
 if (closeWelcomeButton) {
@@ -1707,11 +2053,24 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+if (saveSnapshotButton) {
+  saveSnapshotButton.addEventListener("click", () => saveSnapshotManual());
+}
+renderDraftsList();
+
 initColorPickers();
 initImageIsolator();
 
 function initLivePreview() {
   if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());
+  [eccAreaInput, activityPromptInput, studentCviTipsInput, aiInput].forEach((el) => {
+    if (!el) return;
+    el.addEventListener("input", () => scheduleLivePreview());
+    el.addEventListener("change", () => scheduleLivePreview());
+  });
+  if (includeTeachingActivitiesInput) {
+    includeTeachingActivitiesInput.addEventListener("change", () => scheduleLivePreview(true));
+  }
   if (oddTextPositionInput) oddTextPositionInput.addEventListener("change", () => scheduleLivePreview(true));
   if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", () => scheduleLivePreview(true));
   if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", () => scheduleLivePreview(true));

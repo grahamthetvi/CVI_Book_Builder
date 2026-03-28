@@ -6,6 +6,8 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
 - Print-friendly preview with browser Save as PDF path
+- **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
+- **Drafts on this device** — automatic saves to browser storage, plus optional named snapshots; load or delete any draft from the list (text and images are restored when storage allows)
 - Title slide
 - Alternating spread export:
   - odd slide: accessible high-contrast text + 1 to 4 images
@@ -24,6 +26,14 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 - AI formatted text parsing + manual spread editing
 - Live preview refresh button before export/print
 
+## Drafts and autosave
+
+- After you pause typing for a few seconds, the app saves an **auto-save** entry (recent auto-saves within about 45 seconds are merged into one entry so the list does not flood).
+- Use **Save snapshot now** to pin the current book with an optional name.
+- Up to **25** drafts are kept (oldest dropped). Drafts live in **this browser on this device only** (`localStorage`).
+- Books with **many large images** may hit browser storage limits; the app shows an error if a save fails. Export a `.pptx` as a backup for important work.
+- **Load** replaces the current book (you are asked to confirm). **Delete** removes only that draft.
+
 ## Use
 
 1. Open `index.html` (or deploy root to GitHub Pages).
@@ -33,6 +43,12 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 5. Click **Refresh Preview** to check layout.
 6. Click **Print / Save as PDF** for PDF output, or **Download PowerPoint (.pptx)**.
 7. Use **Copy FVA/LMA Summary** to copy session notes for the TVI.
+
+### Print / Save as PDF
+
+The app marks only the live preview for printing. The print stylesheet uses letter landscape. **Different browsers** may position margins slightly differently; if one browser’s PDF looks off, try another.
+
+**Why “after print” matters (technical):** The code must know when printing has **finished** before removing the print-only styling. Some browsers run the actual print layout **after** `window.print()` has already returned. The app listens for the browser’s **`afterprint`** event (with a long fallback timer) so the preview panel stays in “print mode” until the dialog completes. That helps the saved PDF match what you saw in print preview.
 
 ## AI Formatting Prompt
 
