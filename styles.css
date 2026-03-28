@@ -679,16 +679,21 @@ button:hover {
   }
 
   .preview-page {
-    width: 100%;
+    width: min(100%, calc((8.5in - 0.5in) * 11 / 8.5));
     max-width: none;
+    max-height: calc(8.5in - 0.5in);
+    aspect-ratio: 11 / 8.5;
+    height: auto;
     border: none;
     border-radius: 0;
-    margin: 0;
+    margin: 0 auto;
+    break-inside: avoid;
+    page-break-inside: avoid;
     page-break-after: always;
     break-after: page;
   }
 
-  .preview-page:last-child {
+  .preview-page:last-of-type {
     page-break-after: auto;
     break-after: auto;
   }

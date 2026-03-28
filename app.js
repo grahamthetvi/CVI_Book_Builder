@@ -471,7 +471,7 @@ async function applyOutlineToBlob(blob, color, thickness) {
   const img = await loadImageFromBlob(blob);
   const width = img.naturalWidth || img.width;
   const height = img.naturalHeight || img.height;
-  const radius = Math.max(1, Number(thickness) || 1);
+  const radius = Math.max(1, Math.round((Number(thickness) || 1) * 1.15));
   const pad = radius + 2;
 
   const tintCanvas = document.createElement("canvas");
@@ -926,8 +926,22 @@ function readFileAsDataUrl(file) {
   });
 }
 
+/** Maps border-size control (0–12) to preview text-shadow radius (px) for CVI salience. */
+function oddBorderToCssPx(borderSize) {
+  const n = Math.max(0, Number(borderSize) || 0);
+  if (!n) return 0;
+  return Math.max(1, Math.round(n * 1.4));
+}
+
+/** Maps border-size control to PowerPoint outline pt (matches preview intent). */
+function oddBorderToOutlinePt(borderSize) {
+  const n = Math.max(0, Number(borderSize) || 0);
+  if (!n) return 0;
+  return Math.max(2, Math.round(n * 1.25));
+}
+
 function getTextOutlineCss(borderSize, borderColor) {
-  const size = Math.max(0, Number(borderSize) || 0);
+  const size = oddBorderToCssPx(borderSize);
   if (!size) return "none";
   const shadows = [];
   for (let x = -size; x <= size; x += 1) {
@@ -1208,7 +1222,7 @@ function renderPreview() {
  * @param {string} options.oddBgColor - Background color (hex without #)
  * @param {string} options.oddTextColor - Text color (hex without #)
  * @param {string} options.oddBorderColor - Text outline color (hex without #)
- * @param {number} options.oddBorderSize - Text outline size in pt
+ * @param {number} options.oddBorderSize - Border size control (0–12; mapped to outline pt in export)
  * @param {string} [options.activityPrompt] - Optional story-specific activity from AI
  */
 function addFinalActivitySlide(pptx, options) {
@@ -1230,7 +1244,7 @@ function addFinalActivitySlide(pptx, options) {
     bold: true,
     fontSize: TITLE_FONT_SIZE,
     color: oddTextColor,
-    outline: { color: oddBorderColor, pt: oddBorderSize }
+    outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
   });
 
   const activities = [
@@ -1266,7 +1280,7 @@ function addFinalActivitySlide(pptx, options) {
       bold: true,
       fontSize: HEADING_FONT_SIZE,
       color: oddTextColor,
-      outline: { color: oddBorderColor, pt: Math.max(0, oddBorderSize - 1) }
+      outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(Math.max(0, oddBorderSize - 1)) }
     });
     slide.addText(activity.body, {
       x: 0.6,
@@ -1342,7 +1356,7 @@ async function exportPptx() {
       bold: true,
       fontSize: TITLE_FONT_SIZE,
       color: oddTextColor,
-      outline: { color: oddBorderColor, pt: oddBorderSize }
+      outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
     });
 
     for (const spread of spreadsWithData) {
@@ -1394,7 +1408,7 @@ async function exportPptx() {
           fontSize: oddTextSize,
           color: oddTextColor,
           fit: "shrink",
-          outline: { color: oddBorderColor, pt: Math.max(3, oddBorderSize) }
+          outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
         });
       }
 
@@ -1405,7 +1419,11 @@ async function exportPptx() {
         const r = imgRects[i];
         oddSlide.addImage({
           data: img,
-          sizing: { type: "contain", x: r.x, y: r.y, w: r.w, h: r.h }
+          x: r.x,
+          y: r.y,
+          w: r.w,
+          h: r.h,
+          sizing: { type: "contain", w: r.w, h: r.h }
         });
       });
     }
