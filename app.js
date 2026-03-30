@@ -1554,7 +1554,7 @@ function addFinalActivitySlide(pptx, options) {
     bold: true,
     fontSize: TITLE_FONT_SIZE,
     color: oddTextColor,
-    outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
+    outline: { color: oddBorderColor, size: oddBorderToOutlinePt(oddBorderSize) }
   });
 
   const activities = [
@@ -1590,7 +1590,7 @@ function addFinalActivitySlide(pptx, options) {
       bold: true,
       fontSize: HEADING_FONT_SIZE,
       color: oddTextColor,
-      outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(Math.max(0, oddBorderSize - 1)) }
+      outline: { color: oddBorderColor, size: oddBorderToOutlinePt(Math.max(0, oddBorderSize - 1)) }
     });
     slide.addText(activity.body, {
       x: 0.6,
@@ -1674,7 +1674,7 @@ async function exportPptx() {
       bold: true,
       fontSize: TITLE_FONT_SIZE,
       color: oddTextColor,
-      outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
+      outline: { color: oddBorderColor, size: oddBorderToOutlinePt(oddBorderSize) }
     });
 
     for (const spread of spreadsWithData) {
@@ -1726,7 +1726,7 @@ async function exportPptx() {
           fontSize: oddTextSize,
           color: oddTextColor,
           fit: "shrink",
-          outline: { color: oddBorderColor, pt: oddBorderToOutlinePt(oddBorderSize) }
+          outline: { color: oddBorderColor, size: oddBorderToOutlinePt(oddBorderSize) }
         });
       }
 

@@ -777,6 +777,8 @@ button:hover {
     page-break-inside: avoid;
     page-break-after: always;
     break-after: page;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .preview-page:last-of-type {
