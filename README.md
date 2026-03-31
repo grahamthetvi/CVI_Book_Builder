@@ -7,7 +7,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 - Letter landscape PowerPoint output (`11 x 8.5`)
 - Print-friendly preview with browser Save as PDF path
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
-- **Drafts on this device** — automatic saves to browser storage, plus optional named snapshots; load or delete any draft from the list (text and images are restored when storage allows)
+- **Drafts on this device** — auto-saves when you export PowerPoint or open print/Save as PDF, plus optional named snapshots; load or delete any draft from the list (text and images are restored when storage allows)
 - Title slide
 - Alternating spread export:
   - odd slide: accessible high-contrast text + 1 to 4 images
@@ -28,7 +28,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 
 ## Drafts and autosave
 
-- After you pause typing for a few seconds, the app saves an **auto-save** entry (recent auto-saves within about 45 seconds are merged into one entry so the list does not flood).
+- The app saves an **auto-save** entry when you **Download PowerPoint (.pptx)** (after the file is written) or when you click **Print / Save as PDF** (before the print dialog opens). Recent auto-saves within about 45 seconds are merged into one entry so the list does not flood.
 - Use **Save snapshot now** to pin the current book with an optional name.
 - Up to **25** drafts are kept (oldest dropped). Drafts live in **this browser on this device only** (`localStorage`).
 - Books with **many large images** may hit browser storage limits; the app shows an error if a save fails. Export a `.pptx` as a backup for important work.

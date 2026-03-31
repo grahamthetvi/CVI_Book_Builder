@@ -63,7 +63,6 @@ let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
 
 function scheduleLivePreview(immediate = false) {
-  scheduleAutosave();
   if (immediate) {
     if (livePreviewTimer) clearTimeout(livePreviewTimer);
     livePreviewTimer = null;
@@ -949,17 +948,7 @@ const DRAFTS_STORAGE_KEY = "cviBookDraftsV1";
 const MAX_DRAFTS = 25;
 const AUTO_MERGE_MS = 45000;
 
-let autosaveTimer = null;
 let suppressAutosave = false;
-
-function scheduleAutosave() {
-  if (suppressAutosave) return;
-  if (autosaveTimer) clearTimeout(autosaveTimer);
-  autosaveTimer = setTimeout(() => {
-    autosaveTimer = null;
-    performAutosaveDraft();
-  }, 3500);
-}
 
 function loadDraftsFromStorage() {
   try {
@@ -1760,6 +1749,7 @@ async function exportPptx() {
     showExportProgress("Writing file…");
     await pptx.writeFile({ fileName });
     setStatus(`Done. Downloaded ${fileName}`);
+    await performAutosaveDraft();
   } catch (err) {
     console.error(err);
     setStatus(`Export failed: ${err.message || "Unknown error"}`, true);
@@ -1934,12 +1924,10 @@ parseAiButton.addEventListener("click", () => {
     addSpread();
     setStatus("No spreads found. Check your formatting and edit manually.", true);
     renderPreview();
-    scheduleAutosave();
     return;
   }
   setStatus(`Parsed ${parsed.spreads.length} spread(s). Add images as needed.`);
   renderPreview();
-  scheduleAutosave();
 });
 
 exportPptxButton.addEventListener("click", exportPptx);
@@ -1954,7 +1942,6 @@ presetMaxContrastButton.addEventListener("click", () => {
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   syncMainToSidebar();
   renderPreview();
-  scheduleAutosave();
 });
 
 presetHighContrastButton.addEventListener("click", () => {
@@ -1965,7 +1952,6 @@ presetHighContrastButton.addEventListener("click", () => {
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   syncMainToSidebar();
   renderPreview();
-  scheduleAutosave();
 });
 
 presetStandardPrintButton.addEventListener("click", () => {
@@ -1976,7 +1962,6 @@ presetStandardPrintButton.addEventListener("click", () => {
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   syncMainToSidebar();
   renderPreview();
-  scheduleAutosave();
 });
 
 refreshPreviewButton.addEventListener("click", () => {
@@ -1985,7 +1970,7 @@ refreshPreviewButton.addEventListener("click", () => {
 });
 let printCleanupTimer = null;
 /** Restores normal UI after the system print dialog closes. `window.print()` returns as soon as the dialog opens; layout for PDF must keep print styles until `afterprint` (see README). */
-printPdfButton.addEventListener("click", () => {
+printPdfButton.addEventListener("click", async () => {
   renderPreview();
   printablePreviewSection.classList.add("preview-printable");
 
@@ -2005,6 +1990,7 @@ printPdfButton.addEventListener("click", () => {
   window.addEventListener("afterprint", cleanup);
   document.addEventListener("afterprint", cleanup);
   printCleanupTimer = setTimeout(cleanup, 120000);
+  await performAutosaveDraft();
   window.print();
 });
 
