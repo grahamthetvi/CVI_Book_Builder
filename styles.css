@@ -106,9 +106,38 @@ body {
   min-width: 0;
 }
 
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .help-button {
   flex-shrink: 0;
   align-self: flex-start;
+}
+
+a.tip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  flex-shrink: 0;
+  border: 1px solid #4c5d75;
+  border-radius: 6px;
+  background: #2a3140;
+  color: #f2f4f8;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+a.tip-button:hover {
+  filter: brightness(1.08);
 }
 
 .container {
@@ -737,7 +766,7 @@ button:hover {
 @media print {
   @page {
     size: letter landscape;
-    margin: 0.25in;
+    margin: 0;
   }
 
   body {
@@ -747,7 +776,9 @@ button:hover {
 
   .page-header,
   .panel:not(.preview-printable),
-  .preview-label {
+  .preview-label,
+  .live-preview-heading,
+  .preview-printable > .hint {
     display: none !important;
   }
 
@@ -764,15 +795,20 @@ button:hover {
     padding: 0;
   }
 
+  .preview-container {
+    display: block;
+    gap: 0;
+  }
+
   .preview-page {
-    width: min(100%, calc((8.5in - 0.5in) * 11 / 8.5));
+    width: 11in;
+    height: 8.5in;
     max-width: none;
-    max-height: calc(8.5in - 0.5in);
-    aspect-ratio: 11 / 8.5;
-    height: auto;
+    max-height: none;
     border: none;
     border-radius: 0;
-    margin: 0 auto;
+    margin: 0;
+    overflow: hidden;
     break-inside: avoid;
     page-break-inside: avoid;
     page-break-after: always;
