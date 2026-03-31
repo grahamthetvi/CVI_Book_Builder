@@ -76,6 +76,129 @@
     </div>
   </div>
 
+  <div id="userGuideModal" class="modal-overlay modal-user-guide-overlay" role="dialog" aria-modal="true" aria-labelledby="userGuideModalTitle" hidden>
+    <div class="modal-card modal-user-guide-card">
+      <h2 id="userGuideModalTitle">User guide</h2>
+      <p class="hint user-guide-lead">Step-by-step workflow for building a CVI-friendly book, from setup through export. Everything runs in your browser; drafts and exports stay on your device unless you share them elsewhere.</p>
+
+      <nav class="user-guide-toc" aria-label="Jump to sections">
+        <a href="#ug-overview">Overview</a>
+        <a href="#ug-workflow">Core workflow</a>
+        <a href="#ug-book-setup">Book Setup</a>
+        <a href="#ug-presets">Presets and styling</a>
+        <a href="#ug-story">Story and AI</a>
+        <a href="#ug-images">Image Isolator</a>
+        <a href="#ug-spreads">Spreads</a>
+        <a href="#ug-preview-export">Preview and export</a>
+        <a href="#ug-tvi">TVI notes</a>
+        <a href="#ug-drafts">Drafts</a>
+      </nav>
+
+      <div class="modal-help-section" id="ug-overview">
+        <h3>What this tool does</h3>
+        <p>
+          CVI Book Builder creates a <strong>letter-sized landscape PowerPoint</strong> with a consistent CVI-friendly layout:
+          <strong>odd pages</strong> show high-contrast accessible text (and your images), and <strong>even pages</strong> carry the story text
+          (rotated for binding), salient features, and optional teaching activities. A <strong>live preview</strong> mirrors the same rules as
+          download and print.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-workflow">
+        <h3>Core workflow</h3>
+        <p>Most users follow this path:</p>
+        <ol class="modal-list user-guide-steps">
+          <li><strong>Book Setup</strong> &mdash; Title, ECC area, activity prompt, odd-page text position, visual complexity, and whether to include teaching activities.</li>
+          <li><strong>Optional:</strong> Pick a <strong>Quick Preset</strong> or tune <strong>Accessibility Text Style</strong> (odd-page colors, sizes, borders; story text color on even pages). The sidebar duplicates these controls while you scroll spreads.</li>
+          <li><strong>Story content</strong> &mdash; Either use <strong>Copy AI Formatting Prompt</strong>, paste the assistant&rsquo;s reply into <strong>AI formatted text</strong>, then <strong>Parse Into Spreads</strong>, or add and edit spreads by hand (or combine both).</li>
+          <li><strong>Images</strong> &mdash; Use the <strong>Image Isolator</strong> to prepare pictures (upload, Wikimedia search, background removal, outline), or attach files directly on each spread (up to four odd-page images per spread). HEIC from iPhones is converted in the browser.</li>
+          <li><strong>Spreads</strong> &mdash; Refine story text, salient features, accessible odd-page text, image prompts, and per-spread photos. Use <strong>Add Spread</strong> or <strong>Remove</strong> as needed.</li>
+          <li><strong>Review</strong> &mdash; Watch the <strong>Live Preview</strong> update as you edit; use <strong>Refresh Preview</strong> if something looks stale.</li>
+          <li><strong>Documentation</strong> &mdash; Fill in <strong>TVI Session Notes</strong> and <strong>Copy FVA/LMA Summary</strong> when you need text for reports.</li>
+          <li><strong>Finish</strong> &mdash; <strong>Download PowerPoint (.pptx)</strong> and/or <strong>Print / Save as PDF</strong>. Use <strong>Drafts</strong> to save and restore work in this browser.</li>
+        </ol>
+      </div>
+
+      <div class="modal-help-section" id="ug-book-setup">
+        <h3>Book Setup</h3>
+        <p>
+          <strong>Book title</strong> and <strong>ECC Area</strong> appear in the deck where the template expects them. <strong>Activity Prompt</strong> feeds optional sensory or classroom activity ideas.
+          <strong>Odd page text position</strong> moves the large accessible label (top, bottom, left, or right). <strong>Visual complexity</strong> adjusts how busy slides feel in the layout.
+          Toggle <strong>Include Teaching Activities</strong> to show or hide the teaching-activities block on even pages.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-presets">
+        <h3>Quick Presets and accessibility styling</h3>
+        <p>
+          <strong>Quick Presets</strong> apply common high-contrast palettes (for example yellow/black or red/black) in one click. Fine-tune with
+          <strong>Accessibility Text Style (Odd Pages)</strong>: text and border colors and sizes, odd-page background, and story text color for even pages.
+          The floating sidebar shows the same controls so you can adjust contrast while working on spreads without scrolling back to the top.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-story">
+        <h3>Story Input and AI formatting</h3>
+        <p>
+          Click <strong>Copy AI Formatting Prompt</strong> and paste it into your AI tool. The model returns text using the <code>TITLE</code>, <code>ECC_AREA</code>, <code>ACTIVITY_PROMPT</code>, and <code>SPREAD</code> blocks shown in the placeholder.
+          Paste that output into <strong>AI formatted text</strong>, then click <strong>Parse Into Spreads</strong> to fill or update your spreads. You can still edit every field manually afterward.
+          Each spread can include a separate <strong>image prompt</strong> for external image generators; use <strong>Copy image prompt</strong> on a spread when needed.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-images">
+        <h3>Image Isolator</h3>
+        <p>
+          Upload a photo or search <strong>Wikimedia Commons</strong>, then run <strong>Remove Background</strong>. Optionally enable <strong>Add object outline</strong> and set color and thickness for extra separation on busy backgrounds.
+          <strong>Download Result</strong> saves the processed image so you can attach it on a spread. This is optional if you already have cut-out or simple images.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-spreads">
+        <h3>Spreads</h3>
+        <p>
+          Each spread becomes <strong>two slides</strong>: an odd accessible slide and an even story slide. Edit <strong>Story text</strong> and <strong>Salient features</strong> for the even page;
+          <strong>Accessible text</strong> is the short label on the odd page. Add one to four images per spread on the odd page.
+          <strong>Parse Into Spreads</strong> replaces all current spreads with the spreads from your pasted text. If the text includes <code>TITLE</code>, <code>ECC_AREA</code>, or <code>ACTIVITY_PROMPT</code>, those lines also update Book Setup when present.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-preview-export">
+        <h3>Live Preview, PowerPoint, and PDF</h3>
+        <p>
+          The <strong>Live Preview</strong> uses the same layout logic as export. <strong>Refresh Preview</strong> forces a full redraw. <strong>Download PowerPoint (.pptx)</strong> builds the file with PptxGenJS; large decks may take a moment (a progress overlay can appear).
+          <strong>Print / Save as PDF</strong> uses the browser print dialog&mdash;choose &ldquo;Save as PDF&rdquo; or your system&rsquo;s PDF printer for a static copy.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-tvi">
+        <h3>TVI Session Notes</h3>
+        <p>
+          Use <strong>Student-specific CVI tips</strong> for ongoing recommendations. <strong>Copy FVA/LMA Summary</strong> copies formatted text you can paste into evaluation or report documents.
+        </p>
+      </div>
+
+      <div class="modal-help-section" id="ug-drafts">
+        <h3>Drafts</h3>
+        <p>
+          Open <strong>Drafts</strong> to save snapshots of your book in this browser. Storage is local only; clearing site data or using another device removes access.
+          Save important work as PowerPoint as a backup, especially for large books with many images.
+        </p>
+      </div>
+
+      <div class="modal-help-section user-guide-help-crosslink">
+        <h3>More help</h3>
+        <p>
+          For contact, licensing, and attribution (including third-party libraries), use <strong>Get help</strong> in the header. The welcome screen summarizes a short quick start when you first open the app.
+        </p>
+      </div>
+
+      <div class="story-input-actions">
+        <button id="closeUserGuideButton" type="button" class="primary">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="draftsModal" class="modal-overlay modal-drafts-overlay" role="dialog" aria-modal="true" aria-labelledby="draftsModalTitle" hidden>
     <div class="modal-card modal-drafts-card">
       <h2 id="draftsModalTitle">Drafts</h2>
@@ -101,8 +224,9 @@
         <p>Create a downloadable PowerPoint in Letter landscape format.</p>
       </div>
       <div class="page-header-actions">
-        <button type="button" id="draftsButton" class="help-button">Drafts</button>
-        <button type="button" id="helpButton" class="help-button">Get help</button>
+        <button type="button" id="userGuideButton" class="help-button header-btn-user-guide">User guide</button>
+        <button type="button" id="draftsButton" class="help-button header-btn-drafts">Drafts</button>
+        <button type="button" id="helpButton" class="help-button header-btn-help">Get help</button>
         <a href="https://buymeacoffee.com/grahamthetvi" target="_blank" rel="noopener noreferrer" class="tip-button">Tip me</a>
       </div>
     </header>

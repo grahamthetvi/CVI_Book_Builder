@@ -61,6 +61,67 @@ body {
   z-index: 1001;
 }
 
+.modal-user-guide-overlay {
+  z-index: 1002;
+}
+
+.modal-user-guide-card {
+  width: min(760px, 100%);
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+}
+
+.modal-user-guide-card .modal-help-section[id] {
+  scroll-margin-top: 14px;
+}
+
+.user-guide-lead {
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.user-guide-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 14px 0 18px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #141820;
+  border: 1px solid #2b3340;
+  font-size: 13px;
+}
+
+.user-guide-toc a {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.user-guide-toc a:hover {
+  text-decoration: underline;
+}
+
+.user-guide-steps li {
+  margin-bottom: 8px;
+}
+
+.user-guide-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.modal-help-section code {
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #252a34;
+  color: #e2e8f0;
+}
+
+.user-guide-help-crosslink {
+  padding-top: 4px;
+  border-top: 1px solid #2b3340;
+}
+
 .modal-drafts-card {
   max-height: min(85vh, 640px);
   overflow-y: auto;
@@ -128,16 +189,34 @@ body {
   align-self: flex-start;
 }
 
+.help-button.header-btn-drafts {
+  background: #1e3a5f;
+  border-color: #60a5fa;
+  color: #dbeafe;
+}
+
+.help-button.header-btn-help {
+  background: #14532d;
+  border-color: #4ade80;
+  color: #dcfce7;
+}
+
+.help-button.header-btn-user-guide {
+  background: #4c1d95;
+  border-color: #c084fc;
+  color: #f3e8ff;
+}
+
 a.tip-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   align-self: flex-start;
   flex-shrink: 0;
-  border: 1px solid #4c5d75;
+  border: 1px solid #FFFF00;
   border-radius: 6px;
-  background: #2a3140;
-  color: #f2f4f8;
+  background: #FFFF00;
+  color: #000000;
   padding: 6px 10px;
   font-size: 13px;
   cursor: pointer;

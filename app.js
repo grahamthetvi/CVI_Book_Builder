@@ -47,6 +47,9 @@ const closeWelcomeButton = document.getElementById("closeWelcomeButton");
 const helpModal = document.getElementById("helpModal");
 const helpButton = document.getElementById("helpButton");
 const closeHelpButton = document.getElementById("closeHelpButton");
+const userGuideModal = document.getElementById("userGuideModal");
+const userGuideButton = document.getElementById("userGuideButton");
+const closeUserGuideButton = document.getElementById("closeUserGuideButton");
 const draftsModal = document.getElementById("draftsModal");
 const draftsButton = document.getElementById("draftsButton");
 const closeDraftsButton = document.getElementById("closeDraftsButton");
@@ -274,6 +277,7 @@ function hideWelcomeModal() {
 function showHelpModal() {
   if (!helpModal) return;
   hideWelcomeModal();
+  hideUserGuideModal();
   hideDraftsModal();
   helpModal.hidden = false;
   helpModal.style.display = "flex";
@@ -288,10 +292,29 @@ function hideHelpModal() {
   helpModal.setAttribute("aria-hidden", "true");
 }
 
+function showUserGuideModal() {
+  if (!userGuideModal) return;
+  hideWelcomeModal();
+  hideHelpModal();
+  hideDraftsModal();
+  userGuideModal.hidden = false;
+  userGuideModal.style.display = "flex";
+  userGuideModal.setAttribute("aria-hidden", "false");
+  if (closeUserGuideButton) closeUserGuideButton.focus();
+}
+
+function hideUserGuideModal() {
+  if (!userGuideModal) return;
+  userGuideModal.hidden = true;
+  userGuideModal.style.display = "none";
+  userGuideModal.setAttribute("aria-hidden", "true");
+}
+
 function showDraftsModal() {
   if (!draftsModal) return;
   hideWelcomeModal();
   hideHelpModal();
+  hideUserGuideModal();
   renderDraftsList();
   draftsModal.hidden = false;
   draftsModal.style.display = "flex";
@@ -2035,6 +2058,14 @@ if (closeHelpButton) {
   closeHelpButton.addEventListener("click", hideHelpModal);
 }
 
+if (userGuideButton) {
+  userGuideButton.addEventListener("click", showUserGuideModal);
+}
+
+if (closeUserGuideButton) {
+  closeUserGuideButton.addEventListener("click", hideUserGuideModal);
+}
+
 if (draftsButton) {
   draftsButton.addEventListener("click", showDraftsModal);
 }
@@ -2075,8 +2106,23 @@ if (helpModal) {
   });
 }
 
+if (userGuideModal) {
+  userGuideModal.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+
+    if (target === userGuideModal || target.closest("#closeUserGuideButton")) {
+      hideUserGuideModal();
+    }
+  });
+}
+
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (userGuideModal && !userGuideModal.hidden) {
+    hideUserGuideModal();
+    return;
+  }
   if (draftsModal && !draftsModal.hidden) {
     hideDraftsModal();
     return;
