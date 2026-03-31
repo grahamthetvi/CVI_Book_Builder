@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-  <!-- Open book with high-contrast accent (CVI-friendly) -->
-  <path fill="#1a1a1a" d="M4 6v20c0 1.1.9 2 2 2h10V4H6c-1.1 0-2 .9-2 2z"/>
-  <path fill="#1a1a1a" d="M28 6c0-1.1-.9-2-2-2H16v24h10c1.1 0 2-.9 2-2V6z"/>
-  <path fill="#FFCC00" d="M14 6h4v20h-4z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="100%" height="100%">
+  <rect width="300" height="300" fill="#000000" rx="30" />
+
+  <g transform="translate(10, 34)">
+    <path d="M140,210 C80,210 40,170 40,170 L40,90 C40,90 80,130 140,130 Z" fill="none" stroke="#FFFF00" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M140,210 C200,210 240,170 240,170 L240,90 C240,90 200,130 140,130 Z" fill="none" stroke="#FFFF00" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" />
+    
+    <line x1="140" y1="130" x2="140" y2="210" stroke="#FFFF00" stroke-width="20" stroke-linecap="round" />
+
+    <circle cx="140" cy="50" r="28" fill="#FF0000" />
+    <circle cx="140" cy="50" r="12" fill="#FFFF00" />
+  </g>
 </svg>
