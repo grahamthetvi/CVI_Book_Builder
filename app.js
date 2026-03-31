@@ -47,6 +47,9 @@ const closeWelcomeButton = document.getElementById("closeWelcomeButton");
 const helpModal = document.getElementById("helpModal");
 const helpButton = document.getElementById("helpButton");
 const closeHelpButton = document.getElementById("closeHelpButton");
+const draftsModal = document.getElementById("draftsModal");
+const draftsButton = document.getElementById("draftsButton");
+const closeDraftsButton = document.getElementById("closeDraftsButton");
 const printablePreviewSection = previewContainer.closest(".panel");
 const exportProgressOverlay = document.getElementById("exportProgressOverlay");
 const exportProgressMessage = document.getElementById("exportProgressMessage");
@@ -271,6 +274,7 @@ function hideWelcomeModal() {
 function showHelpModal() {
   if (!helpModal) return;
   hideWelcomeModal();
+  hideDraftsModal();
   helpModal.hidden = false;
   helpModal.style.display = "flex";
   helpModal.setAttribute("aria-hidden", "false");
@@ -282,6 +286,24 @@ function hideHelpModal() {
   helpModal.hidden = true;
   helpModal.style.display = "none";
   helpModal.setAttribute("aria-hidden", "true");
+}
+
+function showDraftsModal() {
+  if (!draftsModal) return;
+  hideWelcomeModal();
+  hideHelpModal();
+  renderDraftsList();
+  draftsModal.hidden = false;
+  draftsModal.style.display = "flex";
+  draftsModal.setAttribute("aria-hidden", "false");
+  if (closeDraftsButton) closeDraftsButton.focus();
+}
+
+function hideDraftsModal() {
+  if (!draftsModal) return;
+  draftsModal.hidden = true;
+  draftsModal.style.display = "none";
+  draftsModal.setAttribute("aria-hidden", "true");
 }
 
 function safePptColor(hex) {
@@ -946,8 +968,6 @@ function readFileAsDataUrl(file) {
 
 const DRAFTS_STORAGE_KEY = "cviBookDraftsV1";
 const MAX_DRAFTS = 25;
-const AUTO_MERGE_MS = 45000;
-
 let suppressAutosave = false;
 
 function loadDraftsFromStorage() {
@@ -1079,6 +1099,10 @@ async function applyBookState(state) {
 
 async function performAutosaveDraft() {
   if (suppressAutosave) return;
+
+  const title = (bookTitleInput?.value || "").trim();
+  if (!title) return;
+
   let state;
   try {
     state = await collectBookState();
@@ -1088,7 +1112,6 @@ async function performAutosaveDraft() {
   }
 
   const drafts = loadDraftsFromStorage();
-  const now = Date.now();
   const iso = new Date().toISOString();
   const label = `Auto-save · ${new Date().toLocaleString()}`;
 
@@ -1100,9 +1123,14 @@ async function performAutosaveDraft() {
     state
   };
 
-  if (drafts[0] && drafts[0].auto && now - new Date(drafts[0].savedAt).getTime() < AUTO_MERGE_MS) {
-    newEntry.id = drafts[0].id;
-    drafts[0] = newEntry;
+  const titleLower = title.toLowerCase();
+  const existingIdx = drafts.findIndex(
+    (d) => d.auto && (d.state?.bookTitle || "").trim().toLowerCase() === titleLower
+  );
+
+  if (existingIdx >= 0) {
+    newEntry.id = drafts[existingIdx].id;
+    drafts[existingIdx] = newEntry;
   } else {
     drafts.unshift(newEntry);
   }
@@ -1133,7 +1161,7 @@ function renderDraftsList() {
   draftsListEl.innerHTML = "";
   if (!drafts.length) {
     draftsListEl.innerHTML =
-      '<p class="hint">No drafts saved yet. Editing saves automatically after a short pause.</p>';
+      '<p class="hint">No drafts saved yet. Drafts are created when you parse spreads or export.</p>';
     return;
   }
   drafts.forEach((d, index) => {
@@ -1928,6 +1956,7 @@ parseAiButton.addEventListener("click", () => {
   }
   setStatus(`Parsed ${parsed.spreads.length} spread(s). Add images as needed.`);
   renderPreview();
+  performAutosaveDraft();
 });
 
 exportPptxButton.addEventListener("click", exportPptx);
@@ -2006,6 +2035,24 @@ if (closeHelpButton) {
   closeHelpButton.addEventListener("click", hideHelpModal);
 }
 
+if (draftsButton) {
+  draftsButton.addEventListener("click", showDraftsModal);
+}
+
+if (closeDraftsButton) {
+  closeDraftsButton.addEventListener("click", hideDraftsModal);
+}
+
+if (draftsModal) {
+  draftsModal.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    if (target === draftsModal || target.closest("#closeDraftsButton")) {
+      hideDraftsModal();
+    }
+  });
+}
+
 if (welcomeModal) {
   welcomeModal.addEventListener("click", (e) => {
     const target = e.target;
@@ -2030,6 +2077,10 @@ if (helpModal) {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (draftsModal && !draftsModal.hidden) {
+    hideDraftsModal();
+    return;
+  }
   if (helpModal && !helpModal.hidden) {
     hideHelpModal();
     return;
@@ -2042,8 +2093,6 @@ document.addEventListener("keydown", (e) => {
 if (saveSnapshotButton) {
   saveSnapshotButton.addEventListener("click", () => saveSnapshotManual());
 }
-renderDraftsList();
-
 initColorPickers();
 initImageIsolator();
 

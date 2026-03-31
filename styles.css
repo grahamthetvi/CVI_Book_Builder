@@ -57,6 +57,15 @@ body {
   z-index: 1000;
 }
 
+.modal-drafts-overlay {
+  z-index: 1001;
+}
+
+.modal-drafts-card {
+  max-height: min(85vh, 640px);
+  overflow-y: auto;
+}
+
 .modal-help-card {
   max-height: min(85vh, 640px);
   overflow-y: auto;
@@ -778,7 +787,8 @@ button:hover {
   .panel:not(.preview-printable),
   .preview-label,
   .live-preview-heading,
-  .preview-printable > .hint {
+  .preview-printable > .hint,
+  .modal-overlay {
     display: none !important;
   }
 

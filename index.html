@@ -76,6 +76,24 @@
     </div>
   </div>
 
+  <div id="draftsModal" class="modal-overlay modal-drafts-overlay" role="dialog" aria-modal="true" aria-labelledby="draftsModalTitle" hidden>
+    <div class="modal-card modal-drafts-card">
+      <h2 id="draftsModalTitle">Drafts</h2>
+      <p class="hint">
+        Drafts are stored only in this browser on this device. Very large books with many high-resolution images may fail
+        to save if storage is full&mdash;export a PowerPoint as a backup.
+      </p>
+      <div id="draftsList" class="drafts-list" aria-live="polite"></div>
+      <div class="story-input-actions top-gap">
+        <button id="saveSnapshotButton" type="button">Save snapshot now</button>
+      </div>
+      <p id="draftStatusMessage" class="hint" aria-live="polite"></p>
+      <div class="story-input-actions top-gap">
+        <button id="closeDraftsButton" type="button" class="primary">Close</button>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
     <header class="page-header">
       <div class="page-header-text">
@@ -83,6 +101,7 @@
         <p>Create a downloadable PowerPoint in Letter landscape format.</p>
       </div>
       <div class="page-header-actions">
+        <button type="button" id="draftsButton" class="help-button">Drafts</button>
         <button type="button" id="helpButton" class="help-button">Get help</button>
         <a href="https://buymeacoffee.com/grahamthetvi" target="_blank" rel="noopener noreferrer" class="tip-button">Tip me</a>
       </div>
@@ -124,19 +143,6 @@
           Include Teaching Activities
         </label>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2>Saved on this device</h2>
-      <p class="hint">
-        Drafts are stored only in this browser on this device. Very large books with many high-resolution images may fail
-        to save if storage is full—export a PowerPoint as a backup.
-      </p>
-      <div id="draftsList" class="drafts-list" aria-live="polite"></div>
-      <div class="story-input-actions top-gap">
-        <button id="saveSnapshotButton" type="button">Save snapshot now</button>
-      </div>
-      <p id="draftStatusMessage" class="hint" aria-live="polite"></p>
     </section>
 
     <section class="panel">
