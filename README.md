@@ -5,7 +5,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
-- **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
+- **Light / dark UI theme** — **Light** and **Dark** radio buttons in the header under “Color theme”; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
 - **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
 - Title slide

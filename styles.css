@@ -106,13 +106,45 @@ body {
   color: var(--text-primary);
 }
 
-.theme-toggle {
+.theme-fieldset {
   flex-shrink: 0;
   align-self: flex-start;
-  min-width: 40px;
+  margin: 0;
   padding: 6px 10px;
-  font-size: 16px;
-  line-height: 1;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  min-width: 0;
+}
+
+.theme-fieldset legend {
+  padding: 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.theme-radios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  margin-top: 4px;
+}
+
+.theme-radio-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.theme-radio-label input {
+  margin: 0;
+  width: auto;
+  cursor: pointer;
 }
 
 .modal-overlay {

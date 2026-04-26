@@ -231,7 +231,13 @@
         <p>Create a downloadable PowerPoint in Letter landscape format.</p>
       </div>
       <div class="page-header-actions">
-        <button type="button" id="themeToggleButton" class="theme-toggle" aria-label="Switch color theme" title="Theme">☀️</button>
+        <fieldset class="theme-fieldset">
+          <legend>Color theme</legend>
+          <div class="theme-radios">
+            <label class="theme-radio-label"><input type="radio" name="uiTheme" id="themeLightRadio" value="light"> Light</label>
+            <label class="theme-radio-label"><input type="radio" name="uiTheme" id="themeDarkRadio" value="dark" checked> Dark</label>
+          </div>
+        </fieldset>
         <button type="button" id="userGuideButton" class="help-button header-btn-user-guide">User guide</button>
         <button type="button" id="draftsButton" class="help-button header-btn-drafts">Drafts</button>
         <button type="button" id="helpButton" class="help-button header-btn-help">Get help</button>

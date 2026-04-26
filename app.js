@@ -54,7 +54,8 @@ const draftsModal = document.getElementById("draftsModal");
 const draftsButton = document.getElementById("draftsButton");
 const closeDraftsButton = document.getElementById("closeDraftsButton");
 // const printablePreviewSection = previewContainer.closest(".panel"); // used only for Print / Save as PDF
-const themeToggleButton = document.getElementById("themeToggleButton");
+const themeLightRadio = document.getElementById("themeLightRadio");
+const themeDarkRadio = document.getElementById("themeDarkRadio");
 const THEME_STORAGE_KEY = "cviBookBuilderTheme";
 const exportProgressOverlay = document.getElementById("exportProgressOverlay");
 const exportProgressMessage = document.getElementById("exportProgressMessage");
@@ -2041,28 +2042,32 @@ function getStoredUiTheme() {
   return "dark";
 }
 
-function syncThemeToggleButton() {
-  if (!themeToggleButton) return;
+function syncThemeRadios() {
+  if (!themeLightRadio || !themeDarkRadio) return;
   const isLight = document.documentElement.dataset.theme === "light";
-  themeToggleButton.textContent = isLight ? "🌙" : "☀️";
-  themeToggleButton.title = isLight ? "Switch to dark theme" : "Switch to light theme";
-  themeToggleButton.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+  themeLightRadio.checked = isLight;
+  themeDarkRadio.checked = !isLight;
 }
 
-if (themeToggleButton) {
+function initUiThemeControls() {
+  if (!themeLightRadio || !themeDarkRadio) return;
   applyUiTheme(getStoredUiTheme());
-  syncThemeToggleButton();
-  themeToggleButton.addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  syncThemeRadios();
+  const onThemeChange = () => {
+    const next = themeLightRadio.checked ? "light" : "dark";
     applyUiTheme(next);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch (e) {
       /* ignore */
     }
-    syncThemeToggleButton();
-  });
+    syncThemeRadios();
+  };
+  themeLightRadio.addEventListener("change", onThemeChange);
+  themeDarkRadio.addEventListener("change", onThemeChange);
 }
+
+initUiThemeControls();
 
 /* Print / Save as PDF — re-enable with the button in index.html
 let printCleanupTimer = null;
