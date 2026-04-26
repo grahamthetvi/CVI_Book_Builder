@@ -6,6 +6,14 @@
   <title>CVI Book Builder</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("cviBookBuilderTheme");
+        if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 </head>
 <body>
@@ -24,7 +32,7 @@
         <li>Click <strong>Copy AI Formatting Prompt</strong> and paste it into your AI tool.</li>
         <li>Paste the AI output into <strong>AI formatted text</strong>, then click <strong>Parse Into Spreads</strong>.</li>
         <li>Add images to each spread and review the live preview.</li>
-        <li>Download PowerPoint or Print/Save as PDF.</li>
+        <li>Download PowerPoint when you are finished.</li>
       </ol>
       <p class="hint modal-attribution" role="note">
         HEIC (iPhone) photo conversion runs in your browser using open-source libraries, including components under
@@ -47,7 +55,7 @@
           CVI Book Builder helps teachers and families create <strong>CVI-friendly</strong> story books for children with
           cortical visual impairment. You can build a letter-sized landscape PowerPoint with high-contrast odd pages,
           story text on even pages, salient feature notes, optional activity ideas, and a live preview. The tool runs
-          entirely in your browser; your book text and images stay on your device unless you choose to export or print.
+          entirely in your browser; your book text and images stay on your device unless you choose to export.
         </p>
       </div>
 
@@ -100,7 +108,7 @@
           CVI Book Builder creates a <strong>letter-sized landscape PowerPoint</strong> with a consistent CVI-friendly layout:
           <strong>odd pages</strong> show high-contrast accessible text (and your images), and <strong>even pages</strong> carry the story text
           (rotated for binding), salient features, and optional teaching activities. A <strong>live preview</strong> mirrors the same rules as
-          download and print.
+          download.
         </p>
       </div>
 
@@ -115,7 +123,7 @@
           <li><strong>Spreads</strong> &mdash; Refine story text, salient features, accessible odd-page text, image prompts, and per-spread photos. Use <strong>Add Spread</strong> or <strong>Remove</strong> as needed.</li>
           <li><strong>Review</strong> &mdash; Watch the <strong>Live Preview</strong> update as you edit; use <strong>Refresh Preview</strong> if something looks stale.</li>
           <li><strong>Documentation</strong> &mdash; Fill in <strong>TVI Session Notes</strong> and <strong>Copy FVA/LMA Summary</strong> when you need text for reports.</li>
-          <li><strong>Finish</strong> &mdash; <strong>Download PowerPoint (.pptx)</strong> and/or <strong>Print / Save as PDF</strong>. Use <strong>Drafts</strong> to save and restore work in this browser.</li>
+          <li><strong>Finish</strong> &mdash; <strong>Download PowerPoint (.pptx)</strong>. Use <strong>Drafts</strong> to save and restore work in this browser.</li>
         </ol>
       </div>
 
@@ -164,10 +172,9 @@
       </div>
 
       <div class="modal-help-section" id="ug-preview-export">
-        <h3>Live Preview, PowerPoint, and PDF</h3>
+        <h3>Live Preview and PowerPoint</h3>
         <p>
           The <strong>Live Preview</strong> uses the same layout logic as export. <strong>Refresh Preview</strong> forces a full redraw. <strong>Download PowerPoint (.pptx)</strong> builds the file with PptxGenJS; large decks may take a moment (a progress overlay can appear).
-          <strong>Print / Save as PDF</strong> uses the browser print dialog&mdash;choose &ldquo;Save as PDF&rdquo; or your system&rsquo;s PDF printer for a static copy.
         </p>
       </div>
 
@@ -224,6 +231,7 @@
         <p>Create a downloadable PowerPoint in Letter landscape format.</p>
       </div>
       <div class="page-header-actions">
+        <button type="button" id="themeToggleButton" class="theme-toggle" aria-label="Switch color theme" title="Theme">☀️</button>
         <button type="button" id="userGuideButton" class="help-button header-btn-user-guide">User guide</button>
         <button type="button" id="draftsButton" class="help-button header-btn-drafts">Drafts</button>
         <button type="button" id="helpButton" class="help-button header-btn-help">Get help</button>
@@ -471,7 +479,9 @@ IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
 
     <section class="panel actions">
       <button id="refreshPreviewButton" type="button">Refresh Preview</button>
+      <!-- PDF / print export (disabled for now; re-enable button + app.js handler together)
       <button id="printPdfButton" type="button">Print / Save as PDF</button>
+      -->
       <button id="exportPptxButton" type="button" class="primary">Download PowerPoint (.pptx)</button>
       <p id="statusMessage" aria-live="polite"></p>
     </section>

@@ -5,9 +5,9 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
-- Print-friendly preview with browser Save as PDF path
+- **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
-- **Drafts** — auto-saves when you parse spreads, export PowerPoint, or print/Save as PDF (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
+- **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
 - Title slide
 - Alternating spread export:
   - odd slide: accessible high-contrast text + 1 to 4 images
@@ -24,11 +24,11 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
   - odd-page background color (default black)
   - odd-page text position (top, bottom, left, right)
 - AI formatted text parsing + manual spread editing
-- Live preview refresh button before export/print
+- Live preview refresh button before export
 
 ## Drafts and autosave
 
-- The app auto-saves when you **Parse Into Spreads**, **Download PowerPoint (.pptx)**, or **Print / Save as PDF**. Auto-saves only happen when the **Book title** field is filled in.
+- The app auto-saves when you **Parse Into Spreads** or **Download PowerPoint (.pptx)**. Auto-saves only happen when the **Book title** field is filled in.
 - If an existing auto-save has the same book title, it is **overwritten** instead of creating a duplicate.
 - Click the **Drafts** button in the top-right header to open the drafts popup where you can load, delete, or create a named snapshot.
 - Use **Save snapshot now** to pin the current book with an optional name. Snapshots are never overwritten by auto-saves.
@@ -43,14 +43,12 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 3. Add spreads manually, or paste formatted text and click **Parse Into Spreads**.
 4. For each spread, optionally upload 1 to 4 odd-page images.
 5. Click **Refresh Preview** to check layout.
-6. Click **Print / Save as PDF** for PDF output, or **Download PowerPoint (.pptx)**.
+6. Click **Download PowerPoint (.pptx)**.
 7. Use **Copy FVA/LMA Summary** to copy session notes for the TVI.
 
-### Print / Save as PDF
+### Print / Save as PDF (currently disabled in the UI)
 
-The app marks only the live preview for printing. The print stylesheet uses letter landscape. **Different browsers** may position margins slightly differently; if one browser’s PDF looks off, try another.
-
-**Why “after print” matters (technical):** The code must know when printing has **finished** before removing the print-only styling. Some browsers run the actual print layout **after** `window.print()` has already returned. The app listens for the browser’s **`afterprint`** event (with a long fallback timer) so the preview panel stays in “print mode” until the dialog completes. That helps the saved PDF match what you saw in print preview.
+The in-app **Print / Save as PDF** control is commented out in `index.html` and `app.js` so it can be restored later. The `@media print` rules in `styles.css` and the `afterprint`-based cleanup in the commented handler are still there for that path.
 
 ## AI Formatting Prompt
 
