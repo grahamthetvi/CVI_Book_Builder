@@ -4,7 +4,7 @@ const addSpreadButton = document.getElementById("addSpreadButton");
 const parseAiButton = document.getElementById("parseAiButton");
 const exportPptxButton = document.getElementById("exportPptxButton");
 const refreshPreviewButton = document.getElementById("refreshPreviewButton");
-const printPdfButton = document.getElementById("printPdfButton");
+// const printPdfButton = document.getElementById("printPdfButton"); // PDF export disabled (see HTML comment + block below)
 const statusMessage = document.getElementById("statusMessage");
 const previewContainer = document.getElementById("previewContainer");
 
@@ -53,7 +53,9 @@ const closeUserGuideButton = document.getElementById("closeUserGuideButton");
 const draftsModal = document.getElementById("draftsModal");
 const draftsButton = document.getElementById("draftsButton");
 const closeDraftsButton = document.getElementById("closeDraftsButton");
-const printablePreviewSection = previewContainer.closest(".panel");
+// const printablePreviewSection = previewContainer.closest(".panel"); // used only for Print / Save as PDF
+const themeToggleButton = document.getElementById("themeToggleButton");
+const THEME_STORAGE_KEY = "cviBookBuilderTheme";
 const exportProgressOverlay = document.getElementById("exportProgressOverlay");
 const exportProgressMessage = document.getElementById("exportProgressMessage");
 const draftsListEl = document.getElementById("draftsList");
@@ -2020,8 +2022,50 @@ refreshPreviewButton.addEventListener("click", () => {
   renderPreview();
   setStatus("Preview refreshed.");
 });
+
+function applyUiTheme(theme) {
+  if (theme === "light") {
+    document.documentElement.dataset.theme = "light";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+}
+
+function getStoredUiTheme() {
+  try {
+    const t = localStorage.getItem(THEME_STORAGE_KEY);
+    if (t === "light" || t === "dark") return t;
+  } catch (e) {
+    /* ignore */
+  }
+  return "dark";
+}
+
+function syncThemeToggleButton() {
+  if (!themeToggleButton) return;
+  const isLight = document.documentElement.dataset.theme === "light";
+  themeToggleButton.textContent = isLight ? "🌙" : "☀️";
+  themeToggleButton.title = isLight ? "Switch to dark theme" : "Switch to light theme";
+  themeToggleButton.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
+}
+
+if (themeToggleButton) {
+  applyUiTheme(getStoredUiTheme());
+  syncThemeToggleButton();
+  themeToggleButton.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    applyUiTheme(next);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+    } catch (e) {
+      /* ignore */
+    }
+    syncThemeToggleButton();
+  });
+}
+
+/* Print / Save as PDF — re-enable with the button in index.html
 let printCleanupTimer = null;
-/** Restores normal UI after the system print dialog closes. `window.print()` returns as soon as the dialog opens; layout for PDF must keep print styles until `afterprint` (see README). */
 printPdfButton.addEventListener("click", async () => {
   renderPreview();
   printablePreviewSection.classList.add("preview-printable");
@@ -2045,6 +2089,7 @@ printPdfButton.addEventListener("click", async () => {
   await performAutosaveDraft();
   window.print();
 });
+*/
 
 if (closeWelcomeButton) {
   closeWelcomeButton.addEventListener("click", hideWelcomeModal);
