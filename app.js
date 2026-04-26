@@ -2044,7 +2044,8 @@ function getStoredUiTheme() {
 function syncThemeToggleButton() {
   if (!themeToggleButton) return;
   const isLight = document.documentElement.dataset.theme === "light";
-  themeToggleButton.textContent = isLight ? "🌙" : "☀️";
+  const label = isLight ? "Dark" : "Light";
+  themeToggleButton.textContent = label;
   themeToggleButton.title = isLight ? "Switch to dark theme" : "Switch to light theme";
   themeToggleButton.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
 }
