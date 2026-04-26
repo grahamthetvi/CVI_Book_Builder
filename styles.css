@@ -102,6 +102,9 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-page);
   color: var(--text-primary);
 }
@@ -220,9 +223,76 @@ body {
   color: var(--code-text);
 }
 
-.user-guide-help-crosslink {
-  padding-top: 4px;
+.modal-welcome-card {
+  width: min(720px, 100%);
+  max-height: min(90vh, 820px);
+  overflow-y: auto;
+}
+
+.welcome-lead {
+  margin: 0 0 14px;
+  line-height: 1.45;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.welcome-section-label {
+  margin: 12px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.welcome-feature-list {
+  list-style: disc;
+  margin-top: 6px;
+}
+
+.welcome-help-hint {
+  margin-top: 14px;
+}
+
+.user-guide-footer-attribution {
+  padding-top: 8px;
   border-top: 1px solid var(--border-default);
+}
+
+.user-guide-footer-inner {
+  margin-bottom: 10px !important;
+  text-align: left;
+}
+
+.site-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+
+.site-footer-bar {
+  padding-top: 14px;
+  padding-bottom: 18px;
+}
+
+.site-footer-inner {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.site-footer-license {
+  color: var(--text-heading);
+}
+
+.site-footer-sep {
+  margin: 0 0.35em;
+  color: var(--text-muted);
+}
+
+.site-footer-creator {
+  color: var(--text-heading);
 }
 
 .modal-drafts-card {
@@ -335,6 +405,11 @@ a.tip-button:hover {
   max-width: 1050px;
   margin: 0 auto;
   padding: 12px 12px 24px;
+}
+
+main.container {
+  flex: 1 0 auto;
+  width: 100%;
 }
 
 .page-header h1 {
@@ -971,7 +1046,8 @@ button:hover {
   .preview-label,
   .live-preview-heading,
   .preview-printable > .hint,
-  .modal-overlay {
+  .modal-overlay,
+  .site-footer {
     display: none !important;
   }
 

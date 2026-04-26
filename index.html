@@ -24,20 +24,38 @@
     </div>
   </div>
   <div id="welcomeModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="welcomeModalTitle" hidden>
-    <div class="modal-card">
+    <div class="modal-card modal-welcome-card">
       <h2 id="welcomeModalTitle">Welcome to CVI Book Builder</h2>
-      <p class="hint">Quick start:</p>
+      <p class="welcome-lead">
+        Build <strong>CVI-friendly</strong> story books as a letter-sized landscape <strong>PowerPoint</strong> (and optional
+        <strong>PDF</strong> via print). Odd pages use high-contrast accessible text and your images; even pages carry the
+        story, salient features, and optional teaching activities. Everything runs <strong>in your browser</strong>—your
+        book content stays on this device until you export, print, or share it yourself.
+      </p>
+      <p class="welcome-section-label">What this app includes</p>
+      <ul class="modal-list welcome-feature-list">
+        <li><strong>Book Setup &amp; presets</strong> — Title, ECC area, activity prompt, text position, visual complexity, and one-click high-contrast palettes.</li>
+        <li><strong>AI-assisted workflow</strong> — Copy the formatting prompt, paste the model&rsquo;s tagged reply, then parse into spreads; edit any field by hand.</li>
+        <li><strong>Image Isolator</strong> — Wikimedia search, background removal, outlines; up to four odd-page images per spread; HEIC from iPhones converts here.</li>
+        <li><strong>Live preview</strong> — Matches export layout; refresh if the preview ever looks stale.</li>
+        <li><strong>TVI Session Notes</strong> — Student tips plus <strong>Copy FVA/LMA Summary</strong> for reports.</li>
+        <li><strong>Drafts</strong> — Save and reload work in this browser (export <code>.pptx</code> as a backup for important books).</li>
+      </ul>
+      <p class="welcome-section-label">Quick start</p>
       <ol class="modal-list">
-        <li>Set your Book Setup options at the top.</li>
-        <li>Click <strong>Copy AI Formatting Prompt</strong> and paste it into your AI tool.</li>
-        <li>Paste the AI output into <strong>AI formatted text</strong>, then click <strong>Parse Into Spreads</strong>.</li>
-        <li>Add images to each spread and review the live preview.</li>
-        <li>Download PowerPoint when you are finished.</li>
+        <li>Set <strong>Book Setup</strong> at the top (title, ECC, activity prompt, layout options).</li>
+        <li>Click <strong>Copy AI Formatting Prompt</strong>, run it in your AI tool, then paste the reply into <strong>AI formatted text</strong> and click <strong>Parse Into Spreads</strong> (or add spreads manually).</li>
+        <li>Add or refine images per spread; use <strong>Refresh Preview</strong> before export if needed.</li>
+        <li>Use <strong>Download PowerPoint (.pptx)</strong> and/or <strong>Print / Save as PDF</strong> when you are ready.</li>
       </ol>
+      <p class="hint welcome-help-hint">
+        Open <strong>User guide</strong> in the header for the full step-by-step reference. Use <strong>Get help</strong> for
+        contact, licensing detail, and third-party library credits.
+      </p>
       <p class="hint modal-attribution" role="note">
-        HEIC (iPhone) photo conversion runs in your browser using open-source libraries, including components under
-        <strong>LGPL-3.0</strong>. Your book content and this app&rsquo;s own code are not LGPL; see the
-        <strong>README</strong> in the repository for license details and credits.
+        HEIC (iPhone) photo conversion uses open-source components including parts under <strong>LGPL-3.0</strong>. Your book
+        content and this app&rsquo;s own code are not LGPL; see the repository <strong>README</strong> for full license
+        texts and attribution.
       </p>
       <div class="story-input-actions">
         <button id="closeWelcomeButton" type="button" class="primary">Got It</button>
@@ -100,6 +118,7 @@
         <a href="#ug-preview-export">Preview and export</a>
         <a href="#ug-tvi">TVI notes</a>
         <a href="#ug-drafts">Drafts</a>
+        <a href="#ug-attribution">Credits</a>
       </nav>
 
       <div class="modal-help-section" id="ug-overview">
@@ -193,10 +212,15 @@
         </p>
       </div>
 
-      <div class="modal-help-section user-guide-help-crosslink">
-        <h3>More help</h3>
+      <div class="modal-help-section user-guide-footer-attribution" id="ug-attribution">
+        <h3>Credits</h3>
+        <p class="site-footer-inner user-guide-footer-inner">
+          <span class="site-footer-license"><strong>MIT License</strong></span>
+          <span class="site-footer-sep" aria-hidden="true">·</span>
+          <span class="site-footer-creator">Addison Graham Creator</span>
+        </p>
         <p>
-          For contact, licensing, and attribution (including third-party libraries), use <strong>Get help</strong> in the header. The welcome screen summarizes a short quick start when you first open the app.
+          For contact, third-party library attribution, and full license texts, use <strong>Get help</strong> in the header.
         </p>
       </div>
 
@@ -591,6 +615,16 @@ IMAGE_PROMPT: One golden retriever on grass, simple background"></textarea>
       </aside>
     </div>
   </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container site-footer-bar">
+      <p class="site-footer-inner">
+        <span class="site-footer-license"><strong>MIT License</strong></span>
+        <span class="site-footer-sep" aria-hidden="true">·</span>
+        <span class="site-footer-creator">Addison Graham Creator</span>
+      </p>
+    </div>
+  </footer>
 
   <template id="spreadTemplate">
     <article class="spread-card">
