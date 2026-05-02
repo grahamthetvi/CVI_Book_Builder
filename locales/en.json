@@ -1,0 +1,392 @@
+{
+  "document": {
+    "pageTitle": "CVI Book Builder",
+    "initialExportOverlay": "Preparing export…"
+  },
+  "welcomeModal": {
+    "title": "Welcome to CVI Book Builder",
+    "leadHtml": "Build <strong>CVI-friendly</strong> story books as a letter-sized landscape <strong>PowerPoint</strong> (and optional <strong>PDF</strong> via print). Odd pages use high-contrast accessible text and your images; even pages carry the story, salient features, and optional teaching activities. Everything runs <strong>in your browser</strong>—your book content stays on this device until you export, print, or share it yourself.",
+    "whatItIncludes": "What this app includes",
+    "features": {
+      "bookSetup": "<strong>Book Setup &amp; presets</strong> — Title, ECC area, activity prompt, text position, visual complexity, and one-click high-contrast palettes.",
+      "aiWorkflow": "<strong>AI-assisted workflow</strong> — Copy the formatting prompt, paste the model’s tagged reply, then parse into spreads; edit any field by hand.",
+      "imageIsolator": "<strong>Image Isolator</strong> — Wikimedia search, background removal, outlines; up to four odd-page images per spread; HEIC from iPhones converts here.",
+      "livePreview": "<strong>Live preview</strong> — Matches export layout; refresh if the preview ever looks stale.",
+      "tviNotes": "<strong>TVI Session Notes</strong> — Student tips plus <strong>Copy FVA/LMA Summary</strong> for reports.",
+      "drafts": "<strong>Drafts</strong> — Save and reload work in this browser (export <code>.pptx</code> as a backup for important books)."
+    },
+    "quickStart": "Quick start",
+    "qs1": "Set <strong>Book Setup</strong> at the top (title, ECC, activity prompt, layout options).",
+    "qs2": "Click <strong>Copy AI Formatting Prompt</strong>, run it in your AI tool, then paste the reply into <strong>AI formatted text</strong> and click <strong>Parse Into Spreads</strong> (or add spreads manually).",
+    "qs3": "Add or refine images per spread; use <strong>Refresh Preview</strong> before export if needed.",
+    "qs4": "Use <strong>Download PowerPoint (.pptx)</strong> and/or <strong>Print / Save as PDF</strong> when you are ready.",
+    "hintHtml": "Open <strong>User guide</strong> in the header for the full step-by-step reference. Use <strong>Get help</strong> for contact, licensing detail, and third-party library credits.",
+    "attributionHtml": "HEIC (iPhone) photo conversion uses open-source components including parts under <strong>LGPL-3.0</strong>. Your book content and this app’s own code are not LGPL; see the repository <strong>README</strong> for full license texts and attribution.",
+    "gotItButton": "Got It"
+  },
+  "getHelpModal": {
+    "title": "Get help",
+    "aboutTitle": "About this site",
+    "aboutHtml": "CVI Book Builder helps teachers and families create <strong>CVI-friendly</strong> story books for children with cortical visual impairment. You can build a letter-sized landscape PowerPoint with high-contrast odd pages, story text on even pages, salient feature notes, optional activity ideas, and a live preview. The tool runs entirely in your browser; your book text and images stay on your device unless you choose to export.",
+    "contactTitle": "Contact",
+    "contactLead": "Questions, feedback, or support:",
+    "licenseTitle": "License",
+    "licenseHtml": "<strong>CVI Book Builder</strong> (this app’s own code) is provided under the <strong>MIT License</strong>. Third-party libraries loaded in the browser (for example HEIC photo conversion and PowerPoint export) may use other licenses such as MIT or LGPL-3.0. If you use the project from its GitHub repository, see the <strong>README</strong> and <strong>LICENSE</strong> files there for full attribution and license texts.",
+    "closeButton": "Close"
+  },
+  "userGuideModal": {
+    "title": "User guide",
+    "leadHint": "Step-by-step workflow for building a CVI-friendly book, from setup through export. Everything runs in your browser; drafts and exports stay on your device unless you share them elsewhere.",
+    "tocAriaLabel": "Jump to sections",
+    "tocOverview": "Overview",
+    "tocWorkflow": "Core workflow",
+    "tocBookSetup": "Book Setup",
+    "tocPresets": "Presets and styling",
+    "tocStory": "Story and AI",
+    "tocImages": "Image Isolator",
+    "tocSpreads": "Spreads",
+    "tocPreviewExport": "Preview and export",
+    "tocTvi": "TVI notes",
+    "tocDrafts": "Drafts",
+    "tocCredits": "Credits",
+    "overviewTitle": "What this tool does",
+    "overviewHtml": "CVI Book Builder creates a <strong>letter-sized landscape PowerPoint</strong> with a consistent CVI-friendly layout: <strong>odd pages</strong> show high-contrast accessible text (and your images), and <strong>even pages</strong> carry the story text (rotated for binding), salient features, and optional teaching activities. A <strong>live preview</strong> mirrors the same rules as download.",
+    "workflowTitle": "Core workflow",
+    "workflowIntro": "Most users follow this path:",
+    "wf1": "<strong>Book Setup</strong> — Title, ECC area, activity prompt, odd-page text position, visual complexity, and whether to include teaching activities.",
+    "wf2": "<strong>Optional:</strong> Pick a <strong>Quick Preset</strong> or tune <strong>Accessibility Text Style</strong> (odd-page colors, sizes, borders; story text color on even pages). The sidebar duplicates these controls while you scroll spreads.",
+    "wf3": "<strong>Story content</strong> — Either use <strong>Copy AI Formatting Prompt</strong>, paste the assistant’s reply into <strong>AI formatted text</strong>, then <strong>Parse Into Spreads</strong>, or add and edit spreads by hand (or combine both).",
+    "wf4": "<strong>Images</strong> — Use the <strong>Image Isolator</strong> to prepare pictures (upload, Wikimedia search, background removal, outline), or attach files directly on each spread (up to four odd-page images per spread). HEIC from iPhones is converted in the browser.",
+    "wf5": "<strong>Spreads</strong> — Refine story text, salient features, accessible odd-page text, image prompts, and per-spread photos. Use <strong>Add Spread</strong> or <strong>Remove</strong> as needed.",
+    "wf6": "<strong>Review</strong> — Watch the <strong>Live Preview</strong> update as you edit; use <strong>Refresh Preview</strong> if something looks stale.",
+    "wf7": "<strong>Documentation</strong> — Fill in <strong>TVI Session Notes</strong> and <strong>Copy FVA/LMA Summary</strong> when you need text for reports.",
+    "wf8": "<strong>Finish</strong> — <strong>Download PowerPoint (.pptx)</strong>. Use <strong>Drafts</strong> to save and restore work in this browser.",
+    "bookSetupTitle": "Book Setup",
+    "bookSetupHtml": "<strong>Book title</strong> and <strong>ECC Area</strong> appear in the deck where the template expects them. <strong>Activity Prompt</strong> feeds optional sensory or classroom activity ideas. <strong>Odd page text position</strong> moves the large accessible label (top, bottom, left, or right). <strong>Visual complexity</strong> adjusts how busy slides feel in the layout. Toggle <strong>Include Teaching Activities</strong> to show or hide the teaching-activities block on even pages.",
+    "presetsTitle": "Quick Presets and accessibility styling",
+    "presetsHtml": "<strong>Quick Presets</strong> apply common high-contrast palettes (for example yellow/black or red/black) in one click. Fine-tune with <strong>Accessibility Text Style (Odd Pages)</strong>: text and border colors and sizes, odd-page background, and story text color for even pages. The floating sidebar shows the same controls so you can adjust contrast while working on spreads without scrolling back to the top.",
+    "storyTitle": "Story Input and AI formatting",
+    "storyHtml": "Click <strong>Copy AI Formatting Prompt</strong> and paste it into your AI tool. The model returns text using the <code>TITLE</code>, <code>ECC_AREA</code>, <code>ACTIVITY_PROMPT</code>, and <code>SPREAD</code> blocks shown in the placeholder. Paste that output into <strong>AI formatted text</strong>, then click <strong>Parse Into Spreads</strong> to fill or update your spreads. You can still edit every field manually afterward. Each spread can include a separate <strong>image prompt</strong> for external image generators; use <strong>Copy image prompt</strong> on a spread when needed.",
+    "imagesTitle": "Image Isolator",
+    "imagesHtml": "Upload a photo or search <strong>Wikimedia Commons</strong>, then run <strong>Remove Background</strong>. Optionally enable <strong>Add object outline</strong> and set color and thickness for extra separation on busy backgrounds. <strong>Download Result</strong> saves the processed image so you can attach it on a spread. This is optional if you already have cut-out or simple images.",
+    "spreadsTitle": "Spreads",
+    "spreadsHtml": "Each spread becomes <strong>two slides</strong>: an odd accessible slide and an even story slide. Edit <strong>Story text</strong> and <strong>Salient features</strong> for the even page; <strong>Accessible text</strong> is the short label on the odd page. Add one to four images per spread on the odd page. <strong>Parse Into Spreads</strong> replaces all current spreads with the spreads from your pasted text. If the text includes <code>TITLE</code>, <code>ECC_AREA</code>, or <code>ACTIVITY_PROMPT</code>, those lines also update Book Setup when present.",
+    "previewExportTitle": "Live Preview and PowerPoint",
+    "previewExportHtml": "The <strong>Live Preview</strong> uses the same layout logic as export. <strong>Refresh Preview</strong> forces a full redraw. <strong>Download PowerPoint (.pptx)</strong> builds the file with PptxGenJS; large decks may take a moment (a progress overlay can appear).",
+    "tviTitle": "TVI Session Notes",
+    "tviHtml": "Use <strong>Student-specific CVI tips</strong> for ongoing recommendations. <strong>Copy FVA/LMA Summary</strong> copies formatted text you can paste into evaluation or report documents.",
+    "draftsTitle": "Drafts",
+    "draftsHtml": "Open <strong>Drafts</strong> to save snapshots of your book in this browser. Storage is local only; clearing site data or using another device removes access. Save important work as PowerPoint as a backup, especially for large books with many images.",
+    "creditsTitle": "Credits",
+    "creditsLineLicense": "MIT License",
+    "creditsLineCreator": "Addison Graham Creator",
+    "creditsFooterHtml": "For contact, third-party library attribution, and full license texts, use <strong>Get help</strong> in the header.",
+    "closeButton": "Close"
+  },
+  "draftsModal": {
+    "title": "Drafts",
+    "hint": "Drafts are stored only in this browser on this device. Very large books with many high-resolution images may fail to save if storage is full—export a PowerPoint as a backup.",
+    "emptyState": "No drafts saved yet. Drafts are created when you parse spreads or export.",
+    "saveSnapshotBtn": "Save snapshot now",
+    "closeBtn": "Close",
+    "status": {
+      "bookLoaded": "Book loaded.",
+      "autosaved": "Autosaved ·",
+      "draftDeleted": "Draft deleted.",
+      "snapshotSaved": "Snapshot saved.",
+      "couldNotSave": "Could not save:",
+      "autosaveFailedFull": "Autosave failed: storage full. Try fewer images, smaller files, or delete old drafts.",
+      "autosaveFailedUnknown": "Autosave failed:",
+      "saveFailedFull": "Save failed: storage full. Try fewer images or delete old drafts.",
+      "saveFailedUnknown": "Save failed:"
+    }
+  },
+  "header": {
+    "title": "CVI Book Builder",
+    "subtitle": "Create a downloadable PowerPoint in Letter landscape format.",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme",
+    "nav": {
+      "userGuide": "User guide",
+      "drafts": "Drafts",
+      "getHelp": "Get help",
+      "tipMe": "Tip me"
+    },
+    "languageLabel": "Language"
+  },
+  "bookSetup": {
+    "title": "Book Setup",
+    "labels": {
+      "bookTitle": "Book title",
+      "eccArea": "ECC Area",
+      "activityPrompt": "Activity Prompt",
+      "oddPageTextPosition": "Odd page text position",
+      "visualComplexity": "Visual complexity",
+      "includeTeachingActivities": "Include Teaching Activities"
+    },
+    "options": {
+      "top": "Top",
+      "bottom": "Bottom",
+      "left": "Left",
+      "right": "Right",
+      "normal": "Normal",
+      "highSupport": "High Support"
+    }
+  },
+  "quickPresets": {
+    "title": "Quick Presets",
+    "maxContrast": "Maximum Contrast (Yellow/Black)",
+    "highContrast": "High Contrast (Red/Black)",
+    "standardPrint": "Standard Print (Black/White)"
+  },
+  "accessibilityTextStyle": {
+    "title": "Accessibility Text Style (Odd Pages)",
+    "sidebarAriaLabel": "Accessibility text style (odd pages)",
+    "labels": {
+      "textColor": "Text color",
+      "textSize": "Text size",
+      "borderColor": "Border color",
+      "borderSize": "Border size",
+      "oddPageBgColor": "Odd page background color",
+      "storyTextColor": "Story text color (even pages)"
+    },
+    "aria": {
+      "textColorPreset": "Text color preset",
+      "textColorPresetSidebar": "Text color preset (sidebar)",
+      "customTextColorOdd": "Custom text color for odd pages",
+      "customTextColorOddSidebar": "Custom text color for odd pages (sidebar)",
+      "borderColorPreset": "Border color preset",
+      "borderColorPresetSidebar": "Border color preset (sidebar)",
+      "customBorderOdd": "Custom border color for odd page text",
+      "customBorderSidebar": "Custom border color (sidebar)",
+      "oddBgPreset": "Odd page background color preset",
+      "oddBgPresetSidebar": "Odd page background color (sidebar)",
+      "customOddBg": "Custom odd page background color",
+      "customOddBgSidebar": "Custom odd page background (sidebar)",
+      "storyTextPreset": "Story text color preset",
+      "storyTextPresetSidebar": "Story text color (sidebar)",
+      "customStoryText": "Custom story text color on even pages",
+      "customStoryTextSidebar": "Custom story text color (sidebar)"
+    },
+    "colors": {
+      "white": "White",
+      "yellow": "Yellow",
+      "red": "Red",
+      "green": "Green",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "veryDarkGray": "Very dark gray",
+      "black": "Black",
+      "custom": "Custom...",
+      "darkGreen": "Dark green"
+    }
+  },
+  "storyInput": {
+    "title": "Story Input",
+    "hint": "Use one or both: parse formatted text, then edit each spread manually.",
+    "aiFormattedText": "AI formatted text (optional)",
+    "aiPlaceholder": "TITLE: My Book\nECC_AREA: Compensatory Access\nACTIVITY_PROMPT: Create a feely box with a ball and a dog toy.\n\nSPREAD:\nSTORY: The ball is red.\nODD_TEXT: BALL\nSALIENT_FEATURES: Round shape, bright red color, bounces\nIMAGE_PROMPT: A single red ball on plain white background, soft lighting\n\nSPREAD:\nSTORY: The dog runs fast.\nODD_TEXT: DOG\nSALIENT_FEATURES: Four legs, furry coat, runs\nIMAGE_PROMPT: One golden retriever on grass, simple background",
+    "copyAiPromptBtn": "Copy AI Formatting Prompt",
+    "parseBtn": "Parse Into Spreads"
+  },
+  "imageIsolator": {
+    "title": "Image Isolator",
+    "hint": "Upload an image or pick from Wikimedia, remove the background, and optionally add an outline.",
+    "uploadLocal": "Upload local image",
+    "searchWikimedia": "Search Wikimedia Commons",
+    "searchBtn": "Search",
+    "placeholder": "e.g., red ball isolated",
+    "addOutline": "Add object outline",
+    "outlineColor": "Outline color",
+    "outlineThickness": "Outline thickness",
+    "removeBgBtn": "Remove Background",
+    "downloadResultBtn": "Download Result",
+    "initialStatus": "Choose an image source to begin.",
+    "sourceImage": "Source Image",
+    "processedResult": "Processed Result",
+    "sourcePreviewAlt": "Selected source preview",
+    "processedPreviewAlt": "Background-removed result preview",
+    "noSourceSelected": "No source image selected.",
+    "runRemoveBgHint": "Run Remove Background to preview the output."
+  },
+  "spreads": {
+    "title": "Spreads",
+    "addSpreadBtn": "Add Spread",
+    "hint": "Each spread creates 2 slides: odd accessible slide + even rotated story slide."
+  },
+  "actions": {
+    "refreshPreview": "Refresh Preview",
+    "downloadPptx": "Download PowerPoint (.pptx)",
+    "printPdf": "Print / Save as PDF"
+  },
+  "tviSessionNotes": {
+    "title": "TVI Session Notes",
+    "hint": "Build tips for this student; include in FVA/LMA summary when you copy.",
+    "studentSpecificTips": "Student-specific CVI tips",
+    "placeholder": "Add student-specific CVI considerations, adaptations, or recommendations...",
+    "copySummaryBtn": "Copy FVA/LMA Summary"
+  },
+  "livePreview": {
+    "title": "Live Preview",
+    "badge": "Live",
+    "ariaLabel": "Live preview enabled",
+    "hint": "Preview updates as you edit. Uses the same odd/even layout rules as export."
+  },
+  "footer": {
+    "license": "MIT License",
+    "creator": "Addison Graham Creator"
+  },
+  "spreadCard": {
+    "titlePrefix": "Spread",
+    "removeBtn": "Remove",
+    "storyLabel": "Story text (even page, rotated 180 degrees)",
+    "salientLabel": "Salient features (even page, below story)",
+    "accessibleLabel": "Accessible text (odd page)",
+    "imagePromptLabel": "Image prompt (for AI image generator)",
+    "oddImagesLabel": "Odd page images (1 to 4)",
+    "evenPageStoryPlaceholder": "Enter even-page story text...",
+    "salientFeaturesPlaceholder": "Key visual features to highlight...",
+    "accessibleTextPlaceholder": "Example: DOG",
+    "imagePromptPlaceholder": "e.g., A single red ball on plain white background, soft lighting",
+    "copyImagePromptBtn": "Copy image prompt",
+    "copyImagePromptAria": "Copy this spread’s image prompt to clipboard"
+  },
+  "placeholders": {
+    "bookTitle": "My CVI Story Book",
+    "eccAreaExample": "e.g., Compensatory Access, Self-Determination",
+    "aiSensoryActivity": "One-sentence sensory activity from AI (e.g., Feely box with story objects)"
+  },
+  "javascriptStrings": {
+    "imageTool": {
+      "noWikiResults": "No Wikimedia image results found. Try a different search.",
+      "enterWikiTerm": "Enter a Wikimedia search term first.",
+      "searchingWiki": "Searching Wikimedia Commons...",
+      "foundWikiImages": "Found {n} Wikimedia image(s). Click one to select.",
+      "wikiSearchFailed": "Wikimedia search failed: ",
+      "chooseImageSource": "Choose an image source first.",
+      "processingImage": "Processing image...",
+      "processingDone": "Done. Background removed and preview updated.",
+      "processingFailed": "Image processing failed: ",
+      "convertingHeic": "Converting HEIC to JPEG…",
+      "selectedWikiImage": "Selected Wikimedia image:",
+      "couldNotLoadImage": "Could not load image:",
+      "selectedLocalImage": "Selected local image:",
+      "convertedFromHeic": "(converted from HEIC)"
+    },
+    "spreadsClipboard": {
+      "imagesSelected": "{n} image(s) selected.",
+      "noImagesSelected": "No images selected.",
+      "convertingHeic": "Converting HEIC…",
+      "maxImagesAllowed": "Only up to 4 images are allowed on odd pages.",
+      "couldNotAdd": "Could not add",
+      "noPromptToCopy": "This spread has no image prompt to copy.",
+      "generateImagePrefix": "generate image:",
+      "promptCopied": "Image prompt copied. Paste into your AI image generator.",
+      "promptCopyFailed": "Failed to copy. Check clipboard permissions."
+    },
+    "drafts": {
+      "autoSavePrefix": "Auto-save ·",
+      "replaceConfirm": "Replace the current book with this draft? Unsaved changes will be lost.",
+      "snapshotNamePrompt": "Snapshot name (optional)",
+      "defaultSnapshotName": "My snapshot",
+      "fallbackSnapshotName": "Snapshot ·",
+      "draftFallbackTitle": "Draft {n}",
+      "loadBtn": "Load",
+      "deleteBtn": "Delete"
+    },
+    "exportStatus": {
+      "startingExport": "Starting export…",
+      "encodingImages": "Encoding images… spread {current} of {total}",
+      "buildingSlides": "Building PowerPoint slides…",
+      "writingFile": "Writing file…",
+      "pptLibraryError": "PowerPoint library did not load. Refresh and try again.",
+      "addSpreadFirst": "Add at least one spread before exporting.",
+      "preparingImages": "Preparing images...",
+      "preparingImagesProgress": "Preparing images ({current}/{total})…",
+      "buildingPpt": "Building PowerPoint...",
+      "downloadComplete": "Done. Downloaded {fileName}",
+      "exportFailed": "Export failed:",
+      "pasteTextFirst": "Paste formatted text first, then parse.",
+      "noSpreadsFound": "No spreads found. Check your formatting and edit manually.",
+      "parsedSpreads": "Parsed {n} spread(s). Add images as needed.",
+      "previewRefreshed": "Preview refreshed.",
+      "ready": "Ready. Add spreads and export PowerPoint."
+    },
+    "aiCopyPrompt": {
+      "success": "AI prompt + current Book Setup copied. Paste into any AI, then paste the AI output back here.",
+      "fail": "Failed to copy. Check clipboard permissions.",
+      "yes": "Yes",
+      "no": "No",
+      "useSetupLine": "Use the current Book Setup values below when you generate content.",
+      "currentSetupHeading": "Current Book Setup",
+      "prefTitle": "TITLE preference:",
+      "prefEcc": "ECC_AREA preference:",
+      "prefActivity": "ACTIVITY_PROMPT preference:",
+      "oddPosition": "Odd page text position:",
+      "visualComplexity": "Visual complexity:",
+      "includeActivities": "Include Teaching Activities:"
+    },
+    "aiTemplate": "You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.\n\nTITLE: [Book title]\n\nECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]\n\nACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]\n\nSPREAD:\nSTORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]\nODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]\nSALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]\nIMAGE_PROMPT: [Short prompt for an AI image generator: describe one clear, simple image for this spread. CVI-friendly: high contrast, uncluttered, single main subject. Example: A single red ball on plain white background, soft lighting.]\n\nSPREAD:\nSTORY: [Next spread's story text.]\nODD_TEXT: [Keyword for this spread.]\nSALIENT_FEATURES: [Salient features for this spread.]\nIMAGE_PROMPT: [AI image generator prompt for this spread.]\n\n[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES / IMAGE_PROMPT for each spread.]",
+    "fvaLmaSummary": {
+      "book": "CVI Book:",
+      "eccFocus": "ECC Focus:",
+      "spreads": "Spreads:",
+      "date": "Date:",
+      "visualPresentation": "Visual Presentation",
+      "materialsPresented": "Materials were presented using {textColor} text at {textSize}pt font on a {bgColor} background. Images were spaced using {complexity} complexity settings.",
+      "activity": "Activity:",
+      "tips": "Student-specific CVI tips:",
+      "latency": "Latency to visual attention: ___ seconds",
+      "viewingDistance": "Preferred viewing distance: ___ inches",
+      "success": "FVA/LMA summary copied to clipboard",
+      "fail": "Failed to copy. Check clipboard permissions.",
+      "complexityNormal": "Normal",
+      "complexityHighSupport": "High Support"
+    },
+    "previewLabels": {
+      "defaultTitle": "CVI Book",
+      "evenPage": "Spread {n} - Even page (rotated)",
+      "oddPage": "Spread {n} - Odd page"
+    },
+    "powerpointMetadata": {
+      "author": "CVI Book Builder",
+      "subject": "CVI Story Book",
+      "activityExtensions": "Activity Extensions",
+      "gatherDiscussExplore": "Gather, Discuss & Explore",
+      "gatherDiscussBody": "Collect real objects related to the story. Discuss textures, shapes, and features. Let the child explore items in a clutter-free space.",
+      "createFeelyBox": "Create a Feely Box",
+      "createFeelyBody": "Place story-related objects in a box with a hand-sized opening. The child reaches in to feel and identify items by touch, reinforcing concepts.",
+      "storySpecificActivity": "Story-Specific Activity"
+    },
+    "colorHelper": {
+      "white": "White",
+      "black": "Black",
+      "yellow": "Yellow",
+      "red": "Red",
+      "green": "Green",
+      "blue": "Blue",
+      "cyan": "Cyan",
+      "magenta": "Magenta",
+      "veryDarkGray": "Very dark gray",
+      "darkGray": "Dark gray",
+      "gray": "Gray",
+      "mediumGray": "Medium gray",
+      "lightGray": "Light gray",
+      "lightGrayBlue": "Light gray-blue",
+      "lightRed": "Light red",
+      "grayBlue": "Gray-blue",
+      "slate": "Slate",
+      "darkSlate": "Dark slate",
+      "unknown": "Unknown",
+      "customPrefix": "Custom",
+      "colorNameAria": "Color name:"
+    },
+    "errors": {
+      "heicConversionFailed": "HEIC conversion failed",
+      "heicHelpSuffix": ". If this persists, export the photo as JPEG from your device (e.g. iPhone: Settings → Camera → Formats → Most Compatible, or duplicate as JPEG in Photos).",
+      "unknownFallback": "Unknown error"
+    }
+  }
+}

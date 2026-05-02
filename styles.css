@@ -357,6 +357,45 @@ body {
   flex-shrink: 0;
 }
 
+.header-locale-label {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+}
+
+.locale-select {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface-raised);
+  color: var(--text-default);
+  max-width: 160px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keep main/sidebar column order stable while panels stay RTL for Arabic */
+[dir="rtl"] .book-section-wrap {
+  direction: ltr;
+}
+
+[dir="rtl"] .book-section-main,
+[dir="rtl"] .book-section-sidebar {
+  direction: rtl;
+}
+
 .help-button {
   flex-shrink: 0;
   align-self: flex-start;
