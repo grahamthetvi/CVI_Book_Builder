@@ -1,3 +1,5 @@
+import { t, getLocale, applyDomTranslations } from "./i18n.js";
+
 const spreadsContainer = document.getElementById("spreadsContainer");
 const spreadTemplate = document.getElementById("spreadTemplate");
 const addSpreadButton = document.getElementById("addSpreadButton");
@@ -84,24 +86,26 @@ function scheduleLivePreview(immediate = false) {
   }, 200);
 }
 
-/* Color name lookup for colorblind-friendly display (hex -> name) */
-const COLOR_NAMES = {
-  "#FFFFFF": "White", "#FFF": "White", "#000000": "Black", "#000": "Black",
-  "#FFFF00": "Yellow", "#FF0": "Yellow", "#FF0000": "Red", "#F00": "Red",
-  "#00FF00": "Green", "#0F0": "Green", "#0000FF": "Blue", "#00F": "Blue",
-  "#FF00FF": "Magenta", "#F0F": "Magenta", "#00FFFF": "Cyan", "#0FF": "Cyan",
-  "#111111": "Very dark gray", "#222222": "Dark gray", "#333333": "Gray",
-  "#666666": "Medium gray", "#999999": "Light gray", "#CCCCCC": "Light gray",
-  "#C6D0DD": "Light gray-blue", "#FF9E9E": "Light red", "#B9C2CE": "Gray-blue",
-  "#2D5BD1": "Blue", "#4C5D75": "Slate", "#384353": "Dark slate"
+/* Hex → i18n key under javascriptStrings.colorHelper (fallback when not matching a preset option) */
+const HEX_COLOR_KEYS = {
+  "#FFFFFF": "white", "#FFF": "white", "#000000": "black", "#000": "black",
+  "#FFFF00": "yellow", "#FF0": "yellow", "#FF0000": "red", "#F00": "red",
+  "#00FF00": "green", "#0F0": "green", "#0000FF": "blue", "#00F": "blue",
+  "#FF00FF": "magenta", "#F0F": "magenta", "#00FFFF": "cyan", "#0FF": "cyan",
+  "#111111": "veryDarkGray", "#222222": "darkGray", "#333333": "gray",
+  "#666666": "mediumGray", "#999999": "lightGray", "#CCCCCC": "lightGray",
+  "#C6D0DD": "lightGrayBlue", "#FF9E9E": "lightRed", "#B9C2CE": "grayBlue",
+  "#2D5BD1": "blue", "#4C5D75": "slate", "#384353": "darkSlate"
 };
 
 function hexToColorName(hex) {
-  if (!hex) return "Unknown";
+  if (!hex) return t("javascriptStrings.colorHelper.unknown");
   let h = hex.toUpperCase().trim();
   if (!h.startsWith("#")) h = "#" + h;
   if (h.length === 4) h = "#" + h.slice(1).split("").map((c) => c + c).join("");
-  return COLOR_NAMES[h] || `Custom (${h})`;
+  const colorKey = HEX_COLOR_KEYS[h];
+  if (colorKey) return t(`javascriptStrings.colorHelper.${colorKey}`);
+  return `${t("javascriptStrings.colorHelper.customPrefix")} (${h})`;
 }
 
 function syncColorDisplay(colorInputId) {
@@ -126,7 +130,7 @@ function syncColorDisplay(colorInputId) {
   }
 
   nameSpan.textContent = label;
-  nameSpan.setAttribute("aria-label", `Color name: ${label}`);
+  nameSpan.setAttribute("aria-label", `${t("javascriptStrings.colorHelper.colorNameAria")} ${label}`);
 }
 
 function setSidebarColorName(colorInputId, nameSpanId) {
@@ -419,7 +423,7 @@ async function convertHeicLikeToJpegFile(file) {
     .filter(Boolean)
     .join(" · ");
   throw new Error(
-    `${detail || "HEIC conversion failed"}. If this persists, export the photo as JPEG from your device (e.g. iPhone: Settings → Camera → Formats → Most Compatible, or duplicate as JPEG in Photos).`
+    `${detail || t("javascriptStrings.errors.heicConversionFailed")}${t("javascriptStrings.errors.heicHelpSuffix")}`
   );
 }
 
@@ -592,7 +596,7 @@ function renderWikimediaResults(items) {
   wikimediaResults.innerHTML = "";
 
   if (!items.length) {
-    wikimediaResults.innerHTML = `<p class="hint">No Wikimedia image results found. Try a different search.</p>`;
+    wikimediaResults.innerHTML = `<p class="hint">${t("javascriptStrings.imageTool.noWikiResults")}</p>`;
     return;
   }
 
@@ -609,7 +613,10 @@ function renderWikimediaResults(items) {
     button.appendChild(img);
     button.appendChild(title);
     button.addEventListener("click", () => {
-      setSourcePreview(item.fullUrl, { statusText: `Selected Wikimedia image: ${item.title}`, sourceName: item.title });
+      setSourcePreview(item.fullUrl, {
+        statusText: `${t("javascriptStrings.imageTool.selectedWikiImage")} ${item.title}`,
+        sourceName: item.title
+      });
     });
     wikimediaResults.appendChild(button);
   });
@@ -619,12 +626,12 @@ async function searchWikimediaCommons() {
   if (!wikimediaQueryInput || !wikimediaSearchButton) return;
   const query = (wikimediaQueryInput.value || "").trim();
   if (!query) {
-    setImageToolStatus("Enter a Wikimedia search term first.", true);
+    setImageToolStatus(t("javascriptStrings.imageTool.enterWikiTerm"), true);
     return;
   }
 
   wikimediaSearchButton.disabled = true;
-  setImageToolStatus("Searching Wikimedia Commons...");
+  setImageToolStatus(t("javascriptStrings.imageTool.searchingWiki"));
   if (wikimediaResults) {
     wikimediaResults.innerHTML = "";
   }
@@ -650,10 +657,13 @@ async function searchWikimediaCommons() {
       .filter(Boolean);
 
     renderWikimediaResults(items);
-    setImageToolStatus(`Found ${items.length} Wikimedia image(s). Click one to select.`);
+    setImageToolStatus(t("javascriptStrings.imageTool.foundWikiImages", { n: items.length }));
   } catch (err) {
     console.error(err);
-    setImageToolStatus(`Wikimedia search failed: ${err.message || "Unknown error"}`, true);
+    setImageToolStatus(
+      `${t("javascriptStrings.imageTool.wikiSearchFailed")}${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+      true
+    );
   } finally {
     wikimediaSearchButton.disabled = false;
   }
@@ -661,13 +671,13 @@ async function searchWikimediaCommons() {
 
 async function processCurrentImage() {
   if (!currentSourceUrl) {
-    setImageToolStatus("Choose an image source first.", true);
+    setImageToolStatus(t("javascriptStrings.imageTool.chooseImageSource"), true);
     return;
   }
 
   if (!processImageButton) return;
   processImageButton.disabled = true;
-  setImageToolStatus("Processing image...");
+  setImageToolStatus(t("javascriptStrings.imageTool.processingImage"));
 
   try {
     const removeBackground = await getBackgroundRemover();
@@ -702,10 +712,13 @@ async function processCurrentImage() {
       downloadProcessedButton.classList.remove("disabled");
     }
 
-    setImageToolStatus("Done. Background removed and preview updated.");
+    setImageToolStatus(t("javascriptStrings.imageTool.processingDone"));
   } catch (err) {
     console.error(err);
-    setImageToolStatus(`Image processing failed: ${err.message || "Unknown error"}`, true);
+    setImageToolStatus(
+      `${t("javascriptStrings.imageTool.processingFailed")}${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+      true
+    );
   } finally {
     processImageButton.disabled = false;
   }
@@ -719,19 +732,22 @@ function initImageIsolator() {
     if (!file) return;
     try {
       if (isHeicLikeFile(file)) {
-        setImageToolStatus("Converting HEIC to JPEG…");
+        setImageToolStatus(t("javascriptStrings.imageTool.convertingHeic"));
       }
       const readyFile = await ensureBrowserCompatibleImageFile(file);
       const objectUrl = URL.createObjectURL(readyFile);
-      const note = readyFile !== file ? ` (converted from HEIC)` : "";
+      const note = readyFile !== file ? ` ${t("javascriptStrings.imageTool.convertedFromHeic")}` : "";
       setSourcePreview(objectUrl, {
         isObjectUrl: true,
-        statusText: `Selected local image: ${readyFile.name}${note}`,
+        statusText: `${t("javascriptStrings.imageTool.selectedLocalImage")} ${readyFile.name}${note}`,
         sourceName: readyFile.name
       });
     } catch (err) {
       console.error(err);
-      setImageToolStatus(`Could not load image: ${err.message || "Unknown error"}`, true);
+      setImageToolStatus(
+        `${t("javascriptStrings.imageTool.couldNotLoadImage")} ${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+        true
+      );
     }
   });
 
@@ -838,15 +854,15 @@ function addSpread(initial = {}) {
 
   const updateSelectedImagesText = () => {
     selectedImagesText.textContent = card.currentFiles.length
-      ? `${card.currentFiles.length} image(s) selected.`
-      : "No images selected.";
+      ? t("javascriptStrings.spreadsClipboard.imagesSelected", { n: card.currentFiles.length })
+      : t("javascriptStrings.spreadsClipboard.noImagesSelected");
   };
 
   imageInput.addEventListener("change", async () => {
     const newFiles = Array.from(imageInput.files || []);
     const showHeicWait = newFiles.some(isHeicLikeFile);
     if (showHeicWait) {
-      setStatus("Converting HEIC…", false);
+      setStatus(t("javascriptStrings.spreadsClipboard.convertingHeic"), false);
     }
 
     let added = 0;
@@ -854,7 +870,7 @@ function addSpread(initial = {}) {
 
     for (const file of newFiles) {
       if (card.currentFiles.length >= 4) {
-        setStatus("Only up to 4 images are allowed on odd pages.", true);
+        setStatus(t("javascriptStrings.spreadsClipboard.maxImagesAllowed"), true);
         hadError = true;
         break;
       }
@@ -865,7 +881,10 @@ function addSpread(initial = {}) {
       } catch (err) {
         console.error(err);
         hadError = true;
-        setStatus(`Could not add ${file.name}: ${err.message || "Unknown error"}`, true);
+        setStatus(
+          `${t("javascriptStrings.spreadsClipboard.couldNotAdd")} ${file.name}: ${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+          true
+        );
       }
     }
 
@@ -908,19 +927,20 @@ function addSpread(initial = {}) {
     copyImagePromptBtn.addEventListener("click", () => {
       const text = imagePromptEl.value.trim();
       if (!text) {
-        setStatus("This spread has no image prompt to copy.", true);
+        setStatus(t("javascriptStrings.spreadsClipboard.noPromptToCopy"), true);
         return;
       }
-      const toCopy = `generate image: ${text}`;
+      const toCopy = `${t("javascriptStrings.spreadsClipboard.generateImagePrefix")} ${text}`;
       copyToClipboardFallback(
         toCopy,
-        "Image prompt copied. Paste into your AI image generator.",
-        "Failed to copy. Check clipboard permissions."
+        t("javascriptStrings.spreadsClipboard.promptCopied"),
+        t("javascriptStrings.spreadsClipboard.promptCopyFailed")
       );
     });
   }
 
   spreadsContainer.appendChild(fragment);
+  applyDomTranslations(card);
   renumberSpreads();
   scheduleLivePreview(true);
 }
@@ -1114,7 +1134,7 @@ async function applyBookState(state) {
       });
     });
     renderPreview();
-    setDraftStatus("Book loaded.", false);
+    setDraftStatus(t("draftsModal.status.bookLoaded"), false);
   } finally {
     setTimeout(() => {
       suppressAutosave = false;
@@ -1138,7 +1158,7 @@ async function performAutosaveDraft() {
 
   const drafts = loadDraftsFromStorage();
   const iso = new Date().toISOString();
-  const label = `Auto-save · ${new Date().toLocaleString()}`;
+  const label = `${t("javascriptStrings.drafts.autoSavePrefix")} ${new Date().toLocaleString(getLocale())}`;
 
   const newEntry = {
     id: newDraftId(),
@@ -1164,12 +1184,12 @@ async function performAutosaveDraft() {
   try {
     saveDraftsToStorage(drafts);
     renderDraftsList();
-    setDraftStatus(`Autosaved · ${new Date().toLocaleTimeString()}`, false);
+    setDraftStatus(`${t("draftsModal.status.autosaved")} ${new Date().toLocaleTimeString(getLocale())}`, false);
   } catch (e) {
     if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
-      setDraftStatus("Autosave failed: storage full. Try fewer images, smaller files, or delete old drafts.", true);
+      setDraftStatus(t("draftsModal.status.autosaveFailedFull"), true);
     } else {
-      setDraftStatus(`Autosave failed: ${e.message || "Unknown error"}`, true);
+      setDraftStatus(`${t("draftsModal.status.autosaveFailedUnknown")} ${e.message || t("javascriptStrings.errors.unknownFallback")}`, true);
     }
   }
 }
@@ -1185,8 +1205,7 @@ function renderDraftsList() {
   const drafts = loadDraftsFromStorage();
   draftsListEl.innerHTML = "";
   if (!drafts.length) {
-    draftsListEl.innerHTML =
-      '<p class="hint">No drafts saved yet. Drafts are created when you parse spreads or export.</p>';
+    draftsListEl.innerHTML = `<p class="hint">${t("draftsModal.emptyState")}</p>`;
     return;
   }
   drafts.forEach((d, index) => {
@@ -1194,7 +1213,7 @@ function renderDraftsList() {
     row.className = "draft-row";
     const info = document.createElement("div");
     info.className = "draft-row-info";
-    const title = d.name || `Draft ${index + 1}`;
+    const title = d.name || t("javascriptStrings.drafts.draftFallbackTitle", { n: index + 1 });
     const short = d.state?.bookTitle ? ` — ${d.state.bookTitle}` : "";
     info.textContent = `${title}${short}`;
     info.title = d.savedAt || "";
@@ -1204,12 +1223,12 @@ function renderDraftsList() {
 
     const loadBtn = document.createElement("button");
     loadBtn.type = "button";
-    loadBtn.textContent = "Load";
+    loadBtn.textContent = t("javascriptStrings.drafts.loadBtn");
     loadBtn.addEventListener("click", () => loadDraftById(d.id));
 
     const delBtn = document.createElement("button");
     delBtn.type = "button";
-    delBtn.textContent = "Delete";
+    delBtn.textContent = t("javascriptStrings.drafts.deleteBtn");
     delBtn.className = "danger";
     delBtn.addEventListener("click", () => deleteDraftById(d.id));
 
@@ -1225,7 +1244,7 @@ function loadDraftById(id) {
   const drafts = loadDraftsFromStorage();
   const d = drafts.find((x) => x.id === id);
   if (!d || !d.state) return;
-  if (!window.confirm("Replace the current book with this draft? Unsaved changes will be lost.")) return;
+  if (!window.confirm(t("javascriptStrings.drafts.replaceConfirm"))) return;
   applyBookState(d.state);
 }
 
@@ -1233,7 +1252,7 @@ function deleteDraftById(id) {
   const next = loadDraftsFromStorage().filter((x) => x.id !== id);
   saveDraftsToStorage(next);
   renderDraftsList();
-  setDraftStatus("Draft deleted.", false);
+  setDraftStatus(t("draftsModal.status.draftDeleted"), false);
 }
 
 async function saveSnapshotManual() {
@@ -1241,17 +1260,20 @@ async function saveSnapshotManual() {
   try {
     state = await collectBookState();
   } catch (e) {
-    setDraftStatus(`Could not save: ${e.message}`, true);
+    setDraftStatus(`${t("draftsModal.status.couldNotSave")} ${e.message}`, true);
     return;
   }
-  const name = window.prompt("Snapshot name (optional)", (state.bookTitle || "").trim() || "My snapshot");
+  const name = window.prompt(
+    t("javascriptStrings.drafts.snapshotNamePrompt"),
+    (state.bookTitle || "").trim() || t("javascriptStrings.drafts.defaultSnapshotName")
+  );
   if (name === null) return;
 
   const drafts = loadDraftsFromStorage();
   drafts.unshift({
     id: newDraftId(),
     savedAt: new Date().toISOString(),
-    name: name.trim() || `Snapshot · ${new Date().toLocaleString()}`,
+    name: name.trim() || `${t("javascriptStrings.drafts.fallbackSnapshotName")} ${new Date().toLocaleString(getLocale())}`,
     auto: false,
     state
   });
@@ -1259,12 +1281,12 @@ async function saveSnapshotManual() {
   try {
     saveDraftsToStorage(drafts);
     renderDraftsList();
-    setDraftStatus("Snapshot saved.", false);
+    setDraftStatus(t("draftsModal.status.snapshotSaved"), false);
   } catch (e) {
     if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
-      setDraftStatus("Save failed: storage full. Try fewer images or delete old drafts.", true);
+      setDraftStatus(t("draftsModal.status.saveFailedFull"), true);
     } else {
-      setDraftStatus(`Save failed: ${e.message || "Unknown error"}`, true);
+      setDraftStatus(`${t("draftsModal.status.saveFailedUnknown")} ${e.message || t("javascriptStrings.errors.unknownFallback")}`, true);
     }
   }
 }
@@ -1464,7 +1486,7 @@ function renderPreview() {
     return;
   }
 
-  const title = (bookTitleInput.value || "CVI Book").trim();
+  const title = (bookTitleInput.value || t("javascriptStrings.previewLabels.defaultTitle")).trim();
   const oddTextPosition = oddTextPositionInput.value;
   const oddTextSize = Math.max(18, Number(oddTextSizeInput.value) || 72);
   const oddTextColor = oddTextColorInput.value;
@@ -1508,7 +1530,7 @@ function renderPreview() {
 
     const evenLabel = document.createElement("p");
     evenLabel.className = "preview-label";
-    evenLabel.textContent = `Spread ${spreadIndex + 1} - Even page (rotated)`;
+    evenLabel.textContent = t("javascriptStrings.previewLabels.evenPage", { n: spreadIndex + 1 });
     previewContainer.appendChild(evenLabel);
 
     const oddPage = document.createElement("div");
@@ -1562,7 +1584,7 @@ function renderPreview() {
 
     const oddLabel = document.createElement("p");
     oddLabel.className = "preview-label";
-    oddLabel.textContent = `Spread ${spreadIndex + 1} - Odd page`;
+    oddLabel.textContent = t("javascriptStrings.previewLabels.oddPage", { n: spreadIndex + 1 });
     previewContainer.appendChild(oddLabel);
   });
 }
@@ -1586,7 +1608,7 @@ function addFinalActivitySlide(pptx, options) {
   const slide = pptx.addSlide();
   slide.background = { color: oddBgColor };
 
-  slide.addText("Activity Extensions", {
+  slide.addText(t("javascriptStrings.powerpointMetadata.activityExtensions"), {
     x: 0.5,
     y: 0.5,
     w: 10,
@@ -1601,18 +1623,18 @@ function addFinalActivitySlide(pptx, options) {
 
   const activities = [
     {
-      title: "Gather, Discuss & Explore",
-      body: "Collect real objects related to the story. Discuss textures, shapes, and features. Let the child explore items in a clutter-free space."
+      title: t("javascriptStrings.powerpointMetadata.gatherDiscussExplore"),
+      body: t("javascriptStrings.powerpointMetadata.gatherDiscussBody")
     },
     {
-      title: "Create a Feely Box",
-      body: "Place story-related objects in a box with a hand-sized opening. The child reaches in to feel and identify items by touch, reinforcing concepts."
+      title: t("javascriptStrings.powerpointMetadata.createFeelyBox"),
+      body: t("javascriptStrings.powerpointMetadata.createFeelyBody")
     }
   ];
 
   if (activityPrompt && activityPrompt.trim()) {
     activities.push({
-      title: "Story-Specific Activity",
+      title: t("javascriptStrings.powerpointMetadata.storySpecificActivity"),
       body: activityPrompt.trim()
     });
   }
@@ -1649,14 +1671,14 @@ function addFinalActivitySlide(pptx, options) {
 
 async function exportPptx() {
   if (typeof PptxGenJS === "undefined") {
-    setStatus("PowerPoint library did not load. Refresh and try again.", true);
+    setStatus(t("javascriptStrings.exportStatus.pptLibraryError"), true);
     hideExportProgress();
     return;
   }
 
   const spreads = collectSpreadsFromForm();
   if (!spreads.length) {
-    setStatus("Add at least one spread before exporting.", true);
+    setStatus(t("javascriptStrings.exportStatus.addSpreadFirst"), true);
     hideExportProgress();
     return;
   }
@@ -1668,19 +1690,23 @@ async function exportPptx() {
   const storyTextColor = safePptColor(storyTextColorInput.value);
   const oddTextSize = Number(oddTextSizeInput.value) || 72;
   const oddBorderSize = Number(oddBorderSizeInput.value) || 0;
-  const bookTitle = (bookTitleInput.value || "CVI Book").trim();
+  const bookTitle = (bookTitleInput.value || t("javascriptStrings.previewLabels.defaultTitle")).trim();
 
   exportPptxButton.disabled = true;
-  showExportProgress("Starting export…");
-  setStatus("Preparing images...");
+  showExportProgress(t("javascriptStrings.exportStatus.startingExport"));
+  setStatus(t("javascriptStrings.exportStatus.preparingImages"));
 
   try {
     const spreadsWithData = [];
     const n = spreads.length;
     for (let si = 0; si < spreads.length; si += 1) {
       const spread = spreads[si];
-      showExportProgress(`Encoding images… spread ${si + 1} of ${n}`);
-      setStatus(`Preparing images (${si + 1}/${n})…`);
+      showExportProgress(
+        t("javascriptStrings.exportStatus.encodingImages", { current: si + 1, total: n })
+      );
+      setStatus(
+        t("javascriptStrings.exportStatus.preparingImagesProgress", { current: si + 1, total: n })
+      );
       const imageData = [];
       for (const file of spread.imageFiles) {
         const data = await readFileAsDataUrl(file);
@@ -1689,15 +1715,15 @@ async function exportPptx() {
       spreadsWithData.push({ ...spread, imageData });
     }
 
-    showExportProgress("Building PowerPoint slides…");
+    showExportProgress(t("javascriptStrings.exportStatus.buildingSlides"));
     const pptx = new PptxGenJS();
     pptx.defineLayout({ name: "LETTER_LAND", width: 11, height: 8.5 });
     pptx.layout = "LETTER_LAND";
-    pptx.author = "CVI Book Builder";
-    pptx.subject = "CVI Story Book";
+    pptx.author = t("javascriptStrings.powerpointMetadata.author");
+    pptx.subject = t("javascriptStrings.powerpointMetadata.subject");
     pptx.title = bookTitle;
 
-    setStatus("Building PowerPoint...");
+    setStatus(t("javascriptStrings.exportStatus.buildingPpt"));
 
     const TITLE_FONT_SIZE = 52;
     const STORY_FONT_SIZE = 34;
@@ -1799,40 +1825,18 @@ async function exportPptx() {
     }
 
     const fileName = `${bookTitle.replace(/[^a-z0-9-_ ]/gi, "").trim() || "cvi-book"}.pptx`;
-    showExportProgress("Writing file…");
+    showExportProgress(t("javascriptStrings.exportStatus.writingFile"));
     await pptx.writeFile({ fileName });
-    setStatus(`Done. Downloaded ${fileName}`);
+    setStatus(t("javascriptStrings.exportStatus.downloadComplete", { fileName }));
     await performAutosaveDraft();
   } catch (err) {
     console.error(err);
-    setStatus(`Export failed: ${err.message || "Unknown error"}`, true);
+    setStatus(`${t("javascriptStrings.exportStatus.exportFailed")} ${err.message || t("javascriptStrings.errors.unknownFallback")}`, true);
   } finally {
     hideExportProgress();
     exportPptxButton.disabled = false;
   }
 }
-
-const AI_FORMATTING_PROMPT_TEMPLATE = `You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
-
-TITLE: [Book title]
-
-ECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]
-
-ACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]
-
-SPREAD:
-STORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]
-ODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]
-SALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]
-IMAGE_PROMPT: [Short prompt for an AI image generator: describe one clear, simple image for this spread. CVI-friendly: high contrast, uncluttered, single main subject. Example: A single red ball on plain white background, soft lighting.]
-
-SPREAD:
-STORY: [Next spread's story text.]
-ODD_TEXT: [Keyword for this spread.]
-SALIENT_FEATURES: [Salient features for this spread.]
-IMAGE_PROMPT: [AI image generator prompt for this spread.]
-
-[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES / IMAGE_PROMPT for each spread.]`;
 
 function getSelectedOptionLabel(selectElement) {
   if (!selectElement) return "";
@@ -1846,19 +1850,21 @@ function buildAiFormattingPromptWithSetup() {
   const activityPrompt = (activityPromptInput.value || "").trim();
   const oddTextPosition = getSelectedOptionLabel(oddTextPositionInput) || oddTextPositionInput.value;
   const visualComplexity = getSelectedOptionLabel(visualComplexityInput) || visualComplexityInput.value;
-  const includeActivities = includeTeachingActivitiesInput.checked ? "Yes" : "No";
+  const includeActivities = includeTeachingActivitiesInput.checked
+    ? t("javascriptStrings.aiCopyPrompt.yes")
+    : t("javascriptStrings.aiCopyPrompt.no");
 
-  return `Use the current Book Setup values below when you generate content.
+  return `${t("javascriptStrings.aiCopyPrompt.useSetupLine")}
 
-Current Book Setup
-- TITLE preference: ${bookTitle || "[Book title]"}
-- ECC_AREA preference: ${eccArea || "[ECC area]"}
-- ACTIVITY_PROMPT preference: ${activityPrompt || "[One-sentence sensory activity]"}
-- Odd page text position: ${oddTextPosition}
-- Visual complexity: ${visualComplexity}
-- Include Teaching Activities: ${includeActivities}
+${t("javascriptStrings.aiCopyPrompt.currentSetupHeading")}
+- ${t("javascriptStrings.aiCopyPrompt.prefTitle")} ${bookTitle || "[Book title]"}
+- ${t("javascriptStrings.aiCopyPrompt.prefEcc")} ${eccArea || "[ECC area]"}
+- ${t("javascriptStrings.aiCopyPrompt.prefActivity")} ${activityPrompt || "[One-sentence sensory activity]"}
+- ${t("javascriptStrings.aiCopyPrompt.oddPosition")} ${oddTextPosition}
+- ${t("javascriptStrings.aiCopyPrompt.visualComplexity")} ${visualComplexity}
+- ${t("javascriptStrings.aiCopyPrompt.includeActivities")} ${includeActivities}
 
-${AI_FORMATTING_PROMPT_TEMPLATE}`.trim();
+${t("javascriptStrings.aiTemplate")}`.trim();
 }
 
 function copyToClipboardFallback(text, successMsg, failMsg) {
@@ -1895,58 +1901,62 @@ function copyAiFormattingPrompt() {
   const prompt = buildAiFormattingPromptWithSetup();
   copyToClipboardFallback(
     prompt,
-    "AI prompt + current Book Setup copied. Paste into any AI, then paste the AI output back here.",
-    "Failed to copy. Check clipboard permissions."
+    t("javascriptStrings.aiCopyPrompt.success"),
+    t("javascriptStrings.aiCopyPrompt.fail")
   );
 }
 
 function copyFvaLmaSummary() {
-  const bookTitle = (bookTitleInput.value || "CVI Book").trim();
+  const bookTitle = (bookTitleInput.value || t("javascriptStrings.previewLabels.defaultTitle")).trim();
   const eccArea = (eccAreaInput.value || "").trim();
   const activityPrompt = (activityPromptInput.value || "").trim();
   const studentTips = (studentCviTipsInput.value || "").trim();
   const spreadCount = spreadsContainer.querySelectorAll(".spread-card").length;
-  const date = new Date().toLocaleDateString();
+  const date = new Date().toLocaleDateString(getLocale());
 
   const textColor = oddTextColorInput.value || "#FFFFFF";
   const bgColor = oddBgColorInput.value || "#000000";
   const textSize = oddTextSizeInput.value || "72";
   const complexityValue = visualComplexityInput.value || "normal";
-  const complexityLabel = complexityValue === "highSupport" ? "High Support" : "Normal";
+  const complexityLabel =
+    complexityValue === "highSupport"
+      ? t("javascriptStrings.fvaLmaSummary.complexityHighSupport")
+      : t("javascriptStrings.fvaLmaSummary.complexityNormal");
 
   const parts = [
-    `CVI Book: ${bookTitle}`,
-    eccArea ? `ECC Focus: ${eccArea}` : "",
-    `Spreads: ${spreadCount}`,
-    `Date: ${date}`
+    `${t("javascriptStrings.fvaLmaSummary.book")} ${bookTitle}`,
+    eccArea ? `${t("javascriptStrings.fvaLmaSummary.eccFocus")} ${eccArea}` : "",
+    `${t("javascriptStrings.fvaLmaSummary.spreads")} ${spreadCount}`,
+    `${t("javascriptStrings.fvaLmaSummary.date")} ${date}`
   ].filter(Boolean);
 
   parts.push(
     "",
-    "Visual Presentation",
-    `Materials were presented using ${textColor} text at ${textSize}pt font on a ${bgColor} background. Images were spaced using ${complexityLabel} complexity settings.`
+    t("javascriptStrings.fvaLmaSummary.visualPresentation"),
+    t("javascriptStrings.fvaLmaSummary.materialsPresented", {
+      textColor,
+      textSize,
+      bgColor,
+      complexity: complexityLabel
+    })
   );
 
   if (activityPrompt) {
-    parts.push("", `Activity: ${activityPrompt}`);
+    parts.push("", `${t("javascriptStrings.fvaLmaSummary.activity")} ${activityPrompt}`);
   }
 
   if (studentTips) {
-    parts.push("", "Student-specific CVI tips:", studentTips);
+    parts.push("", `${t("javascriptStrings.fvaLmaSummary.tips")}`, studentTips);
   }
 
-  parts.push(
-    "",
-    "Latency to visual attention: ___ seconds",
-    "Preferred viewing distance: ___ inches"
-  );
+  parts.push("", t("javascriptStrings.fvaLmaSummary.latency"), t("javascriptStrings.fvaLmaSummary.viewingDistance"));
 
   const summary = parts.join("\n");
 
   copyToClipboardFallback(
     summary,
-    "FVA/LMA summary copied to clipboard",
-    "Failed to copy. Check clipboard permissions."
+    t("javascriptStrings.fvaLmaSummary.success"),
+    t("javascriptStrings.fvaLmaSummary.fail")
   );
 }
 
@@ -1955,7 +1965,7 @@ addSpreadButton.addEventListener("click", () => addSpread());
 parseAiButton.addEventListener("click", () => {
   const raw = aiInput.value.trim();
   if (!raw) {
-    setStatus("Paste formatted text first, then parse.", true);
+    setStatus(t("javascriptStrings.exportStatus.pasteTextFirst"), true);
     return;
   }
 
@@ -1975,11 +1985,11 @@ parseAiButton.addEventListener("click", () => {
 
   if (!parsed.spreads.length) {
     addSpread();
-    setStatus("No spreads found. Check your formatting and edit manually.", true);
+    setStatus(t("javascriptStrings.exportStatus.noSpreadsFound"), true);
     renderPreview();
     return;
   }
-  setStatus(`Parsed ${parsed.spreads.length} spread(s). Add images as needed.`);
+  setStatus(t("javascriptStrings.exportStatus.parsedSpreads", { n: parsed.spreads.length }));
   renderPreview();
   performAutosaveDraft();
 });
@@ -2020,7 +2030,7 @@ presetStandardPrintButton.addEventListener("click", () => {
 
 refreshPreviewButton.addEventListener("click", () => {
   renderPreview();
-  setStatus("Preview refreshed.");
+  setStatus(t("javascriptStrings.exportStatus.previewRefreshed"));
 });
 
 function applyUiTheme(theme) {
@@ -2033,8 +2043,8 @@ function applyUiTheme(theme) {
 
 function getStoredUiTheme() {
   try {
-    const t = localStorage.getItem(THEME_STORAGE_KEY);
-    if (t === "light" || t === "dark") return t;
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
   } catch (e) {
     /* ignore */
   }
@@ -2044,25 +2054,12 @@ function getStoredUiTheme() {
 function syncThemeToggleButton() {
   if (!themeToggleButton) return;
   const isLight = document.documentElement.dataset.theme === "light";
-  const label = isLight ? "Dark" : "Light";
-  themeToggleButton.textContent = label;
-  themeToggleButton.title = isLight ? "Switch to dark theme" : "Switch to light theme";
-  themeToggleButton.setAttribute("aria-label", isLight ? "Switch to dark theme" : "Switch to light theme");
-}
-
-if (themeToggleButton) {
-  applyUiTheme(getStoredUiTheme());
-  syncThemeToggleButton();
-  themeToggleButton.addEventListener("click", () => {
-    const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
-    applyUiTheme(next);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, next);
-    } catch (e) {
-      /* ignore */
-    }
-    syncThemeToggleButton();
-  });
+  themeToggleButton.textContent = isLight ? t("header.themeDark") : t("header.themeLight");
+  themeToggleButton.title = isLight ? t("header.switchToDark") : t("header.switchToLight");
+  themeToggleButton.setAttribute(
+    "aria-label",
+    isLight ? t("header.switchToDark") : t("header.switchToLight")
+  );
 }
 
 /* Print / Save as PDF — re-enable with the button in index.html
@@ -2185,46 +2182,87 @@ document.addEventListener("keydown", (e) => {
 if (saveSnapshotButton) {
   saveSnapshotButton.addEventListener("click", () => saveSnapshotManual());
 }
-initColorPickers();
-initImageIsolator();
 
-function initLivePreview() {
-  if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());
-  [eccAreaInput, activityPromptInput, studentCviTipsInput, aiInput].forEach((el) => {
-    if (!el) return;
-    el.addEventListener("input", () => scheduleLivePreview());
-    el.addEventListener("change", () => scheduleLivePreview());
-  });
-  if (includeTeachingActivitiesInput) {
-    includeTeachingActivitiesInput.addEventListener("change", () => scheduleLivePreview(true));
-  }
-  if (oddTextPositionInput) oddTextPositionInput.addEventListener("change", () => scheduleLivePreview(true));
-  if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", () => scheduleLivePreview(true));
-  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", () => scheduleLivePreview(true));
-  if (visualComplexityInput) visualComplexityInput.addEventListener("change", () => scheduleLivePreview(true));
-  spreadsContainer.addEventListener("input", (e) => {
-    if (e.target.matches(".story-text, .salient-features, .odd-text, .image-prompt")) scheduleLivePreview();
+/** After switching locale: theme labels, export overlay text, preview, drafts list, spread chrome. */
+export function applyLocaleRefresh() {
+  syncThemeToggleButton();
+  if (exportProgressMessage) exportProgressMessage.textContent = t("document.initialExportOverlay");
+  syncMainToSidebar();
+  ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
+  renderPreview();
+  renderDraftsList();
+  document.title = t("document.pageTitle");
+  spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
+    applyDomTranslations(card);
+    const sel = card.querySelector(".selected-images");
+    const n = card.currentFiles?.length || 0;
+    if (sel) {
+      sel.textContent = n
+        ? t("javascriptStrings.spreadsClipboard.imagesSelected", { n })
+        : t("javascriptStrings.spreadsClipboard.noImagesSelected");
+    }
+    const prefix = card.querySelector(".spread-title-row h3 [data-i18n]");
+    if (prefix) prefix.textContent = t("spreadCard.titlePrefix");
   });
 }
 
-initLivePreview();
+export function bootstrap() {
+  initColorPickers();
+  initImageIsolator();
 
-document.body.addEventListener("click", (e) => {
-  if (!(e.target instanceof Element)) return;
-  const btn = e.target.closest("button");
-  if (btn && !btn.disabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    btn.classList.add("animate-pop");
-    btn.addEventListener("animationend", () => btn.classList.remove("animate-pop"), { once: true });
+  function initLivePreview() {
+    if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());
+    [eccAreaInput, activityPromptInput, studentCviTipsInput, aiInput].forEach((el) => {
+      if (!el) return;
+      el.addEventListener("input", () => scheduleLivePreview());
+      el.addEventListener("change", () => scheduleLivePreview());
+    });
+    if (includeTeachingActivitiesInput) {
+      includeTeachingActivitiesInput.addEventListener("change", () => scheduleLivePreview(true));
+    }
+    if (oddTextPositionInput) oddTextPositionInput.addEventListener("change", () => scheduleLivePreview(true));
+    if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", () => scheduleLivePreview(true));
+    if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", () => scheduleLivePreview(true));
+    if (visualComplexityInput) visualComplexityInput.addEventListener("change", () => scheduleLivePreview(true));
+    spreadsContainer.addEventListener("input", (e) => {
+      if (e.target.matches(".story-text, .salient-features, .odd-text, .image-prompt")) scheduleLivePreview();
+    });
   }
-});
 
-addSpread();
-renderPreview();
-showWelcomeModal();
-setStatus("Ready. Add spreads and export PowerPoint.");
+  initLivePreview();
 
-window.addEventListener("beforeunload", () => {
-  clearPreviewUrls();
-  revokeCurrentSourceObjectUrl();
-  revokeProcessedResultUrl();
-});
+  if (themeToggleButton) {
+    applyUiTheme(getStoredUiTheme());
+    syncThemeToggleButton();
+    themeToggleButton.addEventListener("click", () => {
+      const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+      applyUiTheme(next);
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, next);
+      } catch (e) {
+        /* ignore */
+      }
+      syncThemeToggleButton();
+    });
+  }
+
+  document.body.addEventListener("click", (e) => {
+    if (!(e.target instanceof Element)) return;
+    const btn = e.target.closest("button");
+    if (btn && !btn.disabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      btn.classList.add("animate-pop");
+      btn.addEventListener("animationend", () => btn.classList.remove("animate-pop"), { once: true });
+    }
+  });
+
+  addSpread();
+  renderPreview();
+  showWelcomeModal();
+  setStatus(t("javascriptStrings.exportStatus.ready"));
+
+  window.addEventListener("beforeunload", () => {
+    clearPreviewUrls();
+    revokeCurrentSourceObjectUrl();
+    revokeProcessedResultUrl();
+  });
+}

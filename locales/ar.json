@@ -1,0 +1,392 @@
+{
+  "document": {
+    "pageTitle": "منشئ كتب CVI",
+    "initialExportOverlay": "جاري تجهيز التصدير..."
+  },
+  "welcomeModal": {
+    "title": "مرحبًا بك في منشئ كتب CVI",
+    "leadHtml": "هذا التطبيق مصمم لإنشاء كتب قصصية <strong>ملائمة لضعف البصر القشري (CVI)</strong> كعرض <strong>PowerPoint</strong> أفقي بحجم Letter (و<strong>PDF</strong> اختياريًا عبر الطباعة). الصفحات الفردية تعرض نصًا عالي التباين وسهل الوصول وصورك؛ الصفحات الزوجية تحمل القصة والسمات البارزة وأنشطة تعليمية اختيارية. كل شيء يعمل <strong>في متصفحك</strong>—محتوى كتابك يبقى على هذا الجهاز حتى تصدّره أو تطبعه أو تشاركه بنفسك.",
+    "whatItIncludes": "ماذا يتضمن هذا التطبيق",
+    "features": {
+      "bookSetup": "<strong>إعداد الكتاب والإعدادات المسبقة</strong> — العنوان، مجال ECC، موجه النشاط، موضع النص، التعقيد البصري، ولوح ألوان عالية التباين بنقرة واحدة.",
+      "aiWorkflow": "<strong>سير عمل مدعوم بالذكاء الاصطناعي</strong> — انسخ موجه التنسيق، الصق رد النموذج الموسوم، ثم حلّل إلى صفحات متقابلة؛ عدّل أي حقل يدويًا.",
+      "imageIsolator": "<strong>عازل الصور</strong> — بحث ويكيميديا، إزالة الخلفية، ومخططات؛ حتى أربع صور للصفحة الفردية لكل صفحة متقابلة؛ تحويل HEIC من آيفون هنا.",
+      "livePreview": "<strong>معاينة مباشرة</strong> — تطابق تخطيط التصدير؛ حدّث إذا بدت المعاينة قديمة.",
+      "tviNotes": "<strong>ملاحظات جلسة TVI</strong> — نصائح للطالب مع <strong>نسخ ملخص FVA/LMA</strong> للتقارير.",
+      "drafts": "<strong>المسودات</strong> — احفظ وأعد تحميل العمل في هذا المتصفح (صدّر <code>.pptx</code> كنسخة احتياطية للكتب المهمة)."
+    },
+    "quickStart": "البدء السريع",
+    "qs1": "اضبط <strong>إعداد الكتاب</strong> في الأعلى (العنوان، ECC، موجه النشاط، خيارات التخطيط).",
+    "qs2": "انقر <strong>نسخ موجه تنسيق الذكاء الاصطناعي</strong>، شغّله في أداة الذكاء الاصطناعي، ثم الصق الرد في <strong>نص منسق بالذكاء الاصطناعي</strong> وانقر <strong>تحليل إلى صفحات متقابلة</strong> (أو أضف صفحات يدويًا).",
+    "qs3": "أضف صورًا أو حسّنها لكل صفحة متقابلة؛ استخدم <strong>تحديث المعاينة</strong> قبل التصدير إذا لزم.",
+    "qs4": "استخدم <strong>تنزيل PowerPoint (.pptx)</strong> و/أو <strong>طباعة / حفظ PDF</strong> عند الجاهزية.",
+    "hintHtml": "افتح <strong>دليل المستخدم</strong> في الشريط للمرجع الكامل خطوة بخطوة. استخدم <strong>الحصول على المساعدة</strong> للاتصال وتفاصيل الترخيص واعتماد المكتبات الخارجية.",
+    "attributionHtml": "تحويل صور HEIC (آيفون) يستخدم مكونات مفتوحة المصدر بما في ذلك أجزاء تحت <strong>LGPL-3.0</strong>. محتوى كتابك وشيفرة هذا التطبيق ليست LGPL؛ راجع <strong>README</strong> في المستودع لنصوص الترخيص الكاملة والإسناد.",
+    "gotItButton": "فهمت"
+  },
+  "getHelpModal": {
+    "title": "الحصول على المساعدة",
+    "aboutTitle": "حول هذا الموقع",
+    "aboutHtml": "يساعد منشئ كتب CVI المعلمين والعائلات على إنشاء كتب قصصية <strong>ملائمة لـ CVI</strong> للأطفال المصابين بضعف بصري قشري. يمكنك بناء عرض PowerPoint أفقي بحجم Letter بصفحات فردية عالية التباين، ونص قصة على الصفحات الزوجية، وملاحظات للسمات البارزة، وأفكار أنشطة اختيارية، ومعاينة مباشرة. الأداة تعمل بالكامل في متصفحك؛ نص كتابك وصورك يبقى على جهازك ما لم تختر التصدير.",
+    "contactTitle": "جهة الاتصال",
+    "contactLead": "الأسئلة أو الملاحظات أو الدعم:",
+    "licenseTitle": "الترخيص",
+    "licenseHtml": "<strong>منشئ كتب CVI</strong> (شيفرة هذا التطبيق) مُقدَّم بموجب <strong>رخصة MIT</strong>. قد تستخدم المكتبات الطرفية المحمّلة في المتصفح (مثل تحويل HEIC وتصدير PowerPoint) تراخيص أخرى مثل MIT أو LGPL-3.0. إذا استخدمت المشروع من مستودع GitHub، راجع ملفي <strong>README</strong> و<strong>LICENSE</strong> هناك للإسناد الكامل ونصوص الترخيص.",
+    "closeButton": "إغلاق"
+  },
+  "userGuideModal": {
+    "title": "دليل المستخدم",
+    "leadHint": "سير عمل خطوة بخطوة لبناء كتاب ملائم لـ CVI، من الإعداد حتى التصدير. كل شيء يعمل في متصفحك؛ المسودات والتصدير تبقى على جهازك ما لم تشاركها في مكان آخر.",
+    "tocAriaLabel": "الانتقال إلى الأقسام",
+    "tocOverview": "نظرة عامة",
+    "tocWorkflow": "سير العمل الأساسي",
+    "tocBookSetup": "إعداد الكتاب",
+    "tocPresets": "الإعدادات المسبقة والتنسيق",
+    "tocStory": "القصة والذكاء الاصطناعي",
+    "tocImages": "عازل الصور",
+    "tocSpreads": "الصفحات المتقابلة",
+    "tocPreviewExport": "المعاينة والتصدير",
+    "tocTvi": "ملاحظات TVI",
+    "tocDrafts": "المسودات",
+    "tocCredits": "المساهمون",
+    "overviewTitle": "ماذا تفعل هذه الأداة",
+    "overviewHtml": "ينشئ منشئ كتب CVI <strong>عرض PowerPoint أفقي بحجم Letter</strong> بتخطيط ثابت ملائم لـ CVI: <strong>الصفحات الفردية</strong> تعرض نصًا عالي التباين وسهل الوصول (وصورك)، و<strong>الصفحات الزوجية</strong> تحمل نص القصة (مستدير للتجليد) والسمات البارزة والأنشطة التعليمية الاختيارية. <strong>المعاينة المباشرة</strong> تعكس نفس قواعد التنزيل.",
+    "workflowTitle": "سير العمل الأساسي",
+    "workflowIntro": "يتبع معظم المستخدمين هذا المسار:",
+    "wf1": "<strong>إعداد الكتاب</strong> — العنوان، مجال ECC، موجه النشاط، موضع النص في الصفحة الفردية، التعقيد البصري، وما إذا كنت تريد تضمين أنشطة تعليمية.",
+    "wf2": "<strong>اختياري:</strong> اختر <strong>إعدادًا سريعًا</strong> أو ضبط <strong>نمط النص لتسهيل الوصول</strong> (ألوان وأحجام وحدود الصفحات الفردية؛ لون نص القصة للصفحات الزوجية). الشريط الجانبي يكرر هذه العناصر أثناء التمرير.",
+    "wf3": "<strong>محتوى القصة</strong> — إما استخدم <strong>نسخ موجه تنسيق الذكاء الاصطناعي</strong>، الصق رد المساعد في <strong>نص منسق بالذكاء الاصطناعي</strong>، ثم <strong>تحليل إلى صفحات متقابلة</strong>، أو أضف وحرّر الصفحات يدويًا (أو الجمع بين الاثنين).",
+    "wf4": "<strong>الصور</strong> — استخدم <strong>عازل الصور</strong> لتحضير الصور (رفع، بحث ويكيميديا، إزالة خلفية، مخطط)، أو أرفق ملفات مباشرة على كل صفحة متقابلة (حتى أربع صور للصفحة الفردية). يُحوَّل HEIC من آيفون في المتصفح.",
+    "wf5": "<strong>الصفحات المتقابلة</strong> — حسّن نص القصة والسمات البارزة والنص السهل للصفحة الفردية وموجهات الصور وصور كل صفحة. استخدم <strong>إضافة صفحة متقابلة</strong> أو <strong>إزالة</strong> حسب الحاجة.",
+    "wf6": "<strong>المراجعة</strong> — راقب تحديث <strong>المعاينة المباشرة</strong> أثناء التحرير؛ استخدم <strong>تحديث المعاينة</strong> إذا بدا شيء قديمًا.",
+    "wf7": "<strong>التوثيق</strong> — املأ <strong>ملاحظات جلسة TVI</strong> و<strong>نسخ ملخص FVA/LMA</strong> عند الحاجة لنصوص التقارير.",
+    "wf8": "<strong>الإنهاء</strong> — <strong>تنزيل PowerPoint (.pptx)</strong>. استخدم <strong>المسودات</strong> للحفظ والاستعادة في هذا المتصفح.",
+    "bookSetupTitle": "إعداد الكتاب",
+    "bookSetupHtml": "يظهر <strong>عنوان الكتاب</strong> و<strong>مجال ECC</strong> في العرض حيث يتوقع القالب. يغذي <strong>موجه النشاط</strong> أفكار أنشطة حسية أو صفية اختيارية. <strong>موضع النص في الصفحة الفردية</strong> يحرّك التسمية الكبيرة السهلة (أعلى، أسفل، يسار، يمين). <strong>التعقيد البصري</strong> يضبط ازدحام الشرائح. فعّل <strong>تضمين الأنشطة التعليمية</strong> لإظهار أو إخفاء كتلة الأنشطة على الصفحات الزوجية.",
+    "presetsTitle": "الإعدادات السريعة وتنسيق سهولة الوصول",
+    "presetsHtml": "<strong>الإعدادات السريعة</strong> تطبّق لوح ألوان شائعة عالية التباين (مثل أصفر/أسود أو أحمر/أسود) بنقرة واحدة. ضبط دقيق عبر <strong>نمط النص لتسهيل الوصول (الصفحات الفردية)</strong>: ألوان وأحجام النص والحدود، خلفية الصفحة الفردية، ولون نص القصة للصفحات الزوجية. الشريط الجانبي يعرض نفس العناصر لتعديل التباين أثناء العمل دون العودة للأعلى.",
+    "storyTitle": "إدخال القصة وتنسيق الذكاء الاصطناعي",
+    "storyHtml": "انقر <strong>نسخ موجه تنسيق الذكاء الاصطناعي</strong> والصقه في أداتك. يعيد النموذج نصًا باستخدام كتل <code>TITLE</code> و<code>ECC_AREA</code> و<code>ACTIVITY_PROMPT</code> و<code>SPREAD</code> كما في العنصر النائب. الصق المخرجات في <strong>نص منسق بالذكاء الاصطناعي</strong>، ثم انقر <strong>تحليل إلى صفحات متقابلة</strong> لملء الصفحات أو تحديثها. يمكنك تحرير كل حقل يدويًا بعد ذلك. يمكن أن تتضمن كل صفحة متقابلة <strong>موجه صورة</strong> لمنشئ صور خارجي؛ استخدم <strong>نسخ موجه الصورة</strong> عند الحاجة.",
+    "imagesTitle": "عازل الصور",
+    "imagesHtml": "ارفع صورة أو ابحث في <strong>ويكيميديا كومنز</strong>، ثم شغّل <strong>إزالة الخلفية</strong>. يمكنك تفعيل <strong>إضافة مخطط للكائن</strong> وضبط اللون والسمك لفصل أفضل على الخلفيات المزدحمة. <strong>تنزيل النتيجة</strong> يحفظ الصورة المعالجة لربطها بصفحة متقابلة. اختياري إذا كانت لديك صور مقطوعة أو بسيطة.",
+    "spreadsTitle": "الصفحات المتقابلة",
+    "spreadsHtml": "كل صفحة متقابلة تصبح <strong>شريحتين</strong>: شريحة فردية سهلة الوصول وشريحة قصة زوجية. حرّر <strong>نص القصة</strong> و<strong>السمات البارزة</strong> للصفحة الزوجية؛ <strong>النص السهل</strong> هو التسمية القصيرة على الصفحة الفردية. أضف من صورة إلى أربع صور لكل صفحة على الصفحة الفردية. <strong>تحليل إلى صفحات متقابلة</strong> يستبدل كل الصفحات الحالية بالصفحات من النص الملصوق. إذا ضمّن النص <code>TITLE</code> أو <code>ECC_AREA</code> أو <code>ACTIVITY_PROMPT</code>، تحدّث تلك الأسطر أيضًا إعداد الكتاب عند وجودها.",
+    "previewExportTitle": "المعاينة المباشرة وPowerPoint",
+    "previewExportHtml": "<strong>المعاينة المباشرة</strong> تستخدم نفس منطق التخطيط مثل التصدير. <strong>تحديث المعاينة</strong> يفرض إعادة رسم كاملة. <strong>تنزيل PowerPoint (.pptx)</strong> يبني الملف بـ PptxGen؛ العروض الكبيرة قد تستغرق لحظة (قد يظهر تقدم التصدير).",
+    "tviTitle": "ملاحظات جلسة TVI",
+    "tviHtml": "استخدم <strong>نصائح CVI الخاصة بالطالب</strong> للتوصيات المستمرة. <strong>نسخ ملخص FVA/LMA</strong> ينسخ نصًا منسقًا للصقه في تقييم أو تقرير.",
+    "draftsTitle": "المسودات",
+    "draftsHtml": "افتح <strong>المسودات</strong> لحفظ لقطات كتابك في هذا المتصفح. التخزين محلي فقط؛ مسح بيانات الموقع أو جهاز آخر يزيل الوصول. احفظ العمل المهم كـ PowerPoint كنسخة احتياطية، خاصة للكتب الكبيرة بعدة صور.",
+    "creditsTitle": "المساهمون",
+    "creditsLineLicense": "رخصة MIT",
+    "creditsLineCreator": "أديسون جراهام — المنشئ",
+    "creditsFooterHtml": "للاتصال وإسناد المكتبات الطرفية ونصوص الترخيص الكاملة، استخدم <strong>الحصول على المساعدة</strong> في الشريط.",
+    "closeButton": "إغلاق"
+  },
+  "draftsModal": {
+    "title": "المسودات",
+    "hint": "يتم حفظ المسودات محليًا في هذا المتصفح على هذا الجهاز. قد تفشل الكتب الكبيرة جدًا ذات الصور عالية الدقة في الحفظ إذا امتلأ التخزين—صدّر PowerPoint كنسخة احتياطية.",
+    "emptyState": "لم يتم حفظ أي مسودات بعد. يتم إنشاء المسودات عند تحليل الصفحات المتقابلة أو التصدير.",
+    "saveSnapshotBtn": "حفظ لقطة الآن",
+    "closeBtn": "إغلاق",
+    "status": {
+      "bookLoaded": "تم تحميل الكتاب.",
+      "autosaved": "تم الحفظ التلقائي ·",
+      "draftDeleted": "تم حذف المسودة.",
+      "snapshotSaved": "تم حفظ اللقطة.",
+      "couldNotSave": "تعذر الحفظ:",
+      "autosaveFailedFull": "فشل الحفظ التلقائي: التخزين ممتلئ. جرّب صورًا أقل أو ملفات أصغر أو احذف مسودات قديمة.",
+      "autosaveFailedUnknown": "فشل الحفظ التلقائي:",
+      "saveFailedFull": "فشل الحفظ: التخزين ممتلئ. جرّب صورًا أقل أو احذف مسودات قديمة.",
+      "saveFailedUnknown": "فشل الحفظ:"
+    }
+  },
+  "header": {
+    "title": "منشئ كتب CVI",
+    "subtitle": "إنشاء عرض PowerPoint قابل للتنزيل بتنسيق أفقي بحجم Letter.",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "switchToLight": "التبديل إلى المظهر الفاتح",
+    "switchToDark": "التبديل إلى المظهر الداكن",
+    "nav": {
+      "userGuide": "دليل المستخدم",
+      "drafts": "المسودات",
+      "getHelp": "الحصول على المساعدة",
+      "tipMe": "ادعمني"
+    },
+    "languageLabel": "اللغة"
+  },
+  "bookSetup": {
+    "title": "إعداد الكتاب",
+    "labels": {
+      "bookTitle": "عنوان الكتاب",
+      "eccArea": "مجال ECC",
+      "activityPrompt": "موجه النشاط",
+      "oddPageTextPosition": "موضع النص في الصفحة الفردية",
+      "visualComplexity": "التعقيد البصري",
+      "includeTeachingActivities": "تضمين الأنشطة التعليمية"
+    },
+    "options": {
+      "top": "أعلى",
+      "bottom": "أسفل",
+      "left": "يسار",
+      "right": "يمين",
+      "normal": "عادي",
+      "highSupport": "دعم عالي"
+    }
+  },
+  "quickPresets": {
+    "title": "إعدادات سريعة",
+    "maxContrast": "تباين أقصى (أصفر/أسود)",
+    "highContrast": "تباين عالي (أحمر/أسود)",
+    "standardPrint": "طباعة قياسية (أسود/أبيض)"
+  },
+  "accessibilityTextStyle": {
+    "title": "نمط النص لتسهيل الوصول (الصفحات الفردية)",
+    "sidebarAriaLabel": "نمط النص لتسهيل الوصول (الصفحات الفردية)",
+    "labels": {
+      "textColor": "لون النص",
+      "textSize": "حجم النص",
+      "borderColor": "لون الإطار",
+      "borderSize": "حجم الإطار",
+      "oddPageBgColor": "لون خلفية الصفحة الفردية",
+      "storyTextColor": "لون نص القصة (الصفحات الزوجية)"
+    },
+    "aria": {
+      "textColorPreset": "إعداد مسبق للون النص",
+      "textColorPresetSidebar": "إعداد مسبق للون النص (الشريط الجانبي)",
+      "customTextColorOdd": "لون نص مخصص للصفحات الفردية",
+      "customTextColorOddSidebar": "لون نص مخصص للصفحات الفردية (الشريط الجانبي)",
+      "borderColorPreset": "إعداد مسبق للون الإطار",
+      "borderColorPresetSidebar": "إعداد مسبق للون الإطار (الشريط الجانبي)",
+      "customBorderOdd": "لون إطار مخصص لنص الصفحة الفردية",
+      "customBorderSidebar": "لون إطار مخصص (الشريط الجانبي)",
+      "oddBgPreset": "إعداد مسبق للون خلفية الصفحة الفردية",
+      "oddBgPresetSidebar": "لون خلفية الصفحة الفردية (الشريط الجانبي)",
+      "customOddBg": "لون خلفية مخصص للصفحة الفردية",
+      "customOddBgSidebar": "خلفية صفحة فردية مخصصة (الشريط الجانبي)",
+      "storyTextPreset": "إعداد مسبق للون نص القصة",
+      "storyTextPresetSidebar": "لون نص القصة (الشريط الجانبي)",
+      "customStoryText": "لون نص قصة مخصص على الصفحات الزوجية",
+      "customStoryTextSidebar": "لون نص قصة مخصص (الشريط الجانبي)"
+    },
+    "colors": {
+      "white": "أبيض",
+      "yellow": "أصفر",
+      "red": "أحمر",
+      "green": "أخضر",
+      "cyan": "سماوي",
+      "blue": "أزرق",
+      "veryDarkGray": "رمادي داكن جدًا",
+      "black": "أسود",
+      "custom": "مخصص...",
+      "darkGreen": "أخضر داكن"
+    }
+  },
+  "storyInput": {
+    "title": "إدخال القصة",
+    "hint": "استخدم أحدهما أو كليهما: حلّل النص المنسق، ثم حرّر كل صفحة متقابلة يدويًا.",
+    "aiFormattedText": "نص منسق بالذكاء الاصطناعي (اختياري)",
+    "aiPlaceholder": "TITLE: My Book\nECC_AREA: Compensatory Access\nACTIVITY_PROMPT: Create a feely box with a ball and a dog toy.\n\nSPREAD:\nSTORY: The ball is red.\nODD_TEXT: BALL\nSALIENT_FEATURES: Round shape, bright red color, bounces\nIMAGE_PROMPT: A single red ball on plain white background, soft lighting\n\nSPREAD:\nSTORY: The dog runs fast.\nODD_TEXT: DOG\nSALIENT_FEATURES: Four legs, furry coat, runs\nIMAGE_PROMPT: One golden retriever on grass, simple background",
+    "copyAiPromptBtn": "نسخ موجه تنسيق الذكاء الاصطناعي",
+    "parseBtn": "تحليل إلى صفحات متقابلة"
+  },
+  "imageIsolator": {
+    "title": "عازل الصور",
+    "hint": "قم بتحميل صورة أو اختر من ويكيميديا، وأزل الخلفية، وأضف مخططًا اختياريًا.",
+    "uploadLocal": "تحميل صورة محلية",
+    "searchWikimedia": "البحث في ويكيميديا كومنز",
+    "searchBtn": "بحث",
+    "placeholder": "مثال: كرة حمراء معزولة",
+    "addOutline": "إضافة مخطط للكائن",
+    "outlineColor": "لون المخطط",
+    "outlineThickness": "سمك المخطط",
+    "removeBgBtn": "إزالة الخلفية",
+    "downloadResultBtn": "تنزيل النتيجة",
+    "initialStatus": "اختر مصدر الصورة للبدء.",
+    "sourceImage": "الصورة المصدر",
+    "processedResult": "النتيجة المعالجة",
+    "sourcePreviewAlt": "معاينة المصدر المحدد",
+    "processedPreviewAlt": "معاينة النتيجة بعد إزالة الخلفية",
+    "noSourceSelected": "لم يتم تحديد صورة مصدر.",
+    "runRemoveBgHint": "شغّل «إزالة الخلفية» لمعاينة المخرجات."
+  },
+  "spreads": {
+    "title": "الصفحات المتقابلة",
+    "addSpreadBtn": "إضافة صفحة متقابلة",
+    "hint": "تنشئ كل صفحة متقابلة شريحتين: شريحة فردية سهلة الوصول + شريحة قصة زوجية مستديرة."
+  },
+  "actions": {
+    "refreshPreview": "تحديث المعاينة",
+    "downloadPptx": "تنزيل PowerPoint (.pptx)",
+    "printPdf": "طباعة / حفظ بتنسيق PDF"
+  },
+  "tviSessionNotes": {
+    "title": "ملاحظات جلسة TVI",
+    "hint": "ابنِ نصائح لهذا الطالب؛ ضمّنها في ملخص FVA/LMA عند النسخ.",
+    "studentSpecificTips": "نصائح CVI الخاصة بالطالب",
+    "placeholder": "أضف اعتبارات أو تكييفات أو توصيات CVI الخاصة بالطالب...",
+    "copySummaryBtn": "نسخ ملخص FVA/LMA"
+  },
+  "livePreview": {
+    "title": "معاينة مباشرة",
+    "badge": "مباشر",
+    "ariaLabel": "المعاينة المباشرة مفعّلة",
+    "hint": "تتحدث المعاينة أثناء التحرير. تستخدم نفس قواعد تخطيط الصفحات الفردية/الزوجية مثل التصدير."
+  },
+  "footer": {
+    "license": "رخصة MIT",
+    "creator": "أديسون جراهام — المنشئ"
+  },
+  "spreadCard": {
+    "titlePrefix": "صفحة متقابلة",
+    "removeBtn": "إزالة",
+    "storyLabel": "نص القصة (صفحة زوجية، مستديرة 180 درجة)",
+    "salientLabel": "السمات البارزة (صفحة زوجية، أسفل القصة)",
+    "accessibleLabel": "النص السهل (صفحة فردية)",
+    "imagePromptLabel": "موجه الصورة (لمنشئ صور بالذكاء الاصطناعي)",
+    "oddImagesLabel": "صور الصفحة الفردية (1 إلى 4)",
+    "evenPageStoryPlaceholder": "أدخل نص قصة الصفحة الزوجية...",
+    "salientFeaturesPlaceholder": "الميزات البصرية الرئيسية للتسليط عليها...",
+    "accessibleTextPlaceholder": "مثال: كلب",
+    "imagePromptPlaceholder": "مثال: كرة حمراء واحدة على خلفية بيضاء بسيطة، إضاءة ناعمة",
+    "copyImagePromptBtn": "نسخ موجه الصورة",
+    "copyImagePromptAria": "نسخ موجه الصورة لهذه الصفحة المتقابلة إلى الحافظة"
+  },
+  "placeholders": {
+    "bookTitle": "كتاب قصص CVI الخاص بي",
+    "eccAreaExample": "مثال: الوصول التعويضي، تقرير المصير",
+    "aiSensoryActivity": "نشاط حسي من جملة واحدة من الذكاء الاصطناعي (مثل: صندوق الإحساس مع عناصر القصة)"
+  },
+  "javascriptStrings": {
+    "imageTool": {
+      "noWikiResults": "لم يتم العثور على نتائج لصور ويكيميديا. جرّب بحثًا مختلفًا.",
+      "enterWikiTerm": "أدخل مصطلح بحث ويكيميديا أولًا.",
+      "searchingWiki": "جاري البحث في ويكيميديا كومنز...",
+      "foundWikiImages": "تم العثور على {n} صورة في ويكيميديا. انقر على إحداها للتحديد.",
+      "wikiSearchFailed": "فشل بحث ويكيميديا: ",
+      "chooseImageSource": "اختر مصدر الصورة أولًا.",
+      "processingImage": "جاري معالجة الصورة...",
+      "processingDone": "تم. تمت إزالة الخلفية وتحديث المعاينة.",
+      "processingFailed": "فشلت معالجة الصورة: ",
+      "convertingHeic": "جاري تحويل HEIC إلى JPEG…",
+      "selectedWikiImage": "صورة ويكيميديا المحددة:",
+      "couldNotLoadImage": "تعذر تحميل الصورة:",
+      "selectedLocalImage": "الصورة المحلية المحددة:",
+      "convertedFromHeic": "(محوّلة من HEIC)"
+    },
+    "spreadsClipboard": {
+      "imagesSelected": "تم تحديد {n} صورة.",
+      "noImagesSelected": "لم يتم تحديد أي صور.",
+      "convertingHeic": "جاري تحويل HEIC…",
+      "maxImagesAllowed": "يُسمح بما يصل إلى 4 صور فقط في الصفحات الفردية.",
+      "couldNotAdd": "تعذر إضافة",
+      "noPromptToCopy": "لا تحتوي هذه الصفحة المتقابلة على موجه صورة لنسخه.",
+      "generateImagePrefix": "generate image:",
+      "promptCopied": "تم نسخ موجه الصورة. الصقه في منشئ صور الذكاء الاصطناعي.",
+      "promptCopyFailed": "فشل النسخ. تحقق من أذونات الحافظة."
+    },
+    "drafts": {
+      "autoSavePrefix": "حفظ تلقائي ·",
+      "replaceConfirm": "هل تريد استبدال الكتاب الحالي بهذه المسودة؟ ستفقد التغييرات غير المحفوظة.",
+      "snapshotNamePrompt": "اسم اللقطة (اختياري)",
+      "defaultSnapshotName": "لقطتي",
+      "fallbackSnapshotName": "لقطة ·",
+      "draftFallbackTitle": "مسودة {n}",
+      "loadBtn": "تحميل",
+      "deleteBtn": "حذف"
+    },
+    "exportStatus": {
+      "startingExport": "جاري بدء التصدير…",
+      "encodingImages": "جاري ترميز الصور… صفحة متقابلة {current} من {total}",
+      "buildingSlides": "جاري بناء شرائح PowerPoint…",
+      "writingFile": "جاري كتابة الملف…",
+      "pptLibraryError": "لم يتم تحميل مكتبة PowerPoint. حدّث الصفحة وحاول مرة أخرى.",
+      "addSpreadFirst": "أضف صفحة متقابلة واحدة على الأقل قبل التصدير.",
+      "preparingImages": "جاري تجهيز الصور...",
+      "preparingImagesProgress": "جاري تجهيز الصور ({current}/{total})…",
+      "buildingPpt": "جاري بناء PowerPoint...",
+      "downloadComplete": "تم. تم تنزيل {fileName}",
+      "exportFailed": "فشل التصدير:",
+      "pasteTextFirst": "الصق النص المنسق أولًا، ثم حلّل.",
+      "noSpreadsFound": "لم يتم العثور على صفحات متقابلة. تحقق من التنسيق وحرّر يدويًا.",
+      "parsedSpreads": "تم تحليل {n} صفحة متقابلة. أضف الصور حسب الحاجة.",
+      "previewRefreshed": "تم تحديث المعاينة.",
+      "ready": "جاهز. أضف الصفحات المتقابلة وصدّر PowerPoint."
+    },
+    "aiCopyPrompt": {
+      "success": "تم نسخ موجه الذكاء الاصطناعي + إعداد الكتاب الحالي. الصقه في أي ذكاء اصطناعي، ثم الصق المخرجات هنا.",
+      "fail": "فشل النسخ. تحقق من أذونات الحافظة.",
+      "yes": "نعم",
+      "no": "لا",
+      "useSetupLine": "استخدم قيم إعداد الكتاب الحالية أدناه عند إنشاء المحتوى.",
+      "currentSetupHeading": "إعداد الكتاب الحالي",
+      "prefTitle": "تفضيل العنوان TITLE:",
+      "prefEcc": "تفضيل ECC_AREA:",
+      "prefActivity": "تفضيل ACTIVITY_PROMPT:",
+      "oddPosition": "موضع النص في الصفحة الفردية:",
+      "visualComplexity": "التعقيد البصري:",
+      "includeActivities": "تضمين الأنشطة التعليمية:"
+    },
+    "aiTemplate": "You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.\n\nTITLE: [Book title]\n\nECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]\n\nACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]\n\nSPREAD:\nSTORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]\nODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]\nSALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]\nIMAGE_PROMPT: [Short prompt for an AI image generator: describe one clear, simple image for this spread. CVI-friendly: high contrast, uncluttered, single main subject. Example: A single red ball on plain white background, soft lighting.]\n\nSPREAD:\nSTORY: [Next spread's story text.]\nODD_TEXT: [Keyword for this spread.]\nSALIENT_FEATURES: [Salient features for this spread.]\nIMAGE_PROMPT: [AI image generator prompt for this spread.]\n\n[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES / IMAGE_PROMPT for each spread.]",
+    "fvaLmaSummary": {
+      "book": "كتاب CVI:",
+      "eccFocus": "تركيز ECC:",
+      "spreads": "الصفحات المتقابلة:",
+      "date": "التاريخ:",
+      "visualPresentation": "العرض البصري",
+      "materialsPresented": "تم تقديم المواد باستخدام نص بلون {textColor} وحجم {textSize}pt على خلفية {bgColor}. تم تباعد الصور بإعدادات تعقيد {complexity}.",
+      "activity": "النشاط:",
+      "tips": "نصائح CVI الخاصة بالطالب:",
+      "latency": "زمن الاستجابة للانتباه البصري: ___ ثانية",
+      "viewingDistance": "مسافة المشاهدة المفضلة: ___ بوصة",
+      "success": "تم نسخ ملخص FVA/LMA إلى الحافظة",
+      "fail": "فشل النسخ. تحقق من أذونات الحافظة.",
+      "complexityNormal": "عادي",
+      "complexityHighSupport": "دعم عالي"
+    },
+    "previewLabels": {
+      "defaultTitle": "كتاب CVI",
+      "evenPage": "صفحة متقابلة {n} — صفحة زوجية (مستديرة)",
+      "oddPage": "صفحة متقابلة {n} — صفحة فردية"
+    },
+    "powerpointMetadata": {
+      "author": "منشئ كتب CVI",
+      "subject": "كتاب قصص CVI",
+      "activityExtensions": "امتدادات النشاط",
+      "gatherDiscussExplore": "اجمع، ناقش واستكشف",
+      "gatherDiscussBody": "اجمع أغراضًا حقيقية مرتبطة بالقصة. ناقش الملمس والأشكال والسمات. دع الطفل يستكشف الأغراض في مساحة خالية من الفوضى.",
+      "createFeelyBox": "إنشاء صندوق الإحساس",
+      "createFeelyBody": "ضع أغراضًا مرتبطة بالقصة في صندوق بفتحة بحجم اليد. يمد الطفل يده للمس والتعرف على الأغراض باللمس، مع تعزيز المفاهيم.",
+      "storySpecificActivity": "نشاط خاص بالقصة"
+    },
+    "colorHelper": {
+      "white": "أبيض",
+      "black": "أسود",
+      "yellow": "أصفر",
+      "red": "أحمر",
+      "green": "أخضر",
+      "blue": "أزرق",
+      "cyan": "سماوي",
+      "magenta": "أرجواني",
+      "veryDarkGray": "رمادي داكن جدًا",
+      "darkGray": "رمادي داكن",
+      "gray": "رمادي",
+      "mediumGray": "رمادي متوسط",
+      "lightGray": "رمادي فاتح",
+      "lightGrayBlue": "رمادي مزرق فاتح",
+      "lightRed": "أحمر فاتح",
+      "grayBlue": "رمادي مزرق",
+      "slate": "إردوازي",
+      "darkSlate": "إردوازي داكن",
+      "unknown": "غير معروف",
+      "customPrefix": "مخصص",
+      "colorNameAria": "اسم اللون:"
+    },
+    "errors": {
+      "heicConversionFailed": "فشل تحويل HEIC",
+      "heicHelpSuffix": ". إذا استمر ذلك، صدّر الصورة كـ JPEG من جهازك (مثل آيفون: الإعدادات ← الكاميرا ← التنسيقات ← الأكثر توافقًا، أو انسخ كـ JPEG في الصور).",
+      "unknownFallback": "خطأ غير معروف"
+    }
+  }
+}
