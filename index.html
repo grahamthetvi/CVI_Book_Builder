@@ -90,6 +90,7 @@
         <a href="#ug-book-setup" data-i18n="userGuideModal.tocBookSetup">Book Setup</a>
         <a href="#ug-presets" data-i18n="userGuideModal.tocPresets">Presets and styling</a>
         <a href="#ug-story" data-i18n="userGuideModal.tocStory">Story and AI</a>
+        <a href="#ug-digitize" data-i18n="userGuideModal.tocDigitize">Digitize Book</a>
         <a href="#ug-images" data-i18n="userGuideModal.tocImages">Image Isolator</a>
         <a href="#ug-spreads" data-i18n="userGuideModal.tocSpreads">Spreads</a>
         <a href="#ug-preview-export" data-i18n="userGuideModal.tocPreviewExport">Preview and export</a>
@@ -131,6 +132,11 @@
       <div class="modal-help-section" id="ug-story">
         <h3 data-i18n="userGuideModal.storyTitle">Story Input and AI formatting</h3>
         <p data-i18n-html="userGuideModal.storyHtml"></p>
+      </div>
+
+      <div class="modal-help-section" id="ug-digitize">
+        <h3 data-i18n="userGuideModal.digitizeTitle">Digitize Book</h3>
+        <p data-i18n-html="userGuideModal.digitizeHtml"></p>
       </div>
 
       <div class="modal-help-section" id="ug-images">
@@ -350,6 +356,68 @@
       <div class="story-input-actions">
         <button id="copyAiPromptButton" type="button" data-i18n="storyInput.copyAiPromptBtn">Copy AI Formatting Prompt</button>
         <button id="parseAiButton" type="button" data-i18n="storyInput.parseBtn">Parse Into Spreads</button>
+      </div>
+    </section>
+
+    <section class="panel" id="digitizeBookPanel">
+      <h2 data-i18n="digitizeBook.title">Digitize Book</h2>
+      <p class="hint" data-i18n="digitizeBook.hint">Upload a PDF or page photos, run PaddleOCR, fix text, crop objects, then build spreads.</p>
+
+      <div class="grid three-col">
+        <label>
+          <span data-i18n="digitizeBook.uploadPdf">Upload PDF</span>
+          <input id="digitizePdfInput" type="file" accept="application/pdf,.pdf">
+        </label>
+        <label>
+          <span data-i18n="digitizeBook.uploadImages">Upload page images</span>
+          <input id="digitizeImagesInput" type="file" accept="image/*" multiple>
+        </label>
+        <label>
+          <span data-i18n="digitizeBook.ocrModel">OCR model</span>
+          <select id="digitizeOcrModel" data-i18n-options="digitizeBook.models">
+            <option value="v6-small" selected data-i18n-opt="v6Small">PP-OCRv6 Small (recommended)</option>
+            <option value="v6-tiny" data-i18n-opt="v6Tiny">PP-OCRv6 Tiny (faster)</option>
+            <option value="v5-en-mobile" data-i18n-opt="v5En">PP-OCRv5 English</option>
+            <option value="v5-arabic-mobile" data-i18n-opt="v5Ar">PP-OCRv5 Arabic</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="story-input-actions top-gap">
+        <button id="digitizeRunOcrBtn" type="button" data-i18n="digitizeBook.runOcrBtn" disabled>Run OCR on all pages</button>
+        <button id="digitizeBuildBookBtn" type="button" class="primary" data-i18n="digitizeBook.buildBookBtn" disabled>Build book from pages</button>
+        <button id="digitizeClearBtn" type="button" class="danger" data-i18n="digitizeBook.clearPagesBtn" disabled>Clear pages</button>
+      </div>
+      <p id="digitizeStatus" class="hint" aria-live="polite" data-i18n="digitizeBook.initialStatus">Upload a PDF or page photos to begin.</p>
+
+      <div id="digitizePageStrip" class="digitize-page-strip top-gap" aria-live="polite"></div>
+
+      <p id="digitizeWorkspaceEmpty" class="hint top-gap" data-i18n="digitizeBook.selectPageHint">Select a page to edit OCR text and crop objects.</p>
+
+      <div id="digitizeWorkspace" class="digitize-workspace top-gap" hidden>
+        <div class="digitize-page-stage">
+          <h3 data-i18n="digitizeBook.pagePreview">Page preview — drag to crop</h3>
+          <div class="digitize-crop-frame">
+            <img id="digitizePageImage" alt="" data-i18n-alt="digitizeBook.pagePreviewAlt" draggable="false">
+            <canvas id="digitizeCropCanvas" class="digitize-crop-canvas" aria-hidden="true"></canvas>
+          </div>
+          <div class="story-input-actions top-gap">
+            <button id="digitizeIsolateCropBtn" type="button" data-i18n="digitizeBook.isolateCropBtn">Crop &amp; remove background</button>
+            <button id="digitizeClearCropBtn" type="button" data-i18n="digitizeBook.clearCropBtn">Clear crop</button>
+          </div>
+          <p class="hint" data-i18n="digitizeBook.cropHint">Draw a box around a character or object. Isolation uses the Image Isolator outline settings.</p>
+        </div>
+
+        <div class="digitize-text-stage">
+          <label for="digitizeOcrText">
+            <span data-i18n="digitizeBook.ocrTextLabel">OCR text (edit to fix mistakes)</span>
+          </label>
+          <textarea id="digitizeOcrText" rows="10" data-i18n-placeholder="digitizeBook.ocrTextPlaceholder" placeholder="Recognized page text appears here…"></textarea>
+          <p id="digitizeOcrConfidence" class="hint" aria-live="polite"></p>
+
+          <h3 class="top-gap" data-i18n="digitizeBook.isolatedCrops">Isolated crops for this page</h3>
+          <div id="digitizeCropsList" class="digitize-crops-list"></div>
+        </div>
       </div>
     </section>
 
