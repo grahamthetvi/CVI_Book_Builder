@@ -1,4 +1,5 @@
 import { t, getLocale, applyDomTranslations } from "./i18n.js";
+import { initDigitizeBook, refreshDigitizeLocale } from "./digitize.js";
 
 const spreadsContainer = document.getElementById("spreadsContainer");
 const spreadTemplate = document.getElementById("spreadTemplate");
@@ -680,19 +681,12 @@ async function processCurrentImage() {
   setImageToolStatus(t("javascriptStrings.imageTool.processingImage"));
 
   try {
-    const removeBackground = await getBackgroundRemover();
     const sourceResponse = await fetch(currentSourceUrl);
     if (!sourceResponse.ok) {
       throw new Error(`Failed to load source image (${sourceResponse.status}).`);
     }
     const sourceBlob = await sourceResponse.blob();
-    let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob));
-
-    if (outlineEnabledInput && outlineEnabledInput.checked) {
-      const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
-      const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
-      finalBlob = await applyOutlineToBlob(finalBlob, color, thickness);
-    }
+    const finalBlob = await isolateImageBlob(sourceBlob);
 
     revokeProcessedResultUrl();
     processedResultObjectUrl = URL.createObjectURL(finalBlob);
@@ -722,6 +716,40 @@ async function processCurrentImage() {
   } finally {
     processImageButton.disabled = false;
   }
+}
+
+/** Remove background (and optional outline) from any image blob — shared with Digitize Book. */
+async function isolateImageBlob(sourceBlob) {
+  const removeBackground = await getBackgroundRemover();
+  let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob));
+
+  if (outlineEnabledInput && outlineEnabledInput.checked) {
+    const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
+    const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
+    finalBlob = await applyOutlineToBlob(finalBlob, color, thickness);
+  }
+
+  return finalBlob;
+}
+
+function rebuildSpreadsFromDigitized(spreads) {
+  spreadsContainer.innerHTML = "";
+  if (!spreads.length) {
+    addSpread();
+    scheduleLivePreview(true);
+    return;
+  }
+  for (const spread of spreads) {
+    addSpread({
+      storyText: spread.storyText || "",
+      oddText: spread.oddText || "",
+      salientFeatures: spread.salientFeatures || "",
+      imagePrompt: spread.imagePrompt || "",
+      imageFiles: Array.isArray(spread.imageFiles) ? spread.imageFiles.slice(0, 4) : []
+    });
+  }
+  renumberSpreads();
+  scheduleLivePreview(true);
 }
 
 function initImageIsolator() {
@@ -912,6 +940,15 @@ function addSpread(initial = {}) {
         console.warn("Draft image restore failed", e);
       }
     });
+    renderImageList();
+    updateSelectedImagesText();
+  }
+
+  if (initial.imageFiles && initial.imageFiles.length) {
+    for (const file of initial.imageFiles) {
+      if (card.currentFiles.length >= 4) break;
+      if (file) card.currentFiles.push(file);
+    }
     renderImageList();
     updateSelectedImagesText();
   }
@@ -2192,6 +2229,7 @@ export function applyLocaleRefresh() {
   renderPreview();
   renderDraftsList();
   document.title = t("document.pageTitle");
+  refreshDigitizeLocale();
   spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
     applyDomTranslations(card);
     const sel = card.querySelector(".selected-images");
@@ -2209,6 +2247,12 @@ export function applyLocaleRefresh() {
 export function bootstrap() {
   initColorPickers();
   initImageIsolator();
+  initDigitizeBook({
+    isolateBlob: isolateImageBlob,
+    rebuildSpreads: rebuildSpreadsFromDigitized,
+    setStatus,
+    ensureCompatibleImage: ensureBrowserCompatibleImageFile
+  });
 
   function initLivePreview() {
     if (bookTitleInput) bookTitleInput.addEventListener("input", () => scheduleLivePreview());

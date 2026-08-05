@@ -1131,9 +1131,139 @@ button:hover {
   }
 }
 
+.digitize-page-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.digitize-page-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 5.5rem;
+  padding: 0.35rem;
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-body);
+}
+
+.digitize-page-thumb.is-selected {
+  border-color: var(--border-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--border-primary) 35%, transparent);
+}
+
+.digitize-page-thumb img {
+  width: 100%;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--bg-input);
+}
+
+.digitize-page-thumb-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.digitize-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.digitize-crop-frame {
+  position: relative;
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.digitize-crop-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.digitize-crop-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.digitize-text-stage textarea {
+  width: 100%;
+  min-height: 12rem;
+}
+
+.digitize-crops-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.digitize-crop-item {
+  position: relative;
+  width: 5.5rem;
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 0.35rem;
+}
+
+.digitize-crop-item img {
+  display: block;
+  width: 100%;
+  height: 4.5rem;
+  object-fit: contain;
+  background:
+    linear-gradient(45deg, #2a3140 25%, transparent 25%),
+    linear-gradient(-45deg, #2a3140 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a3140 75%),
+    linear-gradient(-45deg, transparent 75%, #2a3140 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  border-radius: 4px;
+}
+
+:root[data-theme="light"] .digitize-crop-item img {
+  background:
+    linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+}
+
+.digitize-crop-item button {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.2rem;
+  font-size: 0.75rem;
+}
+
 @media (max-width: 900px) {
   .four-col {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .digitize-workspace {
+    grid-template-columns: 1fr;
   }
 }
 

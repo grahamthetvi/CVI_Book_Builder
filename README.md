@@ -5,6 +5,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
+- **Digitize Book** — Upload a PDF or page photos, run **PaddleOCR** (PP-OCRv6) in the browser, edit OCR text, crop characters/objects, remove backgrounds, and auto-build spreads
 - **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
 - **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
@@ -25,6 +26,18 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
   - odd-page text position (top, bottom, left, right)
 - AI formatted text parsing + manual spread editing
 - Live preview refresh button before export
+
+## Digitize Book (OCR)
+
+1. Open **Digitize Book** and upload a **PDF** and/or **page photos** (up to 40 pages).
+2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
+3. Click **Run OCR on all pages**. Models download once into the browser (first run can take a minute).
+4. Select each page, **edit the OCR text** to fix mistakes, and drag a box around a character or object.
+5. Click **Crop & remove background** (uses the Image Isolator outline settings).
+6. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
+7. Refine spreads, preview, and download PowerPoint as usual.
+
+OCR and background removal run entirely in the browser. No book images are uploaded to a server.
 
 ## Drafts and autosave
 
@@ -103,6 +116,10 @@ The static web app loads additional libraries from CDNs at runtime. Notable term
 | [heic-to](https://github.com/hoppergee/heic-to) | HEIC/HEIF → JPEG in the browser (primary converter) | [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html) |
 | [heic2any](https://github.com/alexcorvi/heic2any) | HEIC fallback conversion | MIT |
 | [PptxGenJS](https://github.com/gitbrent/PptxGenJS) | PowerPoint (`.pptx`) generation | MIT |
+| [@imgly/background-removal](https://github.com/imgly/background-removal-js) | Image Isolator / digitize crop background removal | AGPL-3.0 / commercial (see vendor terms) |
+| [pdf.js](https://github.com/mozilla/pdf.js) | Digitize Book PDF page rendering | Apache-2.0 |
+| [ppu-paddle-ocr](https://github.com/PT-Perkasa-Pilar-Utama/ppu-paddle-ocr) | Digitize Book PaddleOCR (PP-OCRv6) in the browser | MIT |
+| [onnxruntime-web](https://github.com/microsoft/onnxruntime) | ONNX Runtime WASM used by PaddleOCR | MIT |
 
 Copies of **LGPL-3.0** and **GPL-3.0** (the LGPL refers to the GPL) are in the [`licenses/`](licenses/) folder for anyone who receives this project. Source for LGPL components: [heic-to on GitHub](https://github.com/hoppergee/heic-to).
 
