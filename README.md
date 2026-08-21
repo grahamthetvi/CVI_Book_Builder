@@ -38,8 +38,9 @@ Choose a **book type** at the top of the Digitize Book panel.
 3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
 4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
 5. Click **Crop & remove background** (uses the Image Isolator outline settings).
-6. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
-7. Refine spreads, preview, and download PowerPoint as usual.
+6. Optionally **Copy all pages for AI review**, paste the tagged reply, and apply (isolated crops stay on matching pages).
+7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
+8. Refine spreads, preview, and download PowerPoint as usual.
 
 OCR and background removal run entirely in the browser. No book images are uploaded to a server.
 

@@ -401,8 +401,21 @@
 
         <div class="story-input-actions top-gap">
           <button id="digitizeRunOcrBtn" type="button" data-i18n="digitizeBook.runOcrBtn" disabled>Run OCR on all pages</button>
+          <button id="digitizeCopyAiReviewBtn" type="button" data-i18n="digitizeBook.copyAiReviewBtn" disabled>Copy all pages for AI review</button>
           <button id="digitizeBuildBookBtn" type="button" class="primary" data-i18n="digitizeBook.buildBookBtn" disabled>Build book from pages</button>
           <button id="digitizeClearBtn" type="button" class="danger" data-i18n="digitizeBook.clearPagesBtn" disabled>Clear pages</button>
+        </div>
+
+        <div class="digitize-ai-review top-gap">
+          <h3 data-i18n="digitizeBook.aiReviewTitle">Review OCR with AI</h3>
+          <p class="hint" data-i18n="digitizeBook.aiReviewHint">Copy all page text with a correction prompt, paste it into any AI, then paste the tagged reply here. Apply keeps isolated crops on the matching spreads.</p>
+          <label for="digitizeAiReviewInput">
+            <span data-i18n="digitizeBook.aiReviewPasteLabel">Paste AI-reviewed text</span>
+          </label>
+          <textarea id="digitizeAiReviewInput" rows="6" data-i18n-placeholder="digitizeBook.aiReviewPlaceholder" placeholder="SPREAD:&#10;STORY: The ball is red.&#10;ODD_TEXT: BALL"></textarea>
+          <div class="story-input-actions top-gap">
+            <button id="digitizeApplyAiReviewBtn" type="button" class="primary" data-i18n="digitizeBook.applyAiReviewBtn" disabled>Apply AI text to spreads</button>
+          </div>
         </div>
 
         <div id="digitizePageStrip" class="digitize-page-strip top-gap" aria-live="polite"></div>
@@ -429,6 +442,9 @@
             </label>
             <textarea id="digitizeOcrText" rows="10" data-i18n-placeholder="digitizeBook.ocrTextPlaceholder" placeholder="Recognized page text appears here…"></textarea>
             <p id="digitizeOcrConfidence" class="hint" aria-live="polite"></p>
+            <div class="story-input-actions top-gap">
+              <button id="digitizeCopyPageTextBtn" type="button" data-i18n="digitizeBook.copyPageTextBtn" disabled>Copy this page's text</button>
+            </div>
 
             <h3 class="top-gap" data-i18n="digitizeBook.isolatedCrops">Isolated crops for this page</h3>
             <div id="digitizeCropsList" class="digitize-crops-list"></div>

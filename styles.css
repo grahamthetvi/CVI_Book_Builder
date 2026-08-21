@@ -1232,6 +1232,11 @@ button:hover {
   min-height: 12rem;
 }
 
+.digitize-ai-review textarea {
+  width: 100%;
+  min-height: 8rem;
+}
+
 .digitize-crops-list {
   display: flex;
   flex-wrap: wrap;
