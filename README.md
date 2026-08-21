@@ -5,7 +5,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
-- **Digitize Book** — Upload a PDF, EPUB, or page photos, run **PaddleOCR** (PP-OCRv6) in the browser, edit text, crop characters/objects, remove backgrounds, and auto-build spreads
+- **Digitize Book** — Choose **Normal book** (PDF, EPUB, or page photos + PaddleOCR) or **CVI Book Nook** (auto-import a Ready-to-Print PDF)
 - **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
 - **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
@@ -27,17 +27,29 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 - AI formatted text parsing + manual spread editing
 - Live preview refresh button before export
 
-## Digitize Book (OCR)
+## Digitize Book
 
-1. Open **Digitize Book** and upload a **PDF**, **EPUB**, and/or **page photos** (up to 40 pages). EPUB text is extracted from the file; DRM-encrypted EPUBs cannot be opened. Reflowable EPUBs become one page per chapter file.
+Choose a **book type** at the top of the Digitize Book panel.
+
+### Normal book (OCR)
+
+1. Keep **Normal book** selected (the default). Upload a **PDF**, **EPUB**, and/or **page photos** (up to 40 pages). EPUB text is extracted from the file; DRM-encrypted EPUBs cannot be opened. Reflowable EPUBs become one page per chapter file.
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
 3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
 4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
 5. Click **Crop & remove background** (uses the Image Isolator outline settings).
-6. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
-7. Refine spreads, preview, and download PowerPoint as usual.
+6. Optionally **Copy all pages for AI review**, paste the tagged reply, and apply (isolated crops stay on matching pages).
+7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
+8. Refine spreads, preview, and download PowerPoint as usual.
 
 OCR and background removal run entirely in the browser. No book images are uploaded to a server.
+
+### CVI Book Nook print PDF
+
+1. Select **CVI Book Nook**.
+2. Upload a Ready-to-Print PDF from [CVI Book Nook](https://www.cvibooks.com/) (cover page, then story pages that include `Salient Features:` each followed by a photo page).
+3. Optionally check **Remove backgrounds from photos** to run the Image Isolator on each photo (off by default).
+4. The app sets the **Book title** from the cover, pairs each story page with the following photo, fills salient features and odd-page keywords, and replaces the current spreads. Review and export as usual.
 
 ## Drafts and autosave
 

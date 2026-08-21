@@ -540,10 +540,33 @@ label.checkbox-label {
   cursor: pointer;
 }
 
-label.checkbox-label input[type="checkbox"] {
+label.checkbox-label input[type="checkbox"],
+label.checkbox-label input[type="radio"] {
   width: auto;
   margin: 0;
   margin-right: 8px;
+}
+
+[dir="rtl"] label.checkbox-label input[type="checkbox"],
+[dir="rtl"] label.checkbox-label input[type="radio"] {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+.digitize-book-type {
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+}
+
+.digitize-book-type legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
 }
 
 input,

@@ -14,7 +14,7 @@
       "livePreview": "<strong>معاينة مباشرة</strong> — تطابق تخطيط التصدير؛ حدّث إذا بدت المعاينة قديمة.",
       "tviNotes": "<strong>ملاحظات جلسة TVI</strong> — نصائح للطالب مع <strong>نسخ ملخص FVA/LMA</strong> للتقارير.",
       "drafts": "<strong>المسودات</strong> — احفظ وأعد تحميل العمل في هذا المتصفح (صدّر <code>.pptx</code> كنسخة احتياطية للكتب المهمة).",
-      "digitizeBook": "<strong>رقمنة الكتاب</strong> — ارفع ملف PDF أو EPUB أو صور الصفحات، شغّل PaddleOCR، صحّح النص، اقتص الكائنات، وابنِ الصفحات المتقابلة تلقائيًا."
+      "digitizeBook": "<strong>رقمنة الكتاب</strong> — اختر <strong>كتاب عادي</strong> (PDF أو EPUB أو صور + OCR) أو <strong>CVI Book Nook</strong> (استيراد تلقائي لملف PDF جاهز للطباعة)."
     },
     "quickStart": "البدء السريع",
     "qs1": "اضبط <strong>إعداد الكتاب</strong> في الأعلى (العنوان، ECC، موجه النشاط، خيارات التخطيط).",
@@ -85,7 +85,7 @@
     "closeButton": "إغلاق",
     "tocDigitize": "رقمنة الكتاب",
     "digitizeTitle": "رقمنة الكتاب",
-    "digitizeHtml": "ارفع كتاب أطفال كملف <strong>PDF</strong> أو <strong>EPUB</strong> أو كـ<strong>صور صفحات</strong>. يُستخرج نص EPUB من الملف (ويمكنك تشغيل OCR أيضًا). لملفات PDF والصور، انقر <strong>تشغيل OCR على كل الصفحات</strong> لاستخراج النص عبر <strong>PaddleOCR</strong> (تُحمَّل النماذج مرة واحدة في متصفحك). عدّل نص الصفحة لإصلاح الأخطاء. اسحب مربعًا حول شخصية أو كائن ثم <strong>اقتصاص وإزالة الخلفية</strong> (يستخدم إعدادات مخطط عازل الصور). عند الجاهزية، <strong>بناء كتاب من الصفحات</strong> ينشئ صفحة متقابلة لكل صفحة بالنص المصحح والمحاصيل المعزولة. لا يمكن فتح ملفات EPUB المحمية بحقوق رقمية (DRM). ملفات EPUB القابلة لإعادة التدفق تُعامل كصفحة واحدة لكل ملف فصل."
+    "digitizeHtml": "اختر <strong>نوع الكتاب</strong> أولاً. <strong>كتاب عادي</strong> (الافتراضي): ارفع كتاب أطفال كملف <strong>PDF</strong> أو <strong>EPUB</strong> أو كـ<strong>صور صفحات</strong>. يُستخرج نص EPUB من الملف (ويمكنك تشغيل OCR أيضًا). لملفات PDF والصور، انقر <strong>تشغيل OCR على كل الصفحات</strong> لاستخراج النص عبر <strong>PaddleOCR</strong> (تُحمَّل النماذج مرة واحدة في متصفحك). عدّل نص الصفحة لإصلاح الأخطاء. اسحب مربعًا حول شخصية أو كائن ثم <strong>اقتصاص وإزالة الخلفية</strong> (يستخدم إعدادات مخطط عازل الصور). يمكنك اختياريًا <strong>نسخ كل الصفحات لمراجعة الذكاء الاصطناعي</strong> ولصق الرد الموسوم وتطبيقه—تبقى المحاصيل المعزولة على الصفحات المطابقة. عند الجاهزية، <strong>بناء كتاب من الصفحات</strong> ينشئ صفحة متقابلة لكل صفحة بالنص المصحح والمحاصيل المعزولة. لا يمكن فتح ملفات EPUB المحمية بحقوق رقمية (DRM). ملفات EPUB القابلة لإعادة التدفق تُعامل كصفحة واحدة لكل ملف فصل. <strong>CVI Book Nook</strong>: ارفع ملف PDF جاهز للطباعة من cvibooks.com. يقرأ التطبيق عنوان الغلاف، ويقرن كل صفحة قصة (<code>Salient Features:</code>) بصفحة الصورة التالية، ويبني الصفحات المتقابلة تلقائيًا دون OCR."
   },
   "draftsModal": {
     "title": "المسودات",
@@ -429,6 +429,13 @@
       "confirmClearPages": "مسح كل الصفحات المرقمنة والمحاصيل؟",
       "pagesCleared": "تم مسح الصفحات المرقمنة.",
       "bookBuilt": "تم بناء {n} صفحة متقابلة من الصفحات المرقمنة. راجع الصفحات المتقابلة أدناه.",
+      "nookLoading": "جارٍ قراءة ملف PDF من CVI Book Nook…",
+      "nookProgress": "استيراد الصورة {current} من {total}…",
+      "nookIsolating": "إزالة الخلفية من الصورة {current} من {total}…",
+      "nookNotFormat": "لا يبدو ملف PDF هذا كتاب طباعة من CVI Book Nook (لم يُعثر على صفحات Salient Features).",
+      "nookConfirmReplace": "استبدال كل الصفحات المتقابلة الحالية بالكتاب المستورد من CVI Book Nook؟",
+      "nookImported": "تم استيراد {n} صفحة متقابلة من CVI Book Nook. راجع الصفحات المتقابلة أدناه.",
+      "nookNoPdf": "اختر ملف PDF أولاً.",
       "copyFailed": "فشل النسخ. تحقق من أذونات الحافظة.",
       "selectPageToCopy": "اختر صفحة أولًا، ثم انسخ نصها.",
       "noPageTextToCopy": "هذه الصفحة بلا نص OCR بعد. شغّل OCR أو اكتب النص أولًا.",
@@ -479,6 +486,13 @@
     "aiReviewPasteLabel": "لصق النص المراجَع بالذكاء الاصطناعي",
     "aiReviewPlaceholder": "SPREAD:\nSTORY: The ball is red.\nODD_TEXT: BALL\nSALIENT_FEATURES: Round shape, bright red color\nIMAGE_PROMPT: A single red ball on plain white background",
     "applyAiReviewBtn": "تطبيق نص الذكاء الاصطناعي على الصفحات المتقابلة",
-    "isolatedCrops": "المحاصيل المعزولة لهذه الصفحة"
+    "isolatedCrops": "المحاصيل المعزولة لهذه الصفحة",
+    "typeLegend": "نوع الكتاب",
+    "typeNormal": "كتاب عادي",
+    "typeNook": "CVI Book Nook",
+    "nookHint": "ارفع ملف PDF جاهز للطباعة من CVI Book Nook (غلاف، ثم صفحات قصة مع Salient Features مقرونة بصفحات صور). يُستورد النص والصور تلقائيًا دون OCR.",
+    "nookUploadPdf": "رفع PDF طباعة CVI Book Nook",
+    "nookIsolate": "إزالة الخلفيات من الصور (يستخدم إعدادات عازل الصور)",
+    "nookInitialStatus": "ارفع ملف PDF جاهز للطباعة من CVI Book Nook لاستيراد الصفحات المتقابلة."
   }
 }
