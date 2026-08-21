@@ -2251,7 +2251,12 @@ export function bootstrap() {
     isolateBlob: isolateImageBlob,
     rebuildSpreads: rebuildSpreadsFromDigitized,
     setStatus,
-    ensureCompatibleImage: ensureBrowserCompatibleImageFile
+    ensureCompatibleImage: ensureBrowserCompatibleImageFile,
+    setBookTitle: (title) => {
+      if (!bookTitleInput || !title) return;
+      bookTitleInput.value = title;
+      scheduleLivePreview();
+    }
   });
 
   function initLivePreview() {

@@ -1,5 +1,6 @@
 import { t, applyDomTranslations } from "./i18n.js";
 import { EpubError, isEpubFile, renderEpubToPages } from "./epub-pages.js";
+import { joinPdfTextItems, pairNookSpreads } from "./nook-pdf.js";
 
 const PDFJS_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
 const PDFJS_WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
@@ -26,6 +27,7 @@ let cropDrag = null;
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,
+ *   setBookTitle?: (title: string) => void,
  * }} */
 let deps = null;
 
@@ -131,6 +133,121 @@ async function runOcrOnBlob(blob) {
   return { text, confidence };
 }
 
+async function renderPdfPageToCanvas(page, scale = OCR_RENDER_SCALE) {
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  return canvas;
+}
+
+function canvasToPngBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PDF page render failed"))), "image/png");
+  });
+}
+
+async function getPdfPageText(page) {
+  const content = await page.getTextContent();
+  return joinPdfTextItems(content?.items || []);
+}
+
+function sampleCornerAverage(data, width, height, sample = 6) {
+  const corners = [
+    [0, 0],
+    [Math.max(0, width - sample), 0],
+    [0, Math.max(0, height - sample)],
+    [Math.max(0, width - sample), Math.max(0, height - sample)]
+  ];
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  for (const [sx, sy] of corners) {
+    for (let y = sy; y < Math.min(height, sy + sample); y += 1) {
+      for (let x = sx; x < Math.min(width, sx + sample); x += 1) {
+        const i = (y * width + x) * 4;
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        n += 1;
+      }
+    }
+  }
+  if (!n) return { r: 255, g: 255, b: 255 };
+  return { r: r / n, g: g / n, b: b / n };
+}
+
+function findContentBounds(imageData, width, height) {
+  const data = imageData.data;
+  const bg = sampleCornerAverage(data, width, height);
+  const threshold = 22;
+  const rowCounts = new Uint32Array(height);
+  const colCounts = new Uint32Array(width);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      if (
+        Math.abs(data[i] - bg.r) > threshold ||
+        Math.abs(data[i + 1] - bg.g) > threshold ||
+        Math.abs(data[i + 2] - bg.b) > threshold
+      ) {
+        rowCounts[y] += 1;
+        colCounts[x] += 1;
+      }
+    }
+  }
+
+  const minRowHits = Math.max(8, Math.floor(width * 0.03));
+  const minColHits = Math.max(8, Math.floor(height * 0.03));
+  let top = 0;
+  let bottom = height - 1;
+  let left = 0;
+  let right = width - 1;
+  while (top < height && rowCounts[top] < minRowHits) top += 1;
+  while (bottom > top && rowCounts[bottom] < minRowHits) bottom -= 1;
+  while (left < width && colCounts[left] < minColHits) left += 1;
+  while (right > left && colCounts[right] < minColHits) right -= 1;
+
+  const pad = 12;
+  top = Math.max(0, top - pad);
+  left = Math.max(0, left - pad);
+  bottom = Math.min(height - 1, bottom + pad);
+  right = Math.min(width - 1, right + pad);
+
+  if (right - left < 16 || bottom - top < 16) {
+    return { x: 0, y: 0, w: width, h: height };
+  }
+  return { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+}
+
+function cropCanvasToContent(sourceCanvas) {
+  const ctx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+  const { width, height } = sourceCanvas;
+  if (!width || !height) return sourceCanvas;
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const bounds = findContentBounds(imageData, width, height);
+  if (bounds.w >= width - 2 && bounds.h >= height - 2) return sourceCanvas;
+  const out = document.createElement("canvas");
+  out.width = bounds.w;
+  out.height = bounds.h;
+  out.getContext("2d").drawImage(
+    sourceCanvas,
+    bounds.x,
+    bounds.y,
+    bounds.w,
+    bounds.h,
+    0,
+    0,
+    bounds.w,
+    bounds.h
+  );
+  return out;
+}
+
 async function renderPdfToPages(file) {
   const pdfjs = await getPdfjs();
   const data = await file.arrayBuffer();
@@ -140,15 +257,8 @@ async function renderPdfToPages(file) {
 
   for (let i = 1; i <= pageCount; i += 1) {
     const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: OCR_RENDER_SCALE });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PDF page render failed"))), "image/png");
-    });
+    const canvas = await renderPdfPageToCanvas(page);
+    const blob = await canvasToPngBlob(canvas);
     const objectUrl = URL.createObjectURL(blob);
     out.push({
       id: newId("page"),
@@ -634,6 +744,145 @@ function buildBookFromPages() {
   deps.setStatus?.(t("javascriptStrings.digitize.bookBuilt", { n: spreads.length }));
 }
 
+function getDigitizeMode() {
+  const checked = document.querySelector('input[name="digitizeBookType"]:checked');
+  return checked?.value === "nook" ? "nook" : "normal";
+}
+
+function applyDigitizeMode() {
+  const isNook = getDigitizeMode() === "nook";
+  const normal = el("digitizeNormalMode");
+  const nook = el("digitizeNookMode");
+  const hintNormal = el("digitizeHintNormal");
+  const hintNook = el("digitizeHintNook");
+  if (normal) normal.hidden = isNook;
+  if (nook) nook.hidden = !isNook;
+  if (hintNormal) hintNormal.hidden = isNook;
+  if (hintNook) hintNook.hidden = !isNook;
+  if (isNook) {
+    setDigitizeStatus(t("digitizeBook.nookInitialStatus"));
+  } else if (!pages.length) {
+    setDigitizeStatus(t("digitizeBook.initialStatus"));
+  }
+}
+
+function setNookImportBusy(busy) {
+  const input = el("digitizeNookPdfInput");
+  const isolate = el("digitizeNookIsolate");
+  document.querySelectorAll('input[name="digitizeBookType"]').forEach((radio) => {
+    radio.disabled = busy;
+  });
+  if (input) input.disabled = busy;
+  if (isolate) isolate.disabled = busy;
+}
+
+async function renderNookPhotoFile(pdf, pageNumber, baseName) {
+  const page = await pdf.getPage(pageNumber);
+  const canvas = cropCanvasToContent(await renderPdfPageToCanvas(page));
+  const blob = await canvasToPngBlob(canvas);
+  return new File([blob], `${baseName}-p${pageNumber}.png`, { type: "image/png" });
+}
+
+async function importCviBookNookPdf(file) {
+  if (!file || !deps?.rebuildSpreads) return;
+  const lower = (file.name || "").toLowerCase();
+  if (file.type !== "application/pdf" && !lower.endsWith(".pdf")) {
+    setDigitizeStatus(t("javascriptStrings.digitize.nookNoPdf"), true);
+    return;
+  }
+
+  setNookImportBusy(true);
+  setDigitizeStatus(t("javascriptStrings.digitize.nookLoading"));
+
+  try {
+    const pdfjs = await getPdfjs();
+    const data = await file.arrayBuffer();
+    const pdf = await pdfjs.getDocument({ data }).promise;
+    const pageCount = Math.min(pdf.numPages, MAX_PAGES);
+    const truncated = pdf.numPages > MAX_PAGES;
+
+    const textPages = [];
+    for (let i = 1; i <= pageCount; i += 1) {
+      const page = await pdf.getPage(i);
+      textPages.push({
+        pageNumber: i,
+        text: await getPdfPageText(page)
+      });
+    }
+
+    const parsed = pairNookSpreads(textPages);
+    if (!parsed.spreads.length) {
+      setDigitizeStatus(t("javascriptStrings.digitize.nookNotFormat"), true);
+      return;
+    }
+
+    const ok = window.confirm(t("javascriptStrings.digitize.nookConfirmReplace"));
+    if (!ok) {
+      setDigitizeStatus(t("digitizeBook.nookInitialStatus"));
+      return;
+    }
+
+    const isolate = Boolean(el("digitizeNookIsolate")?.checked);
+    const baseName = file.name.replace(/\.[^/.]+$/, "") || "nook";
+    const photoIndexes = parsed.spreads
+      .map((s) => s.photoPageNumber)
+      .filter((n) => typeof n === "number");
+    let photoDone = 0;
+
+    const spreads = [];
+    for (const spread of parsed.spreads) {
+      const imageFiles = [];
+      if (spread.photoPageNumber) {
+        photoDone += 1;
+        setDigitizeStatus(
+          t("javascriptStrings.digitize.nookProgress", { current: photoDone, total: photoIndexes.length || 1 })
+        );
+        try {
+          let imageFile = await renderNookPhotoFile(pdf, spread.photoPageNumber, baseName);
+          if (isolate && deps.isolateBlob) {
+            setDigitizeStatus(
+              t("javascriptStrings.digitize.nookIsolating", { current: photoDone, total: photoIndexes.length || 1 })
+            );
+            try {
+              const isolated = await deps.isolateBlob(imageFile);
+              imageFile = new File([isolated], imageFile.name, { type: "image/png" });
+            } catch (err) {
+              console.error(err);
+            }
+          }
+          imageFiles.push(imageFile);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      spreads.push({
+        storyText: spread.storyText,
+        oddText: spread.oddText,
+        salientFeatures: spread.salientFeatures,
+        imageFiles
+      });
+    }
+
+    if (parsed.title) deps.setBookTitle?.(parsed.title);
+    deps.rebuildSpreads(spreads);
+    const doneMsg = t("javascriptStrings.digitize.nookImported", { n: spreads.length });
+    setDigitizeStatus(truncated
+      ? `${doneMsg} ${t("javascriptStrings.digitize.truncatedPages", { max: MAX_PAGES, total: pdf.numPages })}`
+      : doneMsg);
+    deps.setStatus?.(doneMsg);
+  } catch (err) {
+    console.error(err);
+    setDigitizeStatus(
+      `${t("javascriptStrings.digitize.loadFailed")}${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+      true
+    );
+  } finally {
+    setNookImportBusy(false);
+    const nookInput = el("digitizeNookPdfInput");
+    if (nookInput) nookInput.value = "";
+  }
+}
+
 function initCropInteraction() {
   const canvas = el("digitizeCropCanvas");
   if (!canvas) return;
@@ -675,6 +924,7 @@ function initCropInteraction() {
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,
+ *   setBookTitle?: (title: string) => void,
  * }} options
  */
 export function initDigitizeBook(options) {
@@ -691,6 +941,19 @@ export function initDigitizeBook(options) {
   const clearBtn = el("digitizeClearBtn");
   const textArea = el("digitizeOcrText");
   const modelSelect = el("digitizeOcrModel");
+  const nookPdfInput = el("digitizeNookPdfInput");
+
+  document.querySelectorAll('input[name="digitizeBookType"]').forEach((radio) => {
+    radio.addEventListener("change", () => applyDigitizeMode());
+  });
+
+  if (nookPdfInput) {
+    nookPdfInput.addEventListener("change", async () => {
+      const file = nookPdfInput.files && nookPdfInput.files[0];
+      if (!file) return;
+      await importCviBookNookPdf(file);
+    });
+  }
 
   if (pdfInput) {
     pdfInput.addEventListener("change", async () => {
@@ -738,12 +1001,14 @@ export function initDigitizeBook(options) {
   }
 
   initCropInteraction();
-  renderAll();
   applyDomTranslations(panel);
+  applyDigitizeMode();
+  renderAll();
 }
 
 export function refreshDigitizeLocale() {
   const panel = el("digitizeBookPanel");
   if (panel) applyDomTranslations(panel);
+  applyDigitizeMode();
   renderAll();
 }
