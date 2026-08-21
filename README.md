@@ -5,7 +5,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
-- **Digitize Book** — Upload a PDF or page photos, run **PaddleOCR** (PP-OCRv6) in the browser (with a boost for colored text), edit OCR text, copy pages for AI review and paste the result into spreads, crop characters/objects, remove backgrounds, and auto-build spreads
+- **Digitize Book** — Upload a PDF, EPUB, or page photos, run **PaddleOCR** (PP-OCRv6) in the browser, edit text, crop characters/objects, remove backgrounds, and auto-build spreads
 - **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
 - **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
@@ -29,14 +29,13 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 
 ## Digitize Book (OCR)
 
-1. Open **Digitize Book** and upload a **PDF** and/or **page photos** (up to 40 pages).
+1. Open **Digitize Book** and upload a **PDF**, **EPUB**, and/or **page photos** (up to 40 pages). EPUB text is extracted from the file; DRM-encrypted EPUBs cannot be opened. Reflowable EPUBs become one page per chapter file.
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
-3. Click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). Each page is preprocessed first so **colored text** and light-on-dark letters have stronger contrast.
-4. Select each page, **edit the OCR text** to fix mistakes, and drag a box around a character or object.
-5. Optionally **Copy this page’s text** or **Copy all pages for AI review**, paste into any AI, then paste the tagged reply into **Paste AI-reviewed text** and click **Apply AI text to spreads** (isolated crops stay on matching pages).
-6. Click **Crop & remove background** (uses the Image Isolator outline settings).
-7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops (if you did not already apply AI text).
-8. Refine spreads, preview, and download PowerPoint as usual.
+3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
+4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
+5. Click **Crop & remove background** (uses the Image Isolator outline settings).
+6. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
+7. Refine spreads, preview, and download PowerPoint as usual.
 
 OCR and background removal run entirely in the browser. No book images are uploaded to a server.
 
@@ -119,6 +118,8 @@ The static web app loads additional libraries from CDNs at runtime. Notable term
 | [PptxGenJS](https://github.com/gitbrent/PptxGenJS) | PowerPoint (`.pptx`) generation | MIT |
 | [@imgly/background-removal](https://github.com/imgly/background-removal-js) | Image Isolator / digitize crop background removal | AGPL-3.0 / commercial (see vendor terms) |
 | [pdf.js](https://github.com/mozilla/pdf.js) | Digitize Book PDF page rendering | Apache-2.0 |
+| [JSZip](https://github.com/Stuk/jszip) | Digitize Book EPUB unzip | MIT or GPLv3 |
+| [html2canvas](https://github.com/niklasvh/html2canvas) | Digitize Book EPUB HTML page rasterization | MIT |
 | [ppu-paddle-ocr](https://github.com/PT-Perkasa-Pilar-Utama/ppu-paddle-ocr) | Digitize Book PaddleOCR (PP-OCRv6) in the browser | MIT |
 | [onnxruntime-web](https://github.com/microsoft/onnxruntime) | ONNX Runtime WASM used by PaddleOCR | MIT |
 

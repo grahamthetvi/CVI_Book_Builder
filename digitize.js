@@ -1,4 +1,5 @@
 import { t, applyDomTranslations } from "./i18n.js";
+import { EpubError, isEpubFile, renderEpubToPages } from "./epub-pages.js";
 
 const PDFJS_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
 const PDFJS_WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
@@ -14,7 +15,7 @@ const OCR_SATURATION_DARKEN = 0.84;
 /** Mean luminance below this is treated as light-on-dark and inverted before OCR. */
 const OCR_INVERT_LUMA_THRESHOLD = 118;
 
-/** @typedef {{ id: string, name: string, blob: Blob, objectUrl: string, ocrText: string, ocrConfidence: number|null, ocrStatus: 'idle'|'pending'|'done'|'error', ocrError?: string, crops: { id: string, name: string, file: File, objectUrl: string }[] }} DigitizePage */
+/** @typedef {{ id: string, name: string, blob: Blob, objectUrl: string, ocrText: string, ocrConfidence: number|null, ocrStatus: 'idle'|'pending'|'done'|'error', ocrError?: string, textSource?: 'epub'|'ocr'|null, crops: { id: string, name: string, file: File, objectUrl: string }[] }} DigitizePage */
 
 /** @type {DigitizePage[]} */
 let pages = [];
@@ -316,6 +317,38 @@ async function renderPdfToPages(file) {
   return out;
 }
 
+function epubErrorMessage(err) {
+  if (err instanceof EpubError) {
+    if (err.code === "drm") return t("javascriptStrings.digitize.epubDrm");
+    if (err.code === "noPages") return t("javascriptStrings.digitize.epubNoPages");
+    return t("javascriptStrings.digitize.epubInvalid");
+  }
+  return err?.message || t("javascriptStrings.errors.unknownFallback");
+}
+
+async function renderEpubFileToPages(file) {
+  setDigitizeStatus(t("javascriptStrings.digitize.loadingEpub"));
+  const { pages: raw, total } = await renderEpubToPages(file, {
+    maxPages: MAX_PAGES,
+    renderScale: OCR_RENDER_SCALE,
+    ensureCompatibleImage: deps?.ensureCompatibleImage
+  });
+  if (total > MAX_PAGES) {
+    setDigitizeStatus(t("javascriptStrings.digitize.truncatedPages", { max: MAX_PAGES, total }), false);
+  }
+  return raw.map((p) => ({
+    id: newId("page"),
+    name: p.name,
+    blob: p.blob,
+    objectUrl: URL.createObjectURL(p.blob),
+    ocrText: p.ocrText || "",
+    ocrConfidence: null,
+    ocrStatus: p.textSource === "epub" && p.ocrText ? "done" : "idle",
+    textSource: p.textSource || null,
+    crops: []
+  }));
+}
+
 async function filesToPages(fileList) {
   const files = Array.from(fileList || []);
   const out = [];
@@ -326,6 +359,15 @@ async function filesToPages(fileList) {
     if (file.type === "application/pdf" || lower.endsWith(".pdf")) {
       const pdfPages = await renderPdfToPages(file);
       for (const p of pdfPages) {
+        if (out.length >= MAX_PAGES) break;
+        out.push(p);
+      }
+      continue;
+    }
+
+    if (isEpubFile(file)) {
+      const epubPages = await renderEpubFileToPages(file);
+      for (const p of epubPages) {
         if (out.length >= MAX_PAGES) break;
         out.push(p);
       }
@@ -557,6 +599,8 @@ function renderWorkspace() {
       conf.textContent = t("javascriptStrings.digitize.ocrRunning");
     } else if (page.ocrStatus === "error") {
       conf.textContent = page.ocrError || t("javascriptStrings.digitize.ocrFailed");
+    } else if (page.textSource === "epub") {
+      conf.textContent = t("javascriptStrings.digitize.textFromEpub");
     } else if (page.ocrConfidence != null) {
       conf.textContent = t("javascriptStrings.digitize.ocrConfidence", {
         pct: Math.round(page.ocrConfidence * 100)
@@ -613,7 +657,7 @@ async function handleUpload(fileList) {
   } catch (err) {
     console.error(err);
     setDigitizeStatus(
-      `${t("javascriptStrings.digitize.loadFailed")}${err.message || t("javascriptStrings.errors.unknownFallback")}`,
+      `${t("javascriptStrings.digitize.loadFailed")}${epubErrorMessage(err)}`,
       true
     );
   }
@@ -637,6 +681,7 @@ async function runOcrOnAllPages() {
         page.ocrText = text;
         page.ocrConfidence = confidence;
         page.ocrStatus = "done";
+        page.textSource = "ocr";
       } catch (err) {
         console.error(err);
         page.ocrStatus = "error";
