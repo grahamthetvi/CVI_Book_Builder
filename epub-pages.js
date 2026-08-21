@@ -544,6 +544,7 @@ async function rasterizeSvgBlob(blob, scale) {
  *   maxPages?: number,
  *   renderScale?: number,
  *   ensureCompatibleImage?: (file: File) => Promise<File>,
+ *   JSZip?: typeof import("jszip"),
  * }} [options]
  * @returns {Promise<{ pages: { blob: Blob, name: string, ocrText: string, textSource: 'epub'|null }[], total: number }>}
  */
@@ -551,8 +552,9 @@ export async function renderEpubToPages(file, options = {}) {
   const maxPages = options.maxPages || 40;
   const renderScale = options.renderScale || 2;
   const ensureCompatibleImage = options.ensureCompatibleImage;
-  const JSZip = await getJSZip();
-  const zip = await JSZip.loadAsync(file);
+  const JSZip = options.JSZip || (await getJSZip());
+  const data = typeof file.arrayBuffer === "function" ? await file.arrayBuffer() : file;
+  const zip = await JSZip.loadAsync(data);
   const index = buildZipIndex(zip);
 
   if (zipEntry(zip, index, "META-INF/encryption.xml")) {
