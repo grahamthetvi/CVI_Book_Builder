@@ -750,6 +750,7 @@ function rebuildSpreadsFromDigitized(spreads) {
   }
   renumberSpreads();
   scheduleLivePreview(true);
+  performAutosaveDraft();
 }
 
 function initImageIsolator() {

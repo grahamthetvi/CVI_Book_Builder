@@ -14,7 +14,7 @@
       "livePreview": "<strong>معاينة مباشرة</strong> — تطابق تخطيط التصدير؛ حدّث إذا بدت المعاينة قديمة.",
       "tviNotes": "<strong>ملاحظات جلسة TVI</strong> — نصائح للطالب مع <strong>نسخ ملخص FVA/LMA</strong> للتقارير.",
       "drafts": "<strong>المسودات</strong> — احفظ وأعد تحميل العمل في هذا المتصفح (صدّر <code>.pptx</code> كنسخة احتياطية للكتب المهمة).",
-      "digitizeBook": "<strong>رقمنة الكتاب</strong> — ارفع ملف PDF أو صور الصفحات، شغّل PaddleOCR، صحّح النص، اقتص الكائنات، وابنِ الصفحات المتقابلة تلقائيًا."
+      "digitizeBook": "<strong>رقمنة الكتاب</strong> — ارفع ملف PDF أو صور الصفحات، شغّل PaddleOCR (مع تعزيز النص الملوّن)، صحّح النص، اقتص الكائنات، أو أرسل نص الصفحات إلى الذكاء الاصطناعي والصقه في الصفحات المتقابلة."
     },
     "quickStart": "البدء السريع",
     "qs1": "اضبط <strong>إعداد الكتاب</strong> في الأعلى (العنوان، ECC، موجه النشاط، خيارات التخطيط).",
@@ -85,7 +85,7 @@
     "closeButton": "إغلاق",
     "tocDigitize": "رقمنة الكتاب",
     "digitizeTitle": "رقمنة الكتاب",
-    "digitizeHtml": "ارفع كتاب أطفال كملف <strong>PDF</strong> أو كـ<strong>صور صفحات</strong>. انقر <strong>تشغيل OCR على كل الصفحات</strong> لاستخراج النص عبر <strong>PaddleOCR</strong> (تُحمَّل النماذج مرة واحدة في متصفحك). عدّل نص OCR في كل صفحة لإصلاح الأخطاء. اسحب مربعًا حول شخصية أو كائن ثم <strong>اقتصاص وإزالة الخلفية</strong> (يستخدم إعدادات مخطط عازل الصور). عند الجاهزية، <strong>بناء كتاب من الصفحات</strong> ينشئ صفحة متقابلة لكل صفحة بالنص المصحح والمحاصيل المعزولة."
+    "digitizeHtml": "ارفع كتاب أطفال كملف <strong>PDF</strong> أو كـ<strong>صور صفحات</strong>. انقر <strong>تشغيل OCR على كل الصفحات</strong> لاستخراج النص عبر <strong>PaddleOCR</strong> (تُحمَّل النماذج مرة واحدة في متصفحك). يُعالَج كل صفحة مسبقًا ليسهل قراءة الحروف الملوّنة أو الفاتحة على خلفية داكنة. عدّل نص OCR في كل صفحة، أو <strong>نسخ نص هذه الصفحة</strong> / <strong>نسخ كل الصفحات لمراجعة الذكاء الاصطناعي</strong>، اطلب التصحيح، ثم <strong>تطبيق نص الذكاء الاصطناعي على الصفحات المتقابلة</strong> (تبقى المحاصيل المعزولة). اسحب مربعًا حول شخصية أو كائن ثم <strong>اقتصاص وإزالة الخلفية</strong>. عند الجاهزية، <strong>بناء كتاب من الصفحات</strong> ينشئ صفحة متقابلة لكل صفحة بالنص المصحح والمحاصيل المعزولة."
   },
   "draftsModal": {
     "title": "المسودات",
@@ -423,12 +423,29 @@
       "confirmBuildWithoutOcr": "بعض الصفحات بلا نص OCR بعد. بناء الصفحات المتقابلة على أي حال؟",
       "confirmClearPages": "مسح كل الصفحات المرقمنة والمحاصيل؟",
       "pagesCleared": "تم مسح الصفحات المرقمنة.",
-      "bookBuilt": "تم بناء {n} صفحة متقابلة من الصفحات المرقمنة. راجع الصفحات المتقابلة أدناه."
+      "bookBuilt": "تم بناء {n} صفحة متقابلة من الصفحات المرقمنة. راجع الصفحات المتقابلة أدناه.",
+      "copyFailed": "فشل النسخ. تحقق من أذونات الحافظة.",
+      "selectPageToCopy": "اختر صفحة أولًا، ثم انسخ نصها.",
+      "noPageTextToCopy": "هذه الصفحة بلا نص OCR بعد. شغّل OCR أو اكتب النص أولًا.",
+      "noAllTextToCopy": "لا نص OCR للنسخ. شغّل OCR على الصفحات أولًا.",
+      "pageTextCopied": "تم نسخ نص هذه الصفحة. الصقه في أي ذكاء اصطناعي، ثم الصق الرد في الصفحة أو في مراجعة OCR بالذكاء الاصطناعي.",
+      "aiReviewCopied": "تم نسخ نص كل الصفحات + موجه المراجعة. الصقه في أي ذكاء اصطناعي، ثم الصق الرد الموسوم أدناه وطبقه على الصفحات المتقابلة.",
+      "pasteAiReviewFirst": "الصق النص المراجَع بالذكاء الاصطناعي أولًا، ثم طبّق.",
+      "aiReviewNoSpreads": "لم يُعثر على صفحات متقابلة. استخدم وسوم SPREAD:/STORY: (أو PAGE 1:) وحاول مجددًا.",
+      "confirmApplyAiReview": "استبدال الصفحات المتقابلة الحالية بالنص المراجَع؟ تبقى المحاصيل المعزولة على الصفحات المطابقة.",
+      "aiReviewApplied": "تم تطبيق نص الذكاء الاصطناعي على {n} صفحة متقابلة. أُبقي على المحاصيل المعزولة حيث تطابقت الصفحات.",
+      "emptyPageOcr": "(لم يُستخرج نص)",
+      "pageHeading": "PAGE {n}",
+      "pageCopyPrompt": "Please correct this OCR from a children’s book page. Colored, outlined, or decorative letters are often misread. Fix spelling and missing words, keep the original meaning, and return only the corrected page text.",
+      "aiReviewIntro": "You are helping turn a children’s book into a CVI-appropriate story book. The PAGE OCR text below was extracted automatically and often misreads colored, outlined, or decorative letters. Correct those errors, keep each page’s meaning, and do not invent new pages.",
+      "aiReviewSetupHeading": "Use the current Book Setup values when present:",
+      "aiReviewPagesHeading": "OCR FROM EACH PAGE (fix in place; keep this page order):",
+      "aiReviewTemplate": "Output your response using EXACTLY these tags. Do not add any other formatting or commentary.\n\nTITLE: [Book title]\n\nECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]\n\nACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]\n\nSPREAD:\nSTORY: [Corrected story text for this page. Simple, concrete language. One or two sentences.]\nODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]\nSALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]\nIMAGE_PROMPT: [Short prompt for an AI image generator: high contrast, uncluttered, single main subject.]\n\n[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES / IMAGE_PROMPT once per page, in the same order as the pages below. If a page has little or no readable text, still emit a SPREAD with the best reading you can.]"
     }
   },
   "digitizeBook": {
     "title": "رقمنة الكتاب",
-    "hint": "ارفع ملف PDF أو صور صفحات، شغّل PaddleOCR في متصفحك، صحّح النص، اقتص الشخصيات أو الكائنات، أزل الخلفيات، ثم ابنِ الصفحات المتقابلة.",
+    "hint": "ارفع ملف PDF أو صور صفحات، شغّل PaddleOCR في متصفحك (يُعزَّز النص الملوّن أولًا)، صحّح النص، اقتص الشخصيات أو الكائنات، أو انسخ نص الصفحات لمراجعة الذكاء الاصطناعي والصقه في الصفحات المتقابلة.",
     "uploadPdf": "رفع PDF",
     "uploadImages": "رفع صور الصفحات",
     "ocrModel": "نموذج OCR",
@@ -439,6 +456,7 @@
       "v5Ar": "PP-OCRv5 عربي"
     },
     "runOcrBtn": "تشغيل OCR على كل الصفحات",
+    "copyAiReviewBtn": "نسخ كل الصفحات لمراجعة الذكاء الاصطناعي",
     "buildBookBtn": "بناء كتاب من الصفحات",
     "clearPagesBtn": "مسح الصفحات",
     "initialStatus": "ارفع ملف PDF أو صور صفحات للبدء.",
@@ -450,6 +468,12 @@
     "cropHint": "ارسم مربعًا حول شخصية أو كائن. العزل يستخدم إعدادات مخطط عازل الصور.",
     "ocrTextLabel": "نص OCR (عدّل لإصلاح الأخطاء)",
     "ocrTextPlaceholder": "يظهر النص المستخرج هنا…",
+    "copyPageTextBtn": "نسخ نص هذه الصفحة",
+    "aiReviewTitle": "مراجعة OCR بالذكاء الاصطناعي",
+    "aiReviewHint": "انسخ نص كل الصفحات مع موجه التصحيح، الصقه في أي ذكاء اصطناعي، ثم الصق الرد الموسوم هنا. التطبيق يُبقي المحاصيل المعزولة على الصفحات المتقابلة المطابقة.",
+    "aiReviewPasteLabel": "لصق النص المراجَع بالذكاء الاصطناعي",
+    "aiReviewPlaceholder": "SPREAD:\nSTORY: The ball is red.\nODD_TEXT: BALL\nSALIENT_FEATURES: Round shape, bright red color\nIMAGE_PROMPT: A single red ball on plain white background",
+    "applyAiReviewBtn": "تطبيق نص الذكاء الاصطناعي على الصفحات المتقابلة",
     "isolatedCrops": "المحاصيل المعزولة لهذه الصفحة"
   }
 }

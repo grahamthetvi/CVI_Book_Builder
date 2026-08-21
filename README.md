@@ -5,7 +5,7 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 ## V2 features
 
 - Letter landscape PowerPoint output (`11 x 8.5`)
-- **Digitize Book** — Upload a PDF or page photos, run **PaddleOCR** (PP-OCRv6) in the browser, edit OCR text, crop characters/objects, remove backgrounds, and auto-build spreads
+- **Digitize Book** — Upload a PDF or page photos, run **PaddleOCR** (PP-OCRv6) in the browser (with a boost for colored text), edit OCR text, copy pages for AI review and paste the result into spreads, crop characters/objects, remove backgrounds, and auto-build spreads
 - **Light / dark UI theme** — toggle in the header; preference is saved in this browser (`localStorage`)
 - **Export progress** — full-screen message and spinner while images are encoded and the PowerPoint file is built (large books can take a while)
 - **Drafts** — auto-saves when you parse spreads or export PowerPoint (requires a book title; matching titles overwrite); open the **Drafts** popup from the header to load, snapshot, or delete drafts
@@ -31,11 +31,12 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 
 1. Open **Digitize Book** and upload a **PDF** and/or **page photos** (up to 40 pages).
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
-3. Click **Run OCR on all pages**. Models download once into the browser (first run can take a minute).
+3. Click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). Each page is preprocessed first so **colored text** and light-on-dark letters have stronger contrast.
 4. Select each page, **edit the OCR text** to fix mistakes, and drag a box around a character or object.
-5. Click **Crop & remove background** (uses the Image Isolator outline settings).
-6. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
-7. Refine spreads, preview, and download PowerPoint as usual.
+5. Optionally **Copy this page’s text** or **Copy all pages for AI review**, paste into any AI, then paste the tagged reply into **Paste AI-reviewed text** and click **Apply AI text to spreads** (isolated crops stay on matching pages).
+6. Click **Crop & remove background** (uses the Image Isolator outline settings).
+7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops (if you did not already apply AI text).
+8. Refine spreads, preview, and download PowerPoint as usual.
 
 OCR and background removal run entirely in the browser. No book images are uploaded to a server.
 
