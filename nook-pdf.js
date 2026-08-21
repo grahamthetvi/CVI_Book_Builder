@@ -52,6 +52,14 @@ function stripLeadingPageNumber(text) {
     .trim();
 }
 
+function normalizeNookProse(text) {
+  return (text || "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([.,!?;:])/g, "$1")
+    .replace(/([.!?])([A-Za-zÀ-ÿ])/g, "$1 $2")
+    .trim();
+}
+
 /**
  * @param {string} text
  * @returns {{ storyText: string, salientFeatures: string }}
@@ -59,11 +67,8 @@ function stripLeadingPageNumber(text) {
 export function parseNookStoryPage(text) {
   const cleaned = stripLeadingPageNumber(text);
   const parts = cleaned.split(/salient\s*features\s*:\s*/i);
-  const storyText = (parts[0] || "")
-    .replace(/\s+/g, " ")
-    .replace(/([.!?])([A-Za-zÀ-ÿ])/g, "$1 $2")
-    .trim();
-  const salientFeatures = parts.slice(1).join(" ").replace(/\s+/g, " ").trim();
+  const storyText = normalizeNookProse(parts[0] || "");
+  const salientFeatures = normalizeNookProse(parts.slice(1).join(" "));
   return { storyText, salientFeatures };
 }
 
@@ -72,11 +77,15 @@ export function parseNookStoryPage(text) {
  * @param {string} storyText
  */
 export function deriveNookOddText(storyText) {
-  const cleaned = (storyText || "").replace(/\s+/g, " ").trim();
+  const cleaned = normalizeNookProse(storyText);
   if (!cleaned) return "";
   const firstSentence = (cleaned.match(/^.+?[.!?]+/) || [cleaned])[0].trim();
-  const words = firstSentence.replace(/[""''«»]+/g, "").split(" ").filter(Boolean);
-  const last = (words[words.length - 1] || "").replace(/[.,!?;:]+$/g, "");
+  const words = firstSentence
+    .replace(/[""''«»]+/g, "")
+    .split(" ")
+    .map((w) => w.replace(/^[.,!?;:]+|[.,!?;:]+$/g, ""))
+    .filter(Boolean);
+  const last = words[words.length - 1] || "";
   if (last) return last;
   const phrase = words.slice(0, 3).join(" ");
   return phrase.length > 28 ? phrase.slice(0, 28).trim() : phrase;

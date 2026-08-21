@@ -275,10 +275,6 @@ async function runOcrOnBlob(blob) {
   const fallback = scoreOcrResult(await recognizeBlob(service, blob));
   const best = fallback.score >= primary.score ? fallback : primary;
   return { text: best.text, confidence: best.confidence };
-
-  const fallback = scoreOcrResult(await recognizeBlob(service, blob));
-  const best = fallback.score >= primary.score ? fallback : primary;
-  return { text: best.text, confidence: best.confidence };
 }
 
 async function renderPdfPageToCanvas(page, scale = OCR_RENDER_SCALE) {
