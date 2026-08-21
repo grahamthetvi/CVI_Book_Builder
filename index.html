@@ -361,12 +361,12 @@
 
     <section class="panel" id="digitizeBookPanel">
       <h2 data-i18n="digitizeBook.title">Digitize Book</h2>
-      <p class="hint" data-i18n="digitizeBook.hint">Upload a PDF or page photos, run PaddleOCR, fix text, crop objects, then build spreads.</p>
+      <p class="hint" data-i18n="digitizeBook.hint">Upload a PDF, EPUB, or page photos, run PaddleOCR, fix text, crop objects, then build spreads.</p>
 
       <div class="grid three-col">
         <label>
-          <span data-i18n="digitizeBook.uploadPdf">Upload PDF</span>
-          <input id="digitizePdfInput" type="file" accept="application/pdf,.pdf">
+          <span data-i18n="digitizeBook.uploadPdf">Upload PDF or EPUB</span>
+          <input id="digitizePdfInput" type="file" accept="application/pdf,.pdf,application/epub+zip,.epub">
         </label>
         <label>
           <span data-i18n="digitizeBook.uploadImages">Upload page images</span>
@@ -388,11 +388,11 @@
         <button id="digitizeBuildBookBtn" type="button" class="primary" data-i18n="digitizeBook.buildBookBtn" disabled>Build book from pages</button>
         <button id="digitizeClearBtn" type="button" class="danger" data-i18n="digitizeBook.clearPagesBtn" disabled>Clear pages</button>
       </div>
-      <p id="digitizeStatus" class="hint" aria-live="polite" data-i18n="digitizeBook.initialStatus">Upload a PDF or page photos to begin.</p>
+      <p id="digitizeStatus" class="hint" aria-live="polite" data-i18n="digitizeBook.initialStatus">Upload a PDF, EPUB, or page photos to begin.</p>
 
       <div id="digitizePageStrip" class="digitize-page-strip top-gap" aria-live="polite"></div>
 
-      <p id="digitizeWorkspaceEmpty" class="hint top-gap" data-i18n="digitizeBook.selectPageHint">Select a page to edit OCR text and crop objects.</p>
+      <p id="digitizeWorkspaceEmpty" class="hint top-gap" data-i18n="digitizeBook.selectPageHint">Select a page to edit text and crop objects.</p>
 
       <div id="digitizeWorkspace" class="digitize-workspace top-gap" hidden>
         <div class="digitize-page-stage">
@@ -410,7 +410,7 @@
 
         <div class="digitize-text-stage">
           <label for="digitizeOcrText">
-            <span data-i18n="digitizeBook.ocrTextLabel">OCR text (edit to fix mistakes)</span>
+            <span data-i18n="digitizeBook.ocrTextLabel">Page text (edit to fix mistakes)</span>
           </label>
           <textarea id="digitizeOcrText" rows="10" data-i18n-placeholder="digitizeBook.ocrTextPlaceholder" placeholder="Recognized page text appears here…"></textarea>
           <p id="digitizeOcrConfidence" class="hint" aria-live="polite"></p>
