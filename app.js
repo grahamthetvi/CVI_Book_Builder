@@ -1,5 +1,5 @@
 import { t, getLocale, applyDomTranslations } from "./i18n.js";
-import { initDigitizeBook, refreshDigitizeLocale } from "./digitize.js";
+import { initDigitizeBook, refreshDigitizeLocale, setDigitizeMode, setDigitizeTypeLocked } from "./digitize.js";
 
 const spreadsContainer = document.getElementById("spreadsContainer");
 const spreadTemplate = document.getElementById("spreadTemplate");
@@ -45,8 +45,6 @@ const sourcePreviewImage = document.getElementById("source-preview");
 const sourcePlaceholder = document.getElementById("source-placeholder");
 const processedPreviewImage = document.getElementById("processed-preview");
 const processedPlaceholder = document.getElementById("processed-placeholder");
-const welcomeModal = document.getElementById("welcomeModal");
-const closeWelcomeButton = document.getElementById("closeWelcomeButton");
 const helpModal = document.getElementById("helpModal");
 const helpButton = document.getElementById("helpButton");
 const closeHelpButton = document.getElementById("closeHelpButton");
@@ -134,65 +132,6 @@ function syncColorDisplay(colorInputId) {
   nameSpan.setAttribute("aria-label", `${t("javascriptStrings.colorHelper.colorNameAria")} ${label}`);
 }
 
-function setSidebarColorName(colorInputId, nameSpanId) {
-  const colorInput = document.getElementById(colorInputId);
-  const presetSelect = document.getElementById(colorInputId + "Preset");
-  const nameSpan = document.getElementById(nameSpanId);
-  if (!colorInput || !nameSpan) return;
-  const hex = colorInput.value.toUpperCase();
-  const withHash = hex.startsWith("#") ? hex : "#" + hex;
-  let label = hexToColorName(withHash);
-  if (presetSelect) {
-    const exactOption = Array.from(presetSelect.options).find((opt) => opt.value.toUpperCase() === withHash);
-    if (exactOption && exactOption.value !== "custom") label = exactOption.textContent;
-    else if (exactOption) presetSelect.value = exactOption.value;
-  }
-  nameSpan.textContent = label;
-}
-
-const MAIN_TO_SIDEBAR_IDS = [
-  ["oddTextColor", "oddTextColorSidebar", "oddTextColorNameSidebar", "oddTextColorPresetSidebar"],
-  ["oddBorderColor", "oddBorderColorSidebar", "oddBorderColorNameSidebar", "oddBorderColorPresetSidebar"],
-  ["oddBgColor", "oddBgColorSidebar", "oddBgColorNameSidebar", "oddBgColorPresetSidebar"],
-  ["storyTextColor", "storyTextColorSidebar", "storyTextColorNameSidebar", "storyTextColorPresetSidebar"]
-];
-
-const MAIN_TO_SIDEBAR_NUMBER_IDS = [
-  ["oddTextSize", "oddTextSizeSidebar"],
-  ["oddBorderSize", "oddBorderSizeSidebar"]
-];
-
-function syncMainToSidebar() {
-  MAIN_TO_SIDEBAR_IDS.forEach(([mainId, sidebarId, nameSpanId, presetSidebarId]) => {
-    const main = document.getElementById(mainId);
-    const sidebar = document.getElementById(sidebarId);
-    const presetMain = document.getElementById(mainId + "Preset");
-    const presetSidebar = document.getElementById(presetSidebarId);
-    if (main && sidebar) {
-      sidebar.value = main.value;
-      if (presetMain && presetSidebar) presetSidebar.value = presetMain.value;
-    }
-    setSidebarColorName(mainId, nameSpanId);
-  });
-  MAIN_TO_SIDEBAR_NUMBER_IDS.forEach(([mainId, sidebarId]) => {
-    const main = document.getElementById(mainId);
-    const sidebar = document.getElementById(sidebarId);
-    if (main && sidebar) sidebar.value = main.value;
-  });
-}
-
-function syncSidebarToMain(sidebarColorId, mainColorId) {
-  const sidebar = document.getElementById(sidebarColorId);
-  const main = document.getElementById(mainColorId);
-  if (!sidebar || !main) return;
-  main.value = sidebar.value;
-  const presetSidebar = document.getElementById(sidebarColorId.replace("Sidebar", "PresetSidebar"));
-  const presetMain = document.getElementById(mainColorId + "Preset");
-  if (presetSidebar && presetMain) presetMain.value = presetSidebar.value;
-  syncColorDisplay(mainColorId);
-  scheduleLivePreview(true);
-}
-
 function initColorPickers() {
   const colorIds = ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"];
   colorIds.forEach((id) => {
@@ -203,7 +142,6 @@ function initColorPickers() {
     colorInput.addEventListener("input", () => {
       syncColorDisplay(id);
       scheduleLivePreview(true);
-      syncMainToSidebar();
     });
 
     if (presetSelect) {
@@ -216,74 +154,27 @@ function initColorPickers() {
           colorInput.focus();
         }
         scheduleLivePreview(true);
-        syncMainToSidebar();
       });
     }
 
     syncColorDisplay(id);
   });
-  syncMainToSidebar();
-  initAccessibilitySidebar();
-}
-
-function initAccessibilitySidebar() {
-  MAIN_TO_SIDEBAR_IDS.forEach(([mainId, sidebarId, nameSpanId, presetSidebarId]) => {
-    const sidebarColor = document.getElementById(sidebarId);
-    const sidebarPreset = document.getElementById(presetSidebarId);
-    if (!sidebarColor) return;
-    sidebarColor.addEventListener("input", () => syncSidebarToMain(sidebarId, mainId));
-    sidebarColor.addEventListener("change", () => syncSidebarToMain(sidebarId, mainId));
-    if (sidebarPreset) {
-      sidebarPreset.addEventListener("change", () => {
-        if (sidebarPreset.value !== "custom") sidebarColor.value = sidebarPreset.value;
-        syncSidebarToMain(sidebarId, mainId);
-      });
-    }
-  });
-  MAIN_TO_SIDEBAR_NUMBER_IDS.forEach(([mainId, sidebarId]) => {
-    const main = document.getElementById(mainId);
-    const sidebar = document.getElementById(sidebarId);
-    if (!sidebar || !main) return;
-    sidebar.addEventListener("input", () => {
-      main.value = sidebar.value;
-      scheduleLivePreview(true);
-    });
-    sidebar.addEventListener("change", () => {
-      main.value = sidebar.value;
-      scheduleLivePreview(true);
-    });
-  });
-  const oddTextSizeInput = document.getElementById("oddTextSize");
-  const oddBorderSizeInput = document.getElementById("oddBorderSize");
-  if (oddTextSizeInput) oddTextSizeInput.addEventListener("input", syncMainToSidebar);
-  if (oddTextSizeInput) oddTextSizeInput.addEventListener("change", syncMainToSidebar);
-  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("input", syncMainToSidebar);
-  if (oddBorderSizeInput) oddBorderSizeInput.addEventListener("change", syncMainToSidebar);
 }
 
 function setStatus(text, isError = false) {
+  if (!statusMessage) return;
   statusMessage.textContent = text;
   statusMessage.style.color = isError ? "#ff9e9e" : "#c6d0dd";
 }
 
-function showWelcomeModal() {
-  if (!welcomeModal) return;
-  welcomeModal.hidden = false;
-  welcomeModal.style.display = "flex";
-  welcomeModal.setAttribute("aria-hidden", "false");
-  if (closeWelcomeButton) closeWelcomeButton.focus();
-}
-
-function hideWelcomeModal() {
-  if (!welcomeModal) return;
-  welcomeModal.hidden = true;
-  welcomeModal.style.display = "none";
-  welcomeModal.setAttribute("aria-hidden", "true");
+function closeHeaderMoreMenu() {
+  const menu = document.getElementById("headerMoreMenu");
+  if (menu) menu.open = false;
 }
 
 function showHelpModal() {
   if (!helpModal) return;
-  hideWelcomeModal();
+  closeHeaderMoreMenu();
   hideUserGuideModal();
   hideDraftsModal();
   helpModal.hidden = false;
@@ -301,7 +192,7 @@ function hideHelpModal() {
 
 function showUserGuideModal() {
   if (!userGuideModal) return;
-  hideWelcomeModal();
+  closeHeaderMoreMenu();
   hideHelpModal();
   hideDraftsModal();
   userGuideModal.hidden = false;
@@ -319,7 +210,7 @@ function hideUserGuideModal() {
 
 function showDraftsModal() {
   if (!draftsModal) return;
-  hideWelcomeModal();
+  closeHeaderMoreMenu();
   hideHelpModal();
   hideUserGuideModal();
   renderDraftsList();
@@ -334,6 +225,258 @@ function hideDraftsModal() {
   draftsModal.hidden = true;
   draftsModal.style.display = "none";
   draftsModal.setAttribute("aria-hidden", "true");
+}
+
+const SEEN_START_KEY = "cviBookBuilderSeenStart";
+const DRAWER_META = {
+  style: { title: "workspace.style", hint: "drawers.styleHint", guide: "ug-presets" },
+  images: { title: "workspace.images", hint: "drawers.imagesHint", guide: "ug-images" },
+  digitize: { title: "workspace.digitize", hint: "drawers.digitizeHint", guide: "ug-digitize" },
+  bookDetails: { title: "workspace.bookDetails", hint: "drawers.bookDetailsHint", guide: "ug-book-setup" },
+  notes: { title: "workspace.notes", hint: "drawers.notesHint", guide: "ug-tvi" },
+  addContent: { title: "workspace.addContent", hint: "drawers.addContentHint", guide: "ug-story" }
+};
+
+let appView = "start";
+let appPath = null;
+let openDrawerName = null;
+
+function markStartSeen() {
+  try {
+    localStorage.setItem(SEEN_START_KEY, "1");
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function placeNode(node, slot) {
+  if (!node || !slot) return;
+  if (node.parentElement !== slot) slot.appendChild(node);
+}
+
+function refreshPathCopy() {
+  const titleEl = document.getElementById("pathViewTitle");
+  const leadEl = document.getElementById("pathViewLead");
+  if (!appPath || appPath === "blank") return;
+  if (titleEl) titleEl.textContent = t(`startScreen.paths.${appPath}.title`);
+  if (leadEl) leadEl.textContent = t(`startScreen.paths.${appPath}.blurb`);
+}
+
+function placeShellPanels() {
+  const titleField = document.getElementById("bookTitleField");
+  const bookDetails = document.getElementById("bookDetailsFields");
+  const storyPanel = document.getElementById("storyInputPanel");
+  const digitizePanel = document.getElementById("digitizeBookPanel");
+
+  if (appView === "path") {
+    placeNode(titleField, document.getElementById("pathTitleSlot"));
+    placeNode(bookDetails, document.getElementById("pathBookDetailsSlot"));
+    if (appPath === "ai") {
+      placeNode(storyPanel, document.getElementById("pathToolSlot"));
+      placeNode(digitizePanel, document.getElementById("drawerDigitizeBody"));
+      setDigitizeTypeLocked(false);
+    } else if (appPath === "digitize" || appPath === "nook") {
+      placeNode(digitizePanel, document.getElementById("pathToolSlot"));
+      placeNode(storyPanel, document.getElementById("drawerAddContentBody"));
+      setDigitizeMode(appPath === "nook" ? "nook" : "normal");
+      setDigitizeTypeLocked(true);
+    } else {
+      placeNode(storyPanel, document.getElementById("drawerAddContentBody"));
+      placeNode(digitizePanel, document.getElementById("drawerDigitizeBody"));
+      setDigitizeTypeLocked(false);
+    }
+  } else {
+    placeNode(titleField, document.getElementById("workspaceTitleSlot"));
+    placeNode(bookDetails, document.getElementById("drawerBookDetailsBody"));
+    placeNode(storyPanel, document.getElementById("drawerAddContentBody"));
+    placeNode(digitizePanel, document.getElementById("drawerDigitizeBody"));
+    setDigitizeTypeLocked(false);
+  }
+}
+
+function setAppView(view, path = appPath) {
+  appView = view;
+  appPath = path;
+  document.body.dataset.appView = view;
+  if (appPath) document.body.dataset.appPath = appPath;
+  else delete document.body.dataset.appPath;
+
+  const startView = document.getElementById("startView");
+  const pathView = document.getElementById("pathView");
+  const workspaceView = document.getElementById("workspaceView");
+  if (startView) startView.hidden = view !== "start";
+  if (pathView) pathView.hidden = view !== "path";
+  if (workspaceView) workspaceView.hidden = view !== "workspace";
+
+  placeShellPanels();
+  refreshPathCopy();
+  if (view === "start") renderStartDrafts();
+  if (view === "workspace") scheduleLivePreview(true);
+}
+
+function chooseStartPath(path) {
+  markStartSeen();
+  closeDrawer();
+  if (path === "blank") {
+    setAppView("workspace", "blank");
+    return;
+  }
+  setAppView("path", path);
+  const titleInput = document.getElementById("bookTitle");
+  if (titleInput) titleInput.focus();
+}
+
+function enterWorkspace() {
+  markStartSeen();
+  closeDrawer();
+  setAppView("workspace", appPath || "blank");
+}
+
+function currentBookIsEmpty() {
+  const title = (bookTitleInput?.value || "").trim();
+  if (title) return false;
+  const cards = Array.from(spreadsContainer?.querySelectorAll(".spread-card") || []);
+  return cards.every((card) => {
+    const story = (card.querySelector(".story-text")?.value || "").trim();
+    const odd = (card.querySelector(".odd-text")?.value || "").trim();
+    const salient = (card.querySelector(".salient-features")?.value || "").trim();
+    const prompt = (card.querySelector(".image-prompt")?.value || "").trim();
+    const files = card.currentFiles?.length || 0;
+    return !story && !odd && !salient && !prompt && !files;
+  });
+}
+
+function renderStartDrafts() {
+  const section = document.getElementById("startContinueSection");
+  const list = document.getElementById("startDraftsList");
+  if (!section || !list) return;
+  const drafts = loadDraftsFromStorage();
+  if (!drafts.length) {
+    section.hidden = true;
+    list.innerHTML = "";
+    return;
+  }
+  section.hidden = false;
+  list.innerHTML = "";
+  drafts.slice(0, 3).forEach((d, index) => {
+    const row = document.createElement("div");
+    row.className = "start-draft-row";
+    const label = document.createElement("span");
+    const title = d.state?.bookTitle || d.name || t("javascriptStrings.drafts.draftFallbackTitle", { n: index + 1 });
+    label.textContent = t("startScreen.continueLatest", { title });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "primary";
+    btn.textContent = t("javascriptStrings.drafts.loadBtn");
+    btn.addEventListener("click", () => loadDraftById(d.id, { confirm: !currentBookIsEmpty() }));
+    row.appendChild(label);
+    row.appendChild(btn);
+    list.appendChild(row);
+  });
+}
+
+function closeDrawer() {
+  const overlay = document.getElementById("appDrawerOverlay");
+  if (overlay) overlay.hidden = true;
+  openDrawerName = null;
+  document.querySelectorAll(".drawer-panel").forEach((panel) => {
+    panel.hidden = true;
+  });
+}
+
+function openDrawer(name) {
+  const meta = DRAWER_META[name];
+  const overlay = document.getElementById("appDrawerOverlay");
+  const titleEl = document.getElementById("appDrawerTitle");
+  const hintEl = document.getElementById("appDrawerHint");
+  if (!meta || !overlay) return;
+  if (appView !== "workspace") setAppView("workspace", appPath || "blank");
+  placeShellPanels();
+  openDrawerName = name;
+  overlay.hidden = false;
+  if (titleEl) titleEl.textContent = t(meta.title);
+  if (hintEl) hintEl.textContent = t(meta.hint);
+  document.querySelectorAll(".drawer-panel").forEach((panel) => {
+    panel.hidden = true;
+  });
+  const body = document.getElementById(
+    name === "style"
+      ? "drawerStyleBody"
+      : name === "images"
+        ? "drawerImagesBody"
+        : name === "digitize"
+          ? "drawerDigitizeBody"
+          : name === "bookDetails"
+            ? "drawerBookDetailsBody"
+            : name === "notes"
+              ? "drawerNotesBody"
+              : "drawerAddContentBody"
+  );
+  if (body) body.hidden = false;
+  const closeBtn = document.getElementById("appDrawerClose");
+  if (closeBtn) closeBtn.focus();
+  if (name === "digitize") {
+    window.dispatchEvent(new Event("resize"));
+  }
+}
+
+function openUserGuideSection(sectionId) {
+  showUserGuideModal();
+  requestAnimationFrame(() => {
+    const target = document.getElementById(sectionId);
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function initAppShell() {
+  document.querySelectorAll("[data-start-path]").forEach((btn) => {
+    btn.addEventListener("click", () => chooseStartPath(btn.getAttribute("data-start-path")));
+  });
+
+  const skipBtn = document.getElementById("skipToWorkspaceButton");
+  if (skipBtn) skipBtn.addEventListener("click", () => chooseStartPath("blank"));
+
+  const backBtn = document.getElementById("pathBackButton");
+  if (backBtn) backBtn.addEventListener("click", () => setAppView("start", null));
+
+  const continueBtn = document.getElementById("pathContinueButton");
+  if (continueBtn) continueBtn.addEventListener("click", () => enterWorkspace());
+
+  const allDraftsBtn = document.getElementById("startAllDraftsButton");
+  if (allDraftsBtn) allDraftsBtn.addEventListener("click", showDraftsModal);
+
+  document.querySelectorAll("[data-open-drawer]").forEach((btn) => {
+    btn.addEventListener("click", () => openDrawer(btn.getAttribute("data-open-drawer")));
+  });
+
+  const overlay = document.getElementById("appDrawerOverlay");
+  const closeBtn = document.getElementById("appDrawerClose");
+  if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeDrawer();
+    });
+  }
+
+  const learnMore = document.getElementById("appDrawerLearnMore");
+  if (learnMore) {
+    learnMore.addEventListener("click", () => {
+      const sectionId = DRAWER_META[openDrawerName]?.guide;
+      if (sectionId) openUserGuideSection(sectionId);
+    });
+  }
+
+  const addContentDigitize = document.getElementById("addContentOpenDigitize");
+  if (addContentDigitize) {
+    addContentDigitize.addEventListener("click", () => openDrawer("digitize"));
+  }
+
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("headerMoreMenu");
+    if (!menu || !menu.open) return;
+    if (!(e.target instanceof Node) || menu.contains(e.target)) return;
+    menu.open = false;
+  });
 }
 
 function safePptColor(hex) {
@@ -737,6 +880,7 @@ function rebuildSpreadsFromDigitized(spreads) {
   if (!spreads.length) {
     addSpread();
     scheduleLivePreview(true);
+    enterWorkspace();
     return;
   }
   for (const spread of spreads) {
@@ -751,6 +895,7 @@ function rebuildSpreadsFromDigitized(spreads) {
   renumberSpreads();
   scheduleLivePreview(true);
   performAutosaveDraft();
+  enterWorkspace();
 }
 
 function initImageIsolator() {
@@ -977,6 +1122,11 @@ function addSpread(initial = {}) {
     });
   }
 
+  const prepareImageBtn = fragment.querySelector(".prepare-image-btn");
+  if (prepareImageBtn) {
+    prepareImageBtn.addEventListener("click", () => openDrawer("images"));
+  }
+
   spreadsContainer.appendChild(fragment);
   applyDomTranslations(card);
   renumberSpreads();
@@ -1158,8 +1308,6 @@ async function applyBookState(state) {
     if (oddTextSizeInput) oddTextSizeInput.value = state.oddTextSize ?? "75";
     if (oddBorderSizeInput) oddBorderSizeInput.value = state.oddBorderSize ?? "3";
 
-    syncMainToSidebar();
-
     spreadsContainer.innerHTML = "";
     const spreadRows = state.spreads && state.spreads.length ? state.spreads : [{}];
     spreadRows.forEach((s) => {
@@ -1173,6 +1321,8 @@ async function applyBookState(state) {
     });
     renderPreview();
     setDraftStatus(t("draftsModal.status.bookLoaded"), false);
+    hideDraftsModal();
+    enterWorkspace();
   } finally {
     setTimeout(() => {
       suppressAutosave = false;
@@ -1222,6 +1372,7 @@ async function performAutosaveDraft() {
   try {
     saveDraftsToStorage(drafts);
     renderDraftsList();
+    renderStartDrafts();
     setDraftStatus(`${t("draftsModal.status.autosaved")} ${new Date().toLocaleTimeString(getLocale())}`, false);
   } catch (e) {
     if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
@@ -1244,6 +1395,7 @@ function renderDraftsList() {
   draftsListEl.innerHTML = "";
   if (!drafts.length) {
     draftsListEl.innerHTML = `<p class="hint">${t("draftsModal.emptyState")}</p>`;
+    renderStartDrafts();
     return;
   }
   drafts.forEach((d, index) => {
@@ -1276,13 +1428,15 @@ function renderDraftsList() {
     row.appendChild(actions);
     draftsListEl.appendChild(row);
   });
+  renderStartDrafts();
 }
 
-function loadDraftById(id) {
+function loadDraftById(id, options = {}) {
   const drafts = loadDraftsFromStorage();
   const d = drafts.find((x) => x.id === id);
   if (!d || !d.state) return;
-  if (!window.confirm(t("javascriptStrings.drafts.replaceConfirm"))) return;
+  const shouldConfirm = options.confirm !== false;
+  if (shouldConfirm && !window.confirm(t("javascriptStrings.drafts.replaceConfirm"))) return;
   applyBookState(d.state);
 }
 
@@ -2030,6 +2184,7 @@ parseAiButton.addEventListener("click", () => {
   setStatus(t("javascriptStrings.exportStatus.parsedSpreads", { n: parsed.spreads.length }));
   renderPreview();
   performAutosaveDraft();
+  enterWorkspace();
 });
 
 exportPptxButton.addEventListener("click", exportPptx);
@@ -2042,7 +2197,6 @@ presetMaxContrastButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#FFFF00";
   storyTextColorInput.value = "#111111";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
-  syncMainToSidebar();
   renderPreview();
 });
 
@@ -2052,7 +2206,6 @@ presetHighContrastButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#FF0000";
   storyTextColorInput.value = "#111111";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
-  syncMainToSidebar();
   renderPreview();
 });
 
@@ -2062,7 +2215,6 @@ presetStandardPrintButton.addEventListener("click", () => {
   oddBorderColorInput.value = "#000000";
   storyTextColorInput.value = "#000000";
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
-  syncMainToSidebar();
   renderPreview();
 });
 
@@ -2127,10 +2279,6 @@ printPdfButton.addEventListener("click", async () => {
 });
 */
 
-if (closeWelcomeButton) {
-  closeWelcomeButton.addEventListener("click", hideWelcomeModal);
-}
-
 if (helpButton) {
   helpButton.addEventListener("click", showHelpModal);
 }
@@ -2165,17 +2313,6 @@ if (draftsModal) {
   });
 }
 
-if (welcomeModal) {
-  welcomeModal.addEventListener("click", (e) => {
-    const target = e.target;
-    if (!(target instanceof Element)) return;
-
-    if (target === welcomeModal || target.closest("#closeWelcomeButton")) {
-      hideWelcomeModal();
-    }
-  });
-}
-
 if (helpModal) {
   helpModal.addEventListener("click", (e) => {
     const target = e.target;
@@ -2200,6 +2337,15 @@ if (userGuideModal) {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (openDrawerName) {
+    closeDrawer();
+    return;
+  }
+  const moreMenu = document.getElementById("headerMoreMenu");
+  if (moreMenu && moreMenu.open) {
+    moreMenu.open = false;
+    return;
+  }
   if (userGuideModal && !userGuideModal.hidden) {
     hideUserGuideModal();
     return;
@@ -2210,10 +2356,6 @@ document.addEventListener("keydown", (e) => {
   }
   if (helpModal && !helpModal.hidden) {
     hideHelpModal();
-    return;
-  }
-  if (welcomeModal && !welcomeModal.hidden) {
-    hideWelcomeModal();
   }
 });
 
@@ -2225,10 +2367,17 @@ if (saveSnapshotButton) {
 export function applyLocaleRefresh() {
   syncThemeToggleButton();
   if (exportProgressMessage) exportProgressMessage.textContent = t("document.initialExportOverlay");
-  syncMainToSidebar();
   ["oddTextColor", "oddBorderColor", "oddBgColor", "storyTextColor"].forEach(syncColorDisplay);
   renderPreview();
   renderDraftsList();
+  renderStartDrafts();
+  refreshPathCopy();
+  if (openDrawerName && DRAWER_META[openDrawerName]) {
+    const titleEl = document.getElementById("appDrawerTitle");
+    const hintEl = document.getElementById("appDrawerHint");
+    if (titleEl) titleEl.textContent = t(DRAWER_META[openDrawerName].title);
+    if (hintEl) hintEl.textContent = t(DRAWER_META[openDrawerName].hint);
+  }
   document.title = t("document.pageTitle");
   refreshDigitizeLocale();
   spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
@@ -2307,7 +2456,8 @@ export function bootstrap() {
 
   addSpread();
   renderPreview();
-  showWelcomeModal();
+  initAppShell();
+  setAppView("start");
   setStatus(t("javascriptStrings.exportStatus.ready"));
 
   window.addEventListener("beforeunload", () => {

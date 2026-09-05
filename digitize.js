@@ -1391,6 +1391,19 @@ export function initDigitizeBook(options) {
   renderAll();
 }
 
+export function setDigitizeMode(mode) {
+  const id = mode === "nook" ? "digitizeTypeNook" : "digitizeTypeNormal";
+  const radio = el(id);
+  if (!radio) return;
+  radio.checked = true;
+  applyDigitizeMode();
+}
+
+export function setDigitizeTypeLocked(locked) {
+  const fieldset = document.querySelector("#digitizeBookPanel .digitize-book-type");
+  if (fieldset) fieldset.hidden = Boolean(locked);
+}
+
 export function refreshDigitizeLocale() {
   const panel = el("digitizeBookPanel");
   if (panel) applyDomTranslations(panel);
