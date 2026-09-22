@@ -115,6 +115,10 @@ SALIENT_FEATURES: [Salient features for this spread.]
 
 After parsing, add images in each spread before export.
 
+## Privacy
+
+CVI Book Builder is free. Book text, photos, and the PowerPoint file are processed in the browser and are not uploaded to this site. Drafts stay in `localStorage` on that device. The [privacy policy](privacy.html) also covers the third parties your browser contacts for libraries, OCR models, background removal, optional Wikimedia search, and the optional tip link.
+
 ## License
 
 **This repository (CVI Book Builder code written here)** is under the [MIT License](LICENSE).

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy policy — CVI Book Builder</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("cviBookBuilderTheme");
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+        if (localStorage.getItem("cviBookBuilderLocale") === "ar") {
+          document.documentElement.lang = "ar";
+          document.documentElement.dir = "rtl";
+          document.documentElement.dataset.privacyLocale = "ar";
+          document.title = "سياسة الخصوصية — منشئ كتب CVI";
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <main class="container privacy-page">
+    <div class="privacy-toolbar">
+      <p class="privacy-back">
+        <a href="index.html" data-lang="en">Back to CVI Book Builder</a>
+        <a href="index.html" data-lang="ar">العودة إلى منشئ كتب CVI</a>
+      </p>
+      <div class="privacy-lang" role="group" aria-label="Language">
+        <button type="button" id="privacyLangEn" aria-pressed="true">English</button>
+        <button type="button" id="privacyLangAr" aria-pressed="false">العربية</button>
+      </div>
+    </div>
+
+    <article class="privacy-doc" data-lang="en" lang="en">
+      <h1>Privacy policy</h1>
+      <p class="privacy-meta">Effective date: September 22, 2026</p>
+      <p class="privacy-lead">CVI Book Builder (<a href="https://cvibookbuilder.com">cvibookbuilder.com</a>) is a free tool for making CVI-friendly story books. Addison Graham operates this site. This page explains what happens to information when you use it.</p>
+      <p>The English text is the official wording. The Arabic text is a translation for readers of the Arabic interface.</p>
+
+      <h2>The short version</h2>
+      <p>We do not collect your books. The tool is free. Your text, photos, and PowerPoint file are processed in your browser, on your device, and are not uploaded to us.</p>
+
+      <h2>We do not collect your book</h2>
+      <p>There is no account and no sign-in. We do not ask for your name, email address, school, or payment details in order to use the tool.</p>
+      <p>We do not receive:</p>
+      <ul>
+        <li>book titles, story text, or salient features</li>
+        <li>photos, PDFs, EPUBs, or page images you open</li>
+        <li>TVI session notes or FVA/LMA summaries</li>
+        <li>the PowerPoint file the app builds</li>
+      </ul>
+      <p>Those stay on your device. Export, print, and sharing happen only when you do them yourself. We do not use your book to train models.</p>
+      <p>We do not use advertising, analytics, or tracking pixels. We do not sell personal information. We do not set cookies.</p>
+
+      <h2>What this browser remembers</h2>
+      <p>The site saves a few settings in local storage on this device, in this browser only:</p>
+      <ul>
+        <li>drafts of your book (up to 25), including text and images you have added, when a book title is filled in</li>
+        <li>light or dark theme</li>
+        <li>language (English or Arabic)</li>
+        <li>whether you have already opened the start screen</li>
+      </ul>
+      <p>We never receive that data. You can delete drafts in the Drafts panel, or clear this site’s data in your browser settings. A shared or school computer will still show those drafts to the next person who uses the same browser profile. If your notes include a student’s name or other school information, follow your school’s rules and do not leave them on a shared browser.</p>
+
+      <h2>What your browser requests from other sites</h2>
+      <p>Opening the site loads the page from <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Pages</a>, which hosts cvibookbuilder.com. That request includes the usual technical details a web server sees, such as your IP address and browser type. We do not add our own visitor log on top of GitHub’s.</p>
+      <p>The app then loads software libraries from the <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net">jsDelivr</a> CDN (<code>cdn.jsdelivr.net</code>), including tools for PowerPoint export, PDF and EPUB reading, HEIC photo conversion, and in-browser OCR. Your book files are not part of those downloads. jsDelivr sees the request for the library file.</p>
+      <p>These features download extra files only when you use them. Your pages and photos are still processed on your device:</p>
+      <ul>
+        <li><strong>OCR (Digitize Book).</strong> Recognition models download from GitHub (<code>media.githubusercontent.com</code> and <code>raw.githubusercontent.com</code>). The page image is not uploaded.</li>
+        <li><strong>Background removal (Image Isolator).</strong> The model downloads from IMG.LY (<code>staticimgly.com</code>). Your photo is not uploaded to IMG.LY. See <a href="https://img.ly/privacy-policy">IMG.LY’s privacy policy</a>.</li>
+        <li><strong>Wikimedia Commons search.</strong> The words you type are sent to <code>commons.wikimedia.org</code> so it can return pictures. If you pick one, your browser downloads that image from Wikimedia. Do not type a student’s name or other private details into that search. See the <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">Wikimedia Foundation privacy policy</a>.</li>
+      </ul>
+
+      <h2>Choices that leave this site</h2>
+      <ul>
+        <li><strong>AI tools.</strong> Copy AI Formatting Prompt only copies text to your clipboard. If you paste a story into ChatGPT, Gemini, Claude, or another assistant, that service receives it under its own policy. This site does not connect to those assistants.</li>
+        <li><strong>Clipboard copies</strong> (image prompts, the FVA/LMA summary, digitized page text) stay on your device until you paste them somewhere.</li>
+        <li><strong>Download PowerPoint</strong> saves a file on your device.</li>
+        <li><strong>Tip me</strong> opens <a href="https://www.buymeacoffee.com/privacy-policy">Buy Me a Coffee</a> in a new tab. Tips are optional. The tool stays free without one. We do not see your card or payment details.</li>
+        <li><strong>Email.</strong> If you write to <a href="mailto:grahamthetvi@icloud.com">grahamthetvi@icloud.com</a>, we receive what you send and use it only to answer you. We do not add you to a mailing list. You can ask us to delete that email.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>Teachers and families use this tool to make books for children with cortical visual impairment. The site is not directed at children, and it does not ask children to create accounts or send us personal information. Keep children’s names and other identifying details out of Wikimedia search, and out of any AI tool you paste into, unless you have already decided that is appropriate.</p>
+
+      <h2>How long information lasts</h2>
+      <p>We do not keep a copy of your books. Browser drafts stay until you delete them, your browser clears them, or the app drops the oldest draft past the limit of 25. Emails you send us are kept only as long as we need them to respond, unless you ask us to delete them sooner.</p>
+
+      <h2>Changes</h2>
+      <p>If this policy changes, we will update the date at the top of this page.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about privacy: <a href="mailto:grahamthetvi@icloud.com">grahamthetvi@icloud.com</a></p>
+    </article>
+
+    <article class="privacy-doc" data-lang="ar" lang="ar">
+      <h1>سياسة الخصوصية</h1>
+      <p class="privacy-meta">تاريخ السريان: 22 سبتمبر 2026</p>
+      <p class="privacy-lead">منشئ كتب CVI (<a href="https://cvibookbuilder.com">cvibookbuilder.com</a>) أداة مجانية لصنع كتب قصصية ملائمة لضعف البصر القشري (CVI). يدير هذا الموقع أديسون جراهام. توضح هذه الصفحة ما يحدث للمعلومات عند استخدامك للأداة.</p>
+      <p>النص الإنجليزي هو الصياغة الرسمية. النص العربي ترجمة لقارئي الواجهة العربية.</p>
+
+      <h2>باختصار</h2>
+      <p>لا نجمع كتبك. الأداة مجانية. يُعالَج نصك وصورك وملف PowerPoint في متصفحك على جهازك، ولا تُرفع إلينا.</p>
+
+      <h2>لا نجمع كتابك</h2>
+      <p>لا يوجد حساب ولا تسجيل دخول. لا نطلب اسمك أو بريدك الإلكتروني أو مدرستك أو بيانات الدفع لاستخدام الأداة.</p>
+      <p>لا تصل إلينا:</p>
+      <ul>
+        <li>عناوين الكتب أو نص القصة أو السمات البارزة</li>
+        <li>الصور أو ملفات PDF أو EPUB أو صور الصفحات التي تفتحها</li>
+        <li>ملاحظات جلسة TVI أو ملخصات FVA/LMA</li>
+        <li>ملف PowerPoint الذي يبنيه التطبيق</li>
+      </ul>
+      <p>تبقى هذه المواد على جهازك. التصدير والطباعة والمشاركة لا تحدث إلا عندما تقوم بها أنت. لا نستخدم كتابك لتدريب نماذج.</p>
+      <p>لا نستخدم إعلانات أو تحليلات أو بكسلات تتبّع. لا نبيع معلومات شخصية. لا نضع ملفات تعريف ارتباط (cookies).</p>
+
+      <h2>ما يتذكره هذا المتصفح</h2>
+      <p>يحفظ الموقع بعض الإعدادات في التخزين المحلي على هذا الجهاز، وفي هذا المتصفح فقط:</p>
+      <ul>
+        <li>مسودات كتابك (حتى 25)، بما فيها النص والصور التي أضفتها، عندما يكون عنوان الكتاب معبّأً</li>
+        <li>المظهر الفاتح أو الداكن</li>
+        <li>اللغة (الإنجليزية أو العربية)</li>
+        <li>ما إذا كنت قد فتحت شاشة البداية من قبل</li>
+      </ul>
+      <p>لا تصلنا هذه البيانات أبدًا. يمكنك حذف المسودات من لوحة المسودات، أو مسح بيانات هذا الموقع من إعدادات المتصفح. جهاز مشترك أو جهاز المدرسة سيُظهر تلك المسودات للشخص التالي الذي يستخدم ملف المتصفح نفسه. إذا تضمّنت ملاحظاتك اسم طالب أو معلومات مدرسية أخرى، فاتبع قواعد مدرستك ولا تتركها على متصفح مشترك.</p>
+
+      <h2>ما يطلبه متصفحك من مواقع أخرى</h2>
+      <p>فتح الموقع يحمّل الصفحة من <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub Pages</a>، الذي يستضيف cvibookbuilder.com. يتضمن ذلك الطلب التفاصيل التقنية المعتادة التي يراها خادم الويب، مثل عنوان IP ونوع المتصفح. لا نضيف سجل زوار خاصًا بنا فوق ما يسجله GitHub.</p>
+      <p>ثم يحمّل التطبيق مكتبات من شبكة <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net">jsDelivr</a> (<code>cdn.jsdelivr.net</code>)، ومنها أدوات تصدير PowerPoint وقراءة PDF وEPUB وتحويل صور HEIC والتعرف الضوئي داخل المتصفح. ملفات كتابك ليست جزءًا من تلك التنزيلات. يرى jsDelivr طلب ملف المكتبة.</p>
+      <p>تنزّل هذه الميزات ملفات إضافية فقط عندما تستخدمها. تظل صفحاتك وصورك تُعالَج على جهازك:</p>
+      <ul>
+        <li><strong>التعرف الضوئي (رقمنة الكتاب).</strong> تُنزَّل نماذج التعرف من GitHub (<code>media.githubusercontent.com</code> و<code>raw.githubusercontent.com</code>). لا تُرفع صورة الصفحة.</li>
+        <li><strong>إزالة الخلفية (عازل الصورة).</strong> يُنزَّل النموذج من IMG.LY (<code>staticimgly.com</code>). لا تُرفع صورتك إلى IMG.LY. راجع <a href="https://img.ly/privacy-policy">سياسة خصوصية IMG.LY</a>.</li>
+        <li><strong>البحث في ويكيميديا كومنز.</strong> الكلمات التي تكتبها تُرسل إلى <code>commons.wikimedia.org</code> ليعيد صورًا. إذا اخترت صورة، يحمّلها متصفحك من ويكيميديا. لا تكتب اسم طالب أو تفاصيل خاصة أخرى في ذلك البحث. راجع <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy">سياسة خصوصية مؤسسة ويكيميديا</a>.</li>
+      </ul>
+
+      <h2>خيارات تغادر هذا الموقع</h2>
+      <ul>
+        <li><strong>أدوات الذكاء الاصطناعي.</strong> زر نسخ موجه التنسيق ينسخ النص إلى الحافظة فقط. إذا لصقت قصة في ChatGPT أو Gemini أو Claude أو مساعد آخر، فإن تلك الخدمة تستلمها وفق سياستها. هذا الموقع لا يتصل بتلك المساعدات.</li>
+        <li><strong>النسخ إلى الحافظة</strong> (موجهات الصور، وملخص FVA/LMA، ونص الصفحات المرقمنة) يبقى على جهازك إلى أن تلصقه في مكان آخر.</li>
+        <li><strong>تنزيل PowerPoint</strong> يحفظ ملفًا على جهازك.</li>
+        <li><strong>ادعمني</strong> يفتح <a href="https://www.buymeacoffee.com/privacy-policy">Buy Me a Coffee</a> في لسان جديد. الإكرامية اختيارية. تبقى الأداة مجانية من دونها. لا نرى بطاقتك أو تفاصيل الدفع.</li>
+        <li><strong>البريد.</strong> إذا كتبت إلى <a href="mailto:grahamthetvi@icloud.com">grahamthetvi@icloud.com</a>، نستلم ما ترسله ونستخدمه فقط للرد عليك. لا نضيفك إلى قائمة بريدية. يمكنك أن تطلب منا حذف تلك الرسالة.</li>
+      </ul>
+
+      <h2>الأطفال</h2>
+      <p>يستخدم المعلمون والعائلات هذه الأداة لصنع كتب لأطفال لديهم ضعف بصري قشري. الموقع غير موجّه للأطفال، ولا يطلب منهم إنشاء حسابات أو إرسال معلومات شخصية إلينا. أبقِ أسماء الأطفال والتفاصيل المعرِّفة الأخرى خارج بحث ويكيميديا، وخارج أي أداة ذكاء اصطناعي تلصق فيها، إلا إذا كنت قد قررت أن ذلك مناسب.</p>
+
+      <h2>إلى متى تبقى المعلومات</h2>
+      <p>لا نحتفظ بنسخة من كتبك. تبقى مسودات المتصفح إلى أن تحذفها، أو يمسحها المتصفح، أو يسقط التطبيق أقدم مسودة بعد حد 25. رسائل البريد التي ترسلها إلينا تُحفظ فقط للمدة اللازمة للرد، ما لم تطلب حذفها قبل ذلك.</p>
+
+      <h2>التغييرات</h2>
+      <p>إذا تغيّرت هذه السياسة، نحدّث التاريخ في أعلى هذه الصفحة.</p>
+
+      <h2>الاتصال</h2>
+      <p>أسئلة الخصوصية: <a href="mailto:grahamthetvi@icloud.com">grahamthetvi@icloud.com</a></p>
+    </article>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container site-footer-bar">
+      <p class="site-footer-inner">
+        <span class="site-footer-license"><strong>MIT License</strong></span>
+        <span class="site-footer-sep" aria-hidden="true">·</span>
+        <a href="privacy.html">Privacy</a>
+        <span class="site-footer-sep" aria-hidden="true">·</span>
+        <span class="site-footer-creator">Addison Graham Creator</span>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var enButton = document.getElementById("privacyLangEn");
+      var arButton = document.getElementById("privacyLangAr");
+
+      function applyLocale(code) {
+        var arabic = code === "ar";
+        if (arabic) document.documentElement.dataset.privacyLocale = "ar";
+        else delete document.documentElement.dataset.privacyLocale;
+        document.documentElement.lang = arabic ? "ar" : "en";
+        document.documentElement.dir = arabic ? "rtl" : "ltr";
+        document.title = arabic
+          ? "سياسة الخصوصية — منشئ كتب CVI"
+          : "Privacy policy — CVI Book Builder";
+        enButton.setAttribute("aria-pressed", arabic ? "false" : "true");
+        arButton.setAttribute("aria-pressed", arabic ? "true" : "false");
+        try {
+          localStorage.setItem("cviBookBuilderLocale", arabic ? "ar" : "en");
+        } catch (e) {}
+      }
+
+      if (document.documentElement.dataset.privacyLocale === "ar") applyLocale("ar");
+      enButton.addEventListener("click", function () { applyLocale("en"); });
+      arButton.addEventListener("click", function () { applyLocale("ar"); });
+    })();
+  </script>
+</body>
+</html>
