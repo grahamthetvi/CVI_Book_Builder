@@ -70,9 +70,6 @@ let currentSourceObjectUrl = null;
 let currentSourceName = "";
 let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
-// Library default is CPU/WASM. Request WebGPU; it falls back to WASM when
-// navigator.gpu is missing or requestAdapter() returns null.
-const BACKGROUND_REMOVAL_CONFIG = { device: "gpu" };
 
 function scheduleLivePreview(immediate = false) {
   if (immediate) {
@@ -864,12 +861,30 @@ async function processCurrentImage() {
   }
 }
 
+/**
+ * WebGPU only when the adapter can run the fp16 ISNet model.
+ * Without shader-f16, that model fails in WebGPU and returns a blank image.
+ */
+async function getBackgroundRemovalConfig() {
+  if (typeof navigator === "undefined" || !navigator.gpu || typeof navigator.gpu.requestAdapter !== "function") {
+    return { device: "cpu" };
+  }
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (adapter && adapter.features && adapter.features.has("shader-f16")) {
+      return { device: "gpu" };
+    }
+  } catch (err) {
+    console.warn("WebGPU adapter request failed; background removal will use the CPU.", err);
+  }
+  return { device: "cpu" };
+}
+
 /** Remove background (and optional outline) from any image blob — shared with Digitize Book. */
 async function isolateImageBlob(sourceBlob) {
   const removeBackground = await getBackgroundRemover();
-  let finalBlob = await normalizeReturnedBlob(
-    await removeBackground(sourceBlob, BACKGROUND_REMOVAL_CONFIG)
-  );
+  const config = await getBackgroundRemovalConfig();
+  let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob, config));
 
   if (outlineEnabledInput && outlineEnabledInput.checked) {
     const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
