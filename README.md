@@ -42,7 +42,7 @@ Choose a **book type** at the top of the Digitize Book panel.
 7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
 8. Refine spreads, preview, and download PowerPoint as usual.
 
-OCR and background removal run entirely in the browser. No book images are uploaded to a server.
+OCR and background removal run entirely in the browser. No book images are uploaded to a server. Background removal uses the browser’s WebGPU when the GPU supports 16-bit shaders, and CPU (WASM) otherwise.
 
 ### CVI Book Nook print PDF
 
