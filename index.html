@@ -549,9 +549,10 @@
                   </div>
                   <div class="story-input-actions top-gap">
                     <button id="digitizeIsolateCropBtn" type="button" data-i18n="digitizeBook.isolateCropBtn">Crop &amp; remove background</button>
+                    <button id="digitizeIsolateAllPagesBtn" type="button" data-i18n="digitizeBook.isolateAllPagesBtn" disabled>Remove backgrounds from all pages</button>
                     <button id="digitizeClearCropBtn" type="button" data-i18n="digitizeBook.clearCropBtn">Clear crop</button>
                   </div>
-                  <p class="hint" data-i18n="digitizeBook.cropHint">Draw a box around a character or object. Isolation uses the Image Isolator outline settings.</p>
+                  <p class="hint" data-i18n="digitizeBook.cropHint">Draw a box around a character or object, or remove backgrounds from every page image at once. Isolation uses the Image Isolator outline settings.</p>
                 </div>
 
                 <div class="digitize-text-stage">
@@ -579,6 +580,11 @@
                 <input id="digitizeNookIsolate" type="checkbox">
                 <span data-i18n="digitizeBook.nookIsolate">Remove backgrounds from photos (uses Image Isolator settings)</span>
               </label>
+              <label class="checkbox-label">
+                <input id="digitizeNookIsolateAll" type="checkbox">
+                <span data-i18n="digitizeBook.nookIsolateAll">Process all photos at once</span>
+              </label>
+              <p class="hint" data-i18n="digitizeBook.nookIsolateAllHint">Runs background removal on every photo together.</p>
             </div>
           </section>
         </div>

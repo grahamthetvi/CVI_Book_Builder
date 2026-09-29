@@ -37,7 +37,7 @@ Choose a **book type** at the top of the Digitize Book panel.
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
 3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
 4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
-5. Click **Crop & remove background** (uses the Image Isolator outline settings).
+5. Click **Crop & remove background** for the box you drew, or **Remove backgrounds from all pages** to process every page image together (uses the Image Isolator outline settings).
 6. Optionally **Copy all pages for AI review**, paste the tagged reply, and apply (isolated crops stay on matching pages).
 7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
 8. Refine spreads, preview, and download PowerPoint as usual.
@@ -48,7 +48,7 @@ OCR and background removal run entirely in the browser. No book images are uploa
 
 1. Select **CVI Book Nook**.
 2. Upload a Ready-to-Print PDF from [CVI Book Nook](https://www.cvibooks.com/) (cover page, then story pages that include `Salient Features:` each followed by a photo page).
-3. Optionally check **Remove backgrounds from photos** to run the Image Isolator on each photo (off by default).
+3. Optionally check **Remove backgrounds from photos** to run the Image Isolator on each photo (off by default). Check **Process all photos at once** to run that removal on every photo together. Photos are cropped to the picture, skipping a page border or page number.
 4. The app sets the **Book title** from the cover, pairs each story page with the following photo, fills salient features and odd-page keywords, and replaces the current spreads. Review and export as usual.
 
 ## Drafts and autosave

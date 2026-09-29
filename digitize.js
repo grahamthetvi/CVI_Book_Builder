@@ -16,7 +16,8 @@ const OCR_SATURATION_DARKEN = 0.84;
 /** Mean luminance below this is treated as light-on-dark and inverted before OCR. */
 const OCR_INVERT_LUMA_THRESHOLD = 118;
 
-/** @typedef {{ id: string, name: string, blob: Blob, objectUrl: string, ocrText: string, ocrConfidence: number|null, ocrStatus: 'idle'|'pending'|'done'|'error', ocrError?: string, textSource?: 'epub'|'ocr'|null, crops: { id: string, name: string, file: File, objectUrl: string }[] }} DigitizePage */
+/** @typedef {{ x0: number, y0: number, x1: number, y1: number }} NormalizedCrop */
+/** @typedef {{ id: string, name: string, blob: Blob, objectUrl: string, ocrText: string, ocrConfidence: number|null, ocrStatus: 'idle'|'pending'|'done'|'error', ocrError?: string, textSource?: 'epub'|'ocr'|null, pendingCrop?: NormalizedCrop|null, crops: { id: string, name: string, file: File, objectUrl: string }[] }} DigitizePage */
 
 /** @type {DigitizePage[]} */
 let pages = [];
@@ -25,8 +26,10 @@ let ocrServicePromise = null;
 let ocrServiceModelKey = "";
 let pdfjsPromise = null;
 
-/** Crop drag state in image natural coordinates */
+/** Crop drag in normalized image coordinates (0–1), so it survives overlay resizes. */
 let cropDrag = null;
+let cropDragging = false;
+let cropResizeObserver = null;
 
 /** @type {null | {
  *   isolateBlob: (blob: Blob) => Promise<Blob>,
@@ -65,6 +68,7 @@ function clearPages() {
   pages = [];
   selectedPageId = null;
   cropDrag = null;
+  cropDragging = false;
 }
 
 function getSelectedPage() {
@@ -289,7 +293,7 @@ async function renderPdfPageToCanvas(page, scale = OCR_RENDER_SCALE) {
 
 function canvasToPngBlob(canvas) {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PDF page render failed"))), "image/png");
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Could not encode image."))), "image/png");
   });
 }
 
@@ -298,74 +302,139 @@ async function getPdfPageText(page) {
   return joinPdfTextItems(content?.items || []);
 }
 
-function sampleCornerAverage(data, width, height, sample = 6) {
-  const corners = [
-    [0, 0],
-    [Math.max(0, width - sample), 0],
-    [0, Math.max(0, height - sample)],
-    [Math.max(0, width - sample), Math.max(0, height - sample)]
-  ];
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  let n = 0;
-  for (const [sx, sy] of corners) {
-    for (let y = sy; y < Math.min(height, sy + sample); y += 1) {
-      for (let x = sx; x < Math.min(width, sx + sample); x += 1) {
-        const i = (y * width + x) * 4;
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-        n += 1;
-      }
+const CONTENT_COLOR_THRESHOLD = 28;
+
+function medianChannel(values) {
+  if (!values.length) return 255;
+  const sorted = values.slice().sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+/**
+ * Margin color from the middle of each edge, inset past a thin frame.
+ * Corner samples are skipped so a border or page number does not become the background.
+ */
+function sampleMarginBackground(data, width, height) {
+  const rgb = [];
+  let transparent = 0;
+  let total = 0;
+  const insets = [6, 14, 28, 48].filter((v) => v < width / 5 && v < height / 5);
+  const bands = insets.length ? insets : [0];
+  const x0 = Math.floor(width * 0.3);
+  const x1 = Math.ceil(width * 0.7);
+  const y0 = Math.floor(height * 0.3);
+  const y1 = Math.ceil(height * 0.7);
+
+  const consider = (x, y) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const i = (y * width + x) * 4;
+    total += 1;
+    if (data[i + 3] < 16) {
+      transparent += 1;
+      return;
+    }
+    rgb.push([data[i], data[i + 1], data[i + 2]]);
+  };
+
+  for (const inset of bands) {
+    for (let x = x0; x < x1; x += 4) {
+      consider(x, inset);
+      consider(x, height - 1 - inset);
+    }
+    for (let y = y0; y < y1; y += 4) {
+      consider(inset, y);
+      consider(width - 1 - inset, y);
     }
   }
-  if (!n) return { r: 255, g: 255, b: 255 };
-  return { r: r / n, g: g / n, b: b / n };
+
+  if (!total || transparent > total * 0.6) {
+    return { r: 0, g: 0, b: 0, transparent: true };
+  }
+  return {
+    r: medianChannel(rgb.map((p) => p[0])),
+    g: medianChannel(rgb.map((p) => p[1])),
+    b: medianChannel(rgb.map((p) => p[2])),
+    transparent: false
+  };
+}
+
+function isMarginPixel(data, index, bg) {
+  if (data[index + 3] < 16) return true;
+  if (bg.transparent) return false;
+  return (
+    Math.abs(data[index] - bg.r) <= CONTENT_COLOR_THRESHOLD &&
+    Math.abs(data[index + 1] - bg.g) <= CONTENT_COLOR_THRESHOLD &&
+    Math.abs(data[index + 2] - bg.b) <= CONTENT_COLOR_THRESHOLD
+  );
+}
+
+/** Bounding span of the photo, ignoring a thin border or page number. */
+function spanOfSubstantialContent(counts, length, crossLength) {
+  const minHits = Math.max(10, Math.floor(crossLength * 0.06));
+  const minBand = Math.max(20, Math.floor(length * 0.035));
+  const gapMerge = Math.max(12, Math.floor(length * 0.02));
+  const content = [];
+  for (let i = 0; i < length; i += 1) content.push(counts[i] >= minHits);
+
+  const runs = [];
+  let index = 0;
+  while (index < length) {
+    if (!content[index]) {
+      index += 1;
+      continue;
+    }
+    let end = index + 1;
+    while (end < length && content[end]) end += 1;
+    runs.push({ start: index, end: end - 1 });
+    index = end;
+  }
+  if (!runs.length) return { start: 0, end: length - 1 };
+
+  const merged = [];
+  for (const run of runs) {
+    const prev = merged[merged.length - 1];
+    if (prev && run.start - prev.end - 1 <= gapMerge) prev.end = run.end;
+    else merged.push({ start: run.start, end: run.end });
+  }
+
+  const substantial = merged.filter((run) => run.end - run.start + 1 >= minBand);
+  const pool = substantial.length ? substantial : merged;
+  const chosen = pool.reduce((best, run) => (
+    run.end - run.start > best.end - best.start ? run : best
+  ));
+  return { start: chosen.start, end: chosen.end };
 }
 
 function findContentBounds(imageData, width, height) {
   const data = imageData.data;
-  const bg = sampleCornerAverage(data, width, height);
-  const threshold = 22;
+  const bg = sampleMarginBackground(data, width, height);
   const rowCounts = new Uint32Array(height);
   const colCounts = new Uint32Array(width);
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
       const i = (y * width + x) * 4;
-      if (
-        Math.abs(data[i] - bg.r) > threshold ||
-        Math.abs(data[i + 1] - bg.g) > threshold ||
-        Math.abs(data[i + 2] - bg.b) > threshold
-      ) {
+      if (!isMarginPixel(data, i, bg)) {
         rowCounts[y] += 1;
         colCounts[x] += 1;
       }
     }
   }
 
-  const minRowHits = Math.max(8, Math.floor(width * 0.03));
-  const minColHits = Math.max(8, Math.floor(height * 0.03));
-  let top = 0;
-  let bottom = height - 1;
-  let left = 0;
-  let right = width - 1;
-  while (top < height && rowCounts[top] < minRowHits) top += 1;
-  while (bottom > top && rowCounts[bottom] < minRowHits) bottom -= 1;
-  while (left < width && colCounts[left] < minColHits) left += 1;
-  while (right > left && colCounts[right] < minColHits) right -= 1;
+  const rows = spanOfSubstantialContent(rowCounts, height, width);
+  const cols = spanOfSubstantialContent(colCounts, width, height);
+  const pad = 8;
+  const top = Math.max(0, rows.start - pad);
+  const left = Math.max(0, cols.start - pad);
+  const bottom = Math.min(height - 1, rows.end + pad);
+  const right = Math.min(width - 1, cols.end + pad);
+  const w = right - left + 1;
+  const h = bottom - top + 1;
 
-  const pad = 12;
-  top = Math.max(0, top - pad);
-  left = Math.max(0, left - pad);
-  bottom = Math.min(height - 1, bottom + pad);
-  right = Math.min(width - 1, right + pad);
-
-  if (right - left < 16 || bottom - top < 16) {
+  if (w < 16 || h < 16 || w * h < width * height * 0.02) {
     return { x: 0, y: 0, w: width, h: height };
   }
-  return { x: left, y: top, w: right - left + 1, h: bottom - top + 1 };
+  return { x: left, y: top, w, h };
 }
 
 function cropCanvasToContent(sourceCanvas) {
@@ -558,90 +627,146 @@ function syncCropOverlaySize() {
   const canvas = el("digitizeCropCanvas");
   if (!img || !canvas || !img.naturalWidth) return;
   const rect = img.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.round(rect.width));
-  canvas.height = Math.max(1, Math.round(rect.height));
-  canvas.style.width = `${rect.width}px`;
-  canvas.style.height = `${rect.height}px`;
+  // A hidden drawer reports 0. Writing that size pins the overlay at 0×0 and drops every drag.
+  if (rect.width < 2 || rect.height < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(rect.width * dpr));
+  const h = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  canvas.style.width = "";
+  canvas.style.height = "";
   drawCropOverlay();
 }
 
 function drawCropOverlay() {
   const canvas = el("digitizeCropCanvas");
+  const img = el("digitizePageImage");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!cropDrag) return;
+  if (!cropDrag || !img) return;
 
-  const { x0, y0, x1, y1 } = cropDrag;
-  const left = Math.min(x0, x1);
-  const top = Math.min(y0, y1);
-  const w = Math.abs(x1 - x0);
-  const h = Math.abs(y1 - y0);
+  const rect = img.getBoundingClientRect();
+  const scaleX = rect.width > 1 ? canvas.width / rect.width : canvas.width;
+  const scaleY = rect.height > 1 ? canvas.height / rect.height : canvas.height;
+  const left = Math.min(cropDrag.x0, cropDrag.x1) * rect.width * scaleX;
+  const top = Math.min(cropDrag.y0, cropDrag.y1) * rect.height * scaleY;
+  const w = Math.abs(cropDrag.x1 - cropDrag.x0) * rect.width * scaleX;
+  const h = Math.abs(cropDrag.y1 - cropDrag.y0) * rect.height * scaleY;
   if (w < 2 || h < 2) return;
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.clearRect(left, top, w, h);
   ctx.strokeStyle = "#7eb8ff";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = Math.max(2, Math.round((window.devicePixelRatio || 1) * 1.5));
   ctx.setLineDash([6, 4]);
   ctx.strokeRect(left + 0.5, top + 0.5, w, h);
 }
 
-function canvasPointFromEvent(e) {
-  const canvas = el("digitizeCropCanvas");
-  const rect = canvas.getBoundingClientRect();
+function imageNormFromEvent(e) {
+  const img = el("digitizePageImage");
+  if (!img || !img.naturalWidth) return null;
+  const rect = img.getBoundingClientRect();
+  if (rect.width < 2 || rect.height < 2) return null;
   return {
-    x: Math.min(Math.max(0, e.clientX - rect.left), rect.width),
-    y: Math.min(Math.max(0, e.clientY - rect.top), rect.height)
+    x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
+    y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height))
   };
+}
+
+function cropSelectionIsBigEnough(norm = cropDrag) {
+  const img = el("digitizePageImage");
+  if (!img || !norm || !img.naturalWidth) return false;
+  const display = img.getBoundingClientRect();
+  const w = Math.abs(norm.x1 - norm.x0);
+  const h = Math.abs(norm.y1 - norm.y0);
+  if (display.width >= 2 && display.height >= 2) {
+    return w * display.width >= 8 && h * display.height >= 8;
+  }
+  return w * img.naturalWidth >= 8 && h * img.naturalHeight >= 8;
 }
 
 function getCropRectInNaturalPixels() {
   const img = el("digitizePageImage");
-  const canvas = el("digitizeCropCanvas");
-  if (!img || !canvas || !cropDrag || !img.naturalWidth) return null;
-  const { x0, y0, x1, y1 } = cropDrag;
-  const left = Math.min(x0, x1);
-  const top = Math.min(y0, y1);
-  const right = Math.max(x0, x1);
-  const bottom = Math.max(y0, y1);
-  const w = right - left;
-  const h = bottom - top;
-  if (w < 8 || h < 8) return null;
+  if (!img || !cropDrag || !img.naturalWidth || !cropSelectionIsBigEnough()) return null;
+  const left = Math.min(cropDrag.x0, cropDrag.x1);
+  const top = Math.min(cropDrag.y0, cropDrag.y1);
+  const width = Math.abs(cropDrag.x1 - cropDrag.x0);
+  const height = Math.abs(cropDrag.y1 - cropDrag.y0);
+  let sx = Math.round(left * img.naturalWidth);
+  let sy = Math.round(top * img.naturalHeight);
+  let sw = Math.round(width * img.naturalWidth);
+  let sh = Math.round(height * img.naturalHeight);
+  sx = Math.max(0, Math.min(sx, img.naturalWidth - 1));
+  sy = Math.max(0, Math.min(sy, img.naturalHeight - 1));
+  sw = Math.max(1, Math.min(sw, img.naturalWidth - sx));
+  sh = Math.max(1, Math.min(sh, img.naturalHeight - sy));
+  return { sx, sy, sw, sh };
+}
 
-  const scaleX = img.naturalWidth / canvas.width;
-  const scaleY = img.naturalHeight / canvas.height;
-  return {
-    sx: Math.round(left * scaleX),
-    sy: Math.round(top * scaleY),
-    sw: Math.round(w * scaleX),
-    sh: Math.round(h * scaleY)
-  };
+function loadImageElement(url) {
+  const img = new Image();
+  img.decoding = "async";
+  const loaded = new Promise((resolve, reject) => {
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not load page image for crop."));
+  });
+  img.src = url;
+  return loaded;
+}
+
+async function cropNormalizedRegionToBlob(page, norm) {
+  if (!page || !norm) return null;
+  const img = await loadImageElement(page.objectUrl);
+  const left = Math.min(norm.x0, norm.x1);
+  const top = Math.min(norm.y0, norm.y1);
+  const width = Math.abs(norm.x1 - norm.x0);
+  const height = Math.abs(norm.y1 - norm.y0);
+  let sx = Math.round(left * img.naturalWidth);
+  let sy = Math.round(top * img.naturalHeight);
+  let sw = Math.round(width * img.naturalWidth);
+  let sh = Math.round(height * img.naturalHeight);
+  sx = Math.max(0, Math.min(sx, Math.max(0, img.naturalWidth - 1)));
+  sy = Math.max(0, Math.min(sy, Math.max(0, img.naturalHeight - 1)));
+  sw = Math.max(1, Math.min(sw, img.naturalWidth - sx));
+  sh = Math.max(1, Math.min(sh, img.naturalHeight - sy));
+  const canvas = document.createElement("canvas");
+  canvas.width = sw;
+  canvas.height = sh;
+  canvas.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  return canvasToPngBlob(canvas);
 }
 
 async function cropSelectionToBlob() {
   const page = getSelectedPage();
-  const rect = getCropRectInNaturalPixels();
-  if (!page || !rect) return null;
+  if (!page || !cropDrag) return null;
+  return cropNormalizedRegionToBlob(page, cropDrag);
+}
 
-  const img = new Image();
-  img.decoding = "async";
-  const loaded = new Promise((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Could not load page image for crop."));
-  });
-  img.src = page.objectUrl;
-  await loaded;
+function rememberPendingCrop() {
+  const page = getSelectedPage();
+  if (!page) return;
+  page.pendingCrop = cropDrag && cropSelectionIsBigEnough()
+    ? { x0: cropDrag.x0, y0: cropDrag.y0, x1: cropDrag.x1, y1: cropDrag.y1 }
+    : null;
+}
 
-  const canvas = document.createElement("canvas");
-  canvas.width = rect.sw;
-  canvas.height = rect.sh;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, rect.sw, rect.sh);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Crop failed."))), "image/png");
+async function runPool(items, limit, worker) {
+  if (!items.length) return;
+  let cursor = 0;
+  const size = Math.max(1, Math.min(limit, items.length));
+  const runners = Array.from({ length: size }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      await worker(items[index], index);
+    }
   });
+  await Promise.all(runners);
 }
 
 function renderCropsList() {
@@ -718,7 +843,9 @@ function renderWorkspace() {
     }
   }
 
-  cropDrag = null;
+  cropDrag = page.pendingCrop
+    ? { x0: page.pendingCrop.x0, y0: page.pendingCrop.y0, x1: page.pendingCrop.x1, y1: page.pendingCrop.y1 }
+    : null;
   renderCropsList();
   requestAnimationFrame(() => syncCropOverlaySize());
 }
@@ -733,8 +860,10 @@ function renderAll() {
   const copyPageBtn = el("digitizeCopyPageTextBtn");
   const copyAiBtn = el("digitizeCopyAiReviewBtn");
   const applyAiBtn = el("digitizeApplyAiReviewBtn");
+  const isolateAllBtn = el("digitizeIsolateAllPagesBtn");
   if (buildBtn) buildBtn.disabled = !hasPages;
   if (runOcrBtn) runOcrBtn.disabled = !hasPages;
+  if (isolateAllBtn) isolateAllBtn.disabled = !hasPages;
   if (clearBtn) clearBtn.disabled = !hasPages;
   if (copyPageBtn) copyPageBtn.disabled = !getSelectedPage();
   if (copyAiBtn) copyAiBtn.disabled = !hasPages;
@@ -849,6 +978,7 @@ async function isolateCurrentCrop() {
       objectUrl: URL.createObjectURL(file)
     });
     cropDrag = null;
+    page.pendingCrop = null;
     drawCropOverlay();
     renderCropsList();
     setDigitizeStatus(t("javascriptStrings.digitize.cropIsolated"));
@@ -860,6 +990,77 @@ async function isolateCurrentCrop() {
     );
   } finally {
     if (isolateBtn) isolateBtn.disabled = false;
+  }
+}
+
+async function isolateAllPageImages() {
+  if (!pages.length) return;
+  if (!deps?.isolateBlob) {
+    setDigitizeStatus(t("javascriptStrings.digitize.backgroundRemoverNotReady"), true);
+    return;
+  }
+  const hasCrops = pages.some((p) => (p.crops || []).length);
+  if (hasCrops && !window.confirm(t("javascriptStrings.digitize.confirmIsolateAllReplace"))) return;
+
+  const isolateAllBtn = el("digitizeIsolateAllPagesBtn");
+  const isolateBtn = el("digitizeIsolateCropBtn");
+  if (isolateAllBtn) isolateAllBtn.disabled = true;
+  if (isolateBtn) isolateBtn.disabled = true;
+
+  let okCount = 0;
+  let failCount = 0;
+  let finished = 0;
+  setDigitizeStatus(t("javascriptStrings.digitize.isolatingAllPages", { current: 0, total: pages.length }));
+
+  try {
+    await runPool(pages, Math.min(4, pages.length), async (page) => {
+      try {
+        const source = page.pendingCrop && cropSelectionIsBigEnough(page.pendingCrop)
+          ? await cropNormalizedRegionToBlob(page, page.pendingCrop)
+          : page.blob;
+        if (!source) throw new Error(t("javascriptStrings.digitize.drawCropFirst"));
+        const isolated = await deps.isolateBlob(source);
+        const file = new File(
+          [isolated],
+          `${page.name.replace(/\.[^/.]+$/, "")}-isolated.png`,
+          { type: "image/png" }
+        );
+        for (const crop of page.crops || []) {
+          if (crop.objectUrl) URL.revokeObjectURL(crop.objectUrl);
+        }
+        page.crops = [{
+          id: newId("crop"),
+          name: file.name,
+          file,
+          objectUrl: URL.createObjectURL(file)
+        }];
+        page.pendingCrop = null;
+        if (page.id === selectedPageId) cropDrag = null;
+        okCount += 1;
+      } catch (err) {
+        console.error(err);
+        failCount += 1;
+      } finally {
+        finished += 1;
+        setDigitizeStatus(t("javascriptStrings.digitize.isolatingAllPages", {
+          current: finished,
+          total: pages.length
+        }));
+      }
+    });
+    drawCropOverlay();
+    renderCropsList();
+    if (failCount) {
+      setDigitizeStatus(
+        t("javascriptStrings.digitize.allPagesIsolatedWithErrors", { ok: okCount, n: failCount }),
+        true
+      );
+    } else {
+      setDigitizeStatus(t("javascriptStrings.digitize.allPagesIsolated", { n: okCount }));
+    }
+  } finally {
+    if (isolateBtn) isolateBtn.disabled = false;
+    renderAll();
   }
 }
 
@@ -1148,11 +1349,13 @@ function applyDigitizeMode() {
 function setNookImportBusy(busy) {
   const input = el("digitizeNookPdfInput");
   const isolate = el("digitizeNookIsolate");
+  const isolateAll = el("digitizeNookIsolateAll");
   document.querySelectorAll('input[name="digitizeBookType"]').forEach((radio) => {
     radio.disabled = busy;
   });
   if (input) input.disabled = busy;
   if (isolate) isolate.disabled = busy;
+  if (isolateAll) isolateAll.disabled = busy;
 }
 
 async function renderNookPhotoFile(pdf, pageNumber, baseName) {
@@ -1201,46 +1404,61 @@ async function importCviBookNookPdf(file) {
       return;
     }
 
-    const isolate = Boolean(el("digitizeNookIsolate")?.checked);
+    const isolateAll = Boolean(el("digitizeNookIsolateAll")?.checked);
+    const isolate = isolateAll || Boolean(el("digitizeNookIsolate")?.checked);
     const baseName = file.name.replace(/\.[^/.]+$/, "") || "nook";
     const photoIndexes = parsed.spreads
       .map((s) => s.photoPageNumber)
       .filter((n) => typeof n === "number");
     let photoDone = 0;
 
-    const spreads = [];
+    const jobs = [];
     for (const spread of parsed.spreads) {
-      const imageFiles = [];
+      /** @type {File|null} */
+      let imageFile = null;
       if (spread.photoPageNumber) {
         photoDone += 1;
         setDigitizeStatus(
           t("javascriptStrings.digitize.nookProgress", { current: photoDone, total: photoIndexes.length || 1 })
         );
         try {
-          let imageFile = await renderNookPhotoFile(pdf, spread.photoPageNumber, baseName);
-          if (isolate && deps.isolateBlob) {
-            setDigitizeStatus(
-              t("javascriptStrings.digitize.nookIsolating", { current: photoDone, total: photoIndexes.length || 1 })
-            );
-            try {
-              const isolated = await deps.isolateBlob(imageFile);
-              imageFile = new File([isolated], imageFile.name, { type: "image/png" });
-            } catch (err) {
-              console.error(err);
-            }
-          }
-          imageFiles.push(imageFile);
+          imageFile = await renderNookPhotoFile(pdf, spread.photoPageNumber, baseName);
         } catch (err) {
           console.error(err);
         }
       }
-      spreads.push({
-        storyText: spread.storyText,
-        oddText: spread.oddText,
-        salientFeatures: spread.salientFeatures,
-        imageFiles
+      jobs.push({ spread, imageFile });
+    }
+
+    if (isolate && deps?.isolateBlob) {
+      const withPhotos = jobs.filter((job) => job.imageFile);
+      let isolatedDone = 0;
+      const concurrency = isolateAll ? Math.min(4, withPhotos.length || 1) : 1;
+      await runPool(withPhotos, concurrency, async (job) => {
+        try {
+          const isolated = await deps.isolateBlob(job.imageFile);
+          job.imageFile = new File([isolated], job.imageFile.name, { type: "image/png" });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          isolatedDone += 1;
+          const progressKey = isolateAll
+            ? "javascriptStrings.digitize.nookIsolatingAll"
+            : "javascriptStrings.digitize.nookIsolating";
+          setDigitizeStatus(t(progressKey, {
+            current: isolatedDone,
+            total: withPhotos.length || 1
+          }));
+        }
       });
     }
+
+    const spreads = jobs.map((job) => ({
+      storyText: job.spread.storyText,
+      oddText: job.spread.oddText,
+      salientFeatures: job.spread.salientFeatures,
+      imageFiles: job.imageFile ? [job.imageFile] : []
+    }));
 
     if (parsed.title) deps.setBookTitle?.(parsed.title);
     deps.rebuildSpreads(spreads);
@@ -1268,33 +1486,58 @@ function initCropInteraction() {
 
   const onDown = (e) => {
     if (!getSelectedPage()) return;
+    if (e.button != null && e.button !== 0) return;
+    syncCropOverlaySize();
+    const pt = imageNormFromEvent(e);
+    if (!pt) return;
     e.preventDefault();
-    const pt = canvasPointFromEvent(e);
+    try {
+      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+    } catch (err) {
+      /* The pointer can already be gone; later move events still update the box. */
+    }
+    cropDragging = true;
     cropDrag = { x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y };
+    rememberPendingCrop();
     drawCropOverlay();
   };
   const onMove = (e) => {
-    if (!cropDrag) return;
+    if (!cropDragging || !cropDrag) return;
+    const pt = imageNormFromEvent(e);
+    if (!pt) return;
     e.preventDefault();
-    const pt = canvasPointFromEvent(e);
     cropDrag.x1 = pt.x;
     cropDrag.y1 = pt.y;
+    rememberPendingCrop();
     drawCropOverlay();
   };
-  const onUp = () => {
-    if (!cropDrag) return;
-    const w = Math.abs(cropDrag.x1 - cropDrag.x0);
-    const h = Math.abs(cropDrag.y1 - cropDrag.y0);
-    if (w < 8 || h < 8) {
-      cropDrag = null;
-      drawCropOverlay();
+  const onUp = (e) => {
+    if (!cropDragging) return;
+    cropDragging = false;
+    const pt = imageNormFromEvent(e);
+    if (pt && cropDrag) {
+      cropDrag.x1 = pt.x;
+      cropDrag.y1 = pt.y;
     }
+    if (!cropSelectionIsBigEnough()) cropDrag = null;
+    rememberPendingCrop();
+    drawCropOverlay();
   };
 
   canvas.addEventListener("pointerdown", onDown);
+  canvas.addEventListener("pointermove", onMove);
+  canvas.addEventListener("pointerup", onUp);
+  canvas.addEventListener("pointercancel", onUp);
   window.addEventListener("pointermove", onMove);
   window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onUp);
   window.addEventListener("resize", () => syncCropOverlaySize());
+
+  const frame = canvas.parentElement;
+  if (typeof ResizeObserver !== "undefined" && frame && !cropResizeObserver) {
+    cropResizeObserver = new ResizeObserver(() => syncCropOverlaySize());
+    cropResizeObserver.observe(frame);
+  }
 }
 
 /**
@@ -1315,6 +1558,7 @@ export function initDigitizeBook(options) {
   const imagesInput = el("digitizeImagesInput");
   const runOcrBtn = el("digitizeRunOcrBtn");
   const isolateBtn = el("digitizeIsolateCropBtn");
+  const isolateAllPagesBtn = el("digitizeIsolateAllPagesBtn");
   const clearCropBtn = el("digitizeClearCropBtn");
   const buildBtn = el("digitizeBuildBookBtn");
   const clearBtn = el("digitizeClearBtn");
@@ -1351,10 +1595,24 @@ export function initDigitizeBook(options) {
   }
   if (runOcrBtn) runOcrBtn.addEventListener("click", () => runOcrOnAllPages());
   if (isolateBtn) isolateBtn.addEventListener("click", () => isolateCurrentCrop());
+  if (isolateAllPagesBtn) isolateAllPagesBtn.addEventListener("click", () => isolateAllPageImages());
   if (clearCropBtn) {
     clearCropBtn.addEventListener("click", () => {
       cropDrag = null;
+      const page = getSelectedPage();
+      if (page) page.pendingCrop = null;
       drawCropOverlay();
+    });
+  }
+
+  const nookIsolate = el("digitizeNookIsolate");
+  const nookIsolateAll = el("digitizeNookIsolateAll");
+  if (nookIsolate && nookIsolateAll) {
+    nookIsolate.addEventListener("change", () => {
+      if (!nookIsolate.checked) nookIsolateAll.checked = false;
+    });
+    nookIsolateAll.addEventListener("change", () => {
+      if (nookIsolateAll.checked) nookIsolate.checked = true;
     });
   }
   if (buildBtn) buildBtn.addEventListener("click", () => buildBookFromPages());
