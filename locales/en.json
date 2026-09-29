@@ -21,7 +21,7 @@
     "qs2": "Click <strong>Copy AI Formatting Prompt</strong>, run it in your AI tool, then paste the reply into <strong>AI formatted text</strong> and click <strong>Parse Into Spreads</strong> (or add spreads manually).",
     "qs3": "Add or refine images per spread; use <strong>Refresh Preview</strong> before export if needed.",
     "qs4": "Use <strong>Download PowerPoint (.pptx)</strong> and/or <strong>Print / Save as PDF</strong> when you are ready.",
-    "hintHtml": "Open <strong>User guide</strong> in the header for the full step-by-step reference. Use <strong>Get help</strong> for contact, licensing detail, and third-party library credits.",
+    "hintHtml": "Open <strong>User guide</strong> in the header for the full step-by-step reference. Use <strong>Get help</strong> for contact and licensing. The <a href=\"privacy.html\">privacy policy</a> explains that the tool is free and that your book stays in this browser.",
     "attributionHtml": "HEIC (iPhone) photo conversion uses open-source components including parts under <strong>LGPL-3.0</strong>. Your book content and this app’s own code are not LGPL; see the repository <strong>README</strong> for full license texts and attribution.",
     "gotItButton": "Got It"
   },
@@ -29,6 +29,8 @@
     "title": "Get help",
     "aboutTitle": "About this site",
     "aboutHtml": "CVI Book Builder helps teachers and families create <strong>CVI-friendly</strong> story books for children with cortical visual impairment. You can build a letter-sized landscape PowerPoint with high-contrast picture pages, story text on story pages, salient feature notes, optional activity ideas, and a live preview. The tool runs entirely in your browser; your book text and images stay on your device unless you choose to export.",
+    "privacyTitle": "Privacy",
+    "privacyHtml": "This tool is free. It does not collect accounts or your book. Read the <a href=\"privacy.html\">privacy policy</a>.",
     "contactTitle": "Contact",
     "contactLead": "Questions, feedback, or support:",
     "licenseTitle": "License",
@@ -83,8 +85,9 @@
     "draftsHtml": "Open <strong>Drafts</strong> to save snapshots of your book in this browser. Storage is local only; clearing site data or using another device removes access. Save important work as PowerPoint as a backup, especially for large books with many images.",
     "creditsTitle": "Credits",
     "creditsLineLicense": "MIT License",
+    "creditsLinePrivacy": "Privacy",
     "creditsLineCreator": "Addison Graham Creator",
-    "creditsFooterHtml": "For contact, third-party library attribution (including LGPL-3.0 HEIC conversion), and full license texts, use <strong>Get help</strong>.",
+    "creditsFooterHtml": "For contact, the privacy policy, third-party library attribution (including LGPL-3.0 HEIC conversion), and full license texts, use <strong>Get help</strong>.",
     "closeButton": "Close"
   },
   "draftsModal": {
@@ -116,6 +119,7 @@
       "userGuide": "User guide",
       "drafts": "Drafts",
       "getHelp": "Get help",
+      "privacy": "Privacy",
       "tipMe": "Tip me"
     },
     "languageLabel": "Language",
@@ -341,6 +345,7 @@
   },
   "footer": {
     "license": "MIT License",
+    "privacy": "Privacy",
     "creator": "Addison Graham Creator"
   },
   "spreadCard": {
