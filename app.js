@@ -70,6 +70,9 @@ let currentSourceObjectUrl = null;
 let currentSourceName = "";
 let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
+// Library default is CPU/WASM. Request WebGPU; it falls back to WASM when
+// navigator.gpu is missing or requestAdapter() returns null.
+const BACKGROUND_REMOVAL_CONFIG = { device: "gpu" };
 
 function scheduleLivePreview(immediate = false) {
   if (immediate) {
@@ -864,7 +867,9 @@ async function processCurrentImage() {
 /** Remove background (and optional outline) from any image blob — shared with Digitize Book. */
 async function isolateImageBlob(sourceBlob) {
   const removeBackground = await getBackgroundRemover();
-  let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob));
+  let finalBlob = await normalizeReturnedBlob(
+    await removeBackground(sourceBlob, BACKGROUND_REMOVAL_CONFIG)
+  );
 
   if (outlineEnabledInput && outlineEnabledInput.checked) {
     const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
