@@ -63,7 +63,6 @@ const draftsListEl = document.getElementById("draftsList");
 const saveSnapshotButton = document.getElementById("saveSnapshotButton");
 const draftStatusMessage = document.getElementById("draftStatusMessage");
 
-let previewObjectUrls = [];
 let livePreviewTimer = null;
 let currentSourceUrl = "";
 let currentSourceObjectUrl = null;
@@ -896,6 +895,7 @@ async function isolateImageBlob(sourceBlob) {
 }
 
 function rebuildSpreadsFromDigitized(spreads) {
+  releaseAllSpreadImages();
   spreadsContainer.innerHTML = "";
   if (!spreads.length) {
     addSpread();
@@ -968,6 +968,154 @@ function initImageIsolator() {
   processImageButton.addEventListener("click", processCurrentImage);
 }
 
+// Screen copies only. Original files stay intact for PowerPoint export.
+// A phone photo decoded at full size is tens of megabytes, and the spread
+// thumbnail plus the live preview each decoded one.
+const DISPLAY_THUMB_EDGE = Math.min(512, Math.round(160 * Math.min(window.devicePixelRatio || 1, 2)));
+const DISPLAY_PREVIEW_EDGE = Math.min(2048, Math.round(1100 * Math.min(window.devicePixelRatio || 1, 2)));
+const displayImageJobs = new Map();
+const resolvedDisplayImages = new Map();
+const displayWorkQueue = [];
+let displayWorkActive = 0;
+
+function enqueueDisplayWork(task) {
+  return new Promise((resolve, reject) => {
+    displayWorkQueue.push({ task, resolve, reject });
+    pumpDisplayWork();
+  });
+}
+
+function pumpDisplayWork() {
+  while (displayWorkActive < 2 && displayWorkQueue.length) {
+    const job = displayWorkQueue.shift();
+    displayWorkActive += 1;
+    job.task().then(job.resolve, job.reject).finally(() => {
+      displayWorkActive -= 1;
+      pumpDisplayWork();
+    });
+  }
+}
+
+function displayImageMime(file) {
+  const type = (file.type || "").toLowerCase();
+  if (type === "image/png" || type === "image/webp") return type;
+  const name = (file.name || "").toLowerCase();
+  if (name.endsWith(".png")) return "image/png";
+  if (name.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Could not encode a display image."));
+        return;
+      }
+      resolve(blob);
+    }, type, quality);
+  });
+}
+
+async function scaledBitmapUrl(bitmap, mime, maxEdge) {
+  const longest = Math.max(bitmap.width, bitmap.height);
+  if (longest <= maxEdge) return null;
+  const scale = maxEdge / longest;
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  const quality = mime === "image/jpeg" || mime === "image/webp" ? 0.85 : undefined;
+  const blob = await canvasToBlob(canvas, mime, quality);
+  return URL.createObjectURL(blob);
+}
+
+async function buildDisplayImages(file) {
+  if (typeof createImageBitmap !== "function") {
+    const url = URL.createObjectURL(file);
+    return { thumbUrl: url, previewUrl: url };
+  }
+  const bitmap = await createImageBitmap(file);
+  try {
+    const mime = displayImageMime(file);
+    const thumbUrl = await scaledBitmapUrl(bitmap, mime, DISPLAY_THUMB_EDGE);
+    const previewUrl = await scaledBitmapUrl(bitmap, mime, DISPLAY_PREVIEW_EDGE);
+    if (!thumbUrl && !previewUrl) {
+      const url = URL.createObjectURL(file);
+      return { thumbUrl: url, previewUrl: url };
+    }
+    if (!previewUrl) {
+      return { thumbUrl, previewUrl: URL.createObjectURL(file) };
+    }
+    if (!thumbUrl) {
+      return { thumbUrl: previewUrl, previewUrl };
+    }
+    return { thumbUrl, previewUrl };
+  } finally {
+    bitmap.close();
+  }
+}
+
+function ensureDisplayImages(file) {
+  let pending = displayImageJobs.get(file);
+  if (!pending) {
+    pending = enqueueDisplayWork(() => buildDisplayImages(file));
+    displayImageJobs.set(file, pending);
+    pending.then((urls) => {
+      if (displayImageJobs.get(file) === pending) resolvedDisplayImages.set(file, urls);
+    }).catch(() => {
+      if (displayImageJobs.get(file) === pending) displayImageJobs.delete(file);
+    });
+  }
+  return pending;
+}
+
+function releaseDisplayImage(file) {
+  const pending = displayImageJobs.get(file);
+  if (!pending) return;
+  displayImageJobs.delete(file);
+  resolvedDisplayImages.delete(file);
+  pending.then((urls) => {
+    const seen = new Set();
+    for (const url of [urls.thumbUrl, urls.previewUrl]) {
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      URL.revokeObjectURL(url);
+    }
+  }).catch(() => {});
+}
+
+function releaseAllSpreadImages() {
+  spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
+    for (const file of card.currentFiles || []) releaseDisplayImage(file);
+  });
+}
+
+function assignDisplayImage(img, file, kind) {
+  const generation = (Number(img.dataset.displayGen) || 0) + 1;
+  img.dataset.displayGen = String(generation);
+  img.decoding = "async";
+  const apply = (urls) => {
+    if (!img.isConnected || img.dataset.displayGen !== String(generation)) return;
+    img.src = kind === "thumb" ? urls.thumbUrl : urls.previewUrl;
+  };
+  const ready = resolvedDisplayImages.get(file);
+  if (ready) {
+    apply(ready);
+    return;
+  }
+  ensureDisplayImages(file).then(apply).catch((err) => {
+    console.error(err);
+    if (!img.isConnected || img.dataset.displayGen !== String(generation)) return;
+    const fallback = URL.createObjectURL(file);
+    img.onload = () => URL.revokeObjectURL(fallback);
+    img.src = fallback;
+  });
+}
+
 function addSpread(initial = {}) {
   const fragment = spreadTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".spread-card");
@@ -994,9 +1142,8 @@ function addSpread(initial = {}) {
       item.className = "image-preview-item";
 
       const img = document.createElement("img");
-      const url = URL.createObjectURL(file);
-      img.src = url;
-      img.onload = () => URL.revokeObjectURL(url);
+      img.alt = file.name || "";
+      assignDisplayImage(img, file, "thumb");
 
       const controls = document.createElement("div");
       controls.className = "image-preview-controls";
@@ -1030,7 +1177,8 @@ function addSpread(initial = {}) {
       removeBtn.textContent = "✖";
       removeBtn.className = "danger";
       removeBtn.onclick = () => {
-        card.currentFiles.splice(index, 1);
+        const [removed] = card.currentFiles.splice(index, 1);
+        if (removed) releaseDisplayImage(removed);
         renderImageList();
         updateSelectedImagesText();
         scheduleLivePreview(true);
@@ -1120,6 +1268,7 @@ function addSpread(initial = {}) {
   }
 
   removeButton.addEventListener("click", () => {
+    for (const file of card.currentFiles || []) releaseDisplayImage(file);
     card.remove();
     renumberSpreads();
     scheduleLivePreview(true);
@@ -1328,6 +1477,7 @@ async function applyBookState(state) {
     if (oddTextSizeInput) oddTextSizeInput.value = state.oddTextSize ?? "75";
     if (oddBorderSizeInput) oddBorderSizeInput.value = state.oddBorderSize ?? "3";
 
+    releaseAllSpreadImages();
     spreadsContainer.innerHTML = "";
     const spreadRows = state.spreads && state.spreads.length ? state.spreads : [{}];
     spreadRows.forEach((s) => {
@@ -1646,11 +1796,6 @@ function toPercentRect(rect) {
   };
 }
 
-function clearPreviewUrls() {
-  previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
-  previewObjectUrls = [];
-}
-
 const EVEN_PAGE_MIN_FONT_PX = 12;
 const EVEN_PAGE_INITIAL_FONT_PX = 34;
 const ODD_TEXT_MIN_FONT_PX = 16;
@@ -1690,7 +1835,6 @@ function shrinkEvenPageStoryToFit(storyWrapper) {
 }
 
 function renderPreview() {
-  clearPreviewUrls();
   previewContainer.innerHTML = "";
 
   const spreads = collectSpreadsFromForm();
@@ -1780,10 +1924,8 @@ function renderPreview() {
       const wrap = document.createElement("div");
       wrap.className = "preview-img-wrap";
       const img = document.createElement("img");
-      const url = URL.createObjectURL(file);
-      previewObjectUrls.push(url);
-      img.src = url;
       img.alt = file.name;
+      assignDisplayImage(img, file, "preview");
       wrap.appendChild(img);
       oddImagesZone.appendChild(wrap);
     });
@@ -2192,6 +2334,7 @@ parseAiButton.addEventListener("click", () => {
     activityPromptInput.value = parsed.activityPrompt;
   }
 
+  releaseAllSpreadImages();
   spreadsContainer.innerHTML = "";
   parsed.spreads.forEach((s) => addSpread(s));
 
@@ -2481,7 +2624,7 @@ export function bootstrap() {
   setStatus(t("javascriptStrings.exportStatus.ready"));
 
   window.addEventListener("beforeunload", () => {
-    clearPreviewUrls();
+    releaseAllSpreadImages();
     revokeCurrentSourceObjectUrl();
     revokeProcessedResultUrl();
   });
