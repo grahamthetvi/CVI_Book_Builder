@@ -11,7 +11,10 @@
  * download that library on open.
  */
 
-const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.web.js";
+// The plain web bundle imports "onnxruntime-web" as a bare specifier, which a
+// browser cannot resolve. jsDelivr's ESM build rewrites that import.
+const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm";
+const ORT_WASM_PATH = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/";
 const MODEL_ID = "studioludens/birefnet-lite-512";
 const IMGLY_URL = "https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm";
 
@@ -36,7 +39,9 @@ function loadTransformers() {
       if (mod.env) {
         mod.env.allowLocalModels = false;
         if (mod.env.backends?.onnx?.wasm) {
+          mod.env.backends.onnx.wasm.wasmPaths = ORT_WASM_PATH;
           mod.env.backends.onnx.wasm.numThreads = 1;
+          mod.env.backends.onnx.wasm.proxy = false;
         }
       }
       return mod;
