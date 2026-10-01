@@ -1,6 +1,7 @@
 import { t, applyDomTranslations } from "./i18n.js";
 import { EpubError, isEpubFile, renderEpubToPages } from "./epub-pages.js";
 import { joinPdfTextItems, pairNookSpreads } from "./nook-pdf.js";
+import { extractObjectFromImage, normalizedPointOnImage, objectExtractUserMessage } from "./object-extract.js";
 
 const PDFJS_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
 const PDFJS_WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
@@ -30,9 +31,11 @@ let pdfjsPromise = null;
 let cropDrag = null;
 let cropDragging = false;
 let cropResizeObserver = null;
+let extractBusy = false;
 
 /** @type {null | {
  *   isolateBlob: (blob: Blob) => Promise<Blob>,
+ *   decorateCutout?: (blob: Blob) => Promise<Blob>,
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,
@@ -670,12 +673,16 @@ function drawCropOverlay() {
 function imageNormFromEvent(e) {
   const img = el("digitizePageImage");
   if (!img || !img.naturalWidth) return null;
-  const rect = img.getBoundingClientRect();
-  if (rect.width < 2 || rect.height < 2) return null;
-  return {
-    x: Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)),
-    y: Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height))
-  };
+  return normalizedPointOnImage(img, e.clientX, e.clientY);
+}
+
+function clickExtractEnabled() {
+  return Boolean(el("digitizeClickExtract")?.checked);
+}
+
+function syncClickExtractFrame() {
+  const frame = el("digitizePageImage")?.closest(".digitize-crop-frame");
+  if (frame) frame.classList.toggle("is-click-extract", clickExtractEnabled());
 }
 
 function cropSelectionIsBigEnough(norm = cropDrag) {
@@ -989,6 +996,76 @@ async function isolateCurrentCrop() {
       true
     );
   } finally {
+    if (isolateBtn) isolateBtn.disabled = false;
+  }
+}
+
+function objectExtractMessages() {
+  return {
+    empty: t("javascriptStrings.objectExtract.empty"),
+    tooBroad: t("javascriptStrings.objectExtract.tooBroad"),
+    outside: t("javascriptStrings.objectExtract.outside"),
+    failed: t("javascriptStrings.objectExtract.failed")
+  };
+}
+
+async function extractAtPoint(point) {
+  const page = getSelectedPage();
+  if (!page || !point || extractBusy) return;
+  if (page.crops.length >= MAX_CROPS_PER_PAGE) {
+    setDigitizeStatus(t("javascriptStrings.digitize.maxCrops"), true);
+    return;
+  }
+
+  let box = null;
+  if (cropDrag && cropSelectionIsBigEnough()) {
+    const left = Math.min(cropDrag.x0, cropDrag.x1);
+    const top = Math.min(cropDrag.y0, cropDrag.y1);
+    const right = Math.max(cropDrag.x0, cropDrag.x1);
+    const bottom = Math.max(cropDrag.y0, cropDrag.y1);
+    const inside = point.x >= left && point.x <= right && point.y >= top && point.y <= bottom;
+    if (inside) box = { x0: left, y0: top, x1: right, y1: bottom };
+  }
+
+  const pageId = page.id;
+  extractBusy = true;
+  const isolateBtn = el("digitizeIsolateCropBtn");
+  if (isolateBtn) isolateBtn.disabled = true;
+  setDigitizeStatus(t("javascriptStrings.objectExtract.extracting"));
+
+  try {
+    const img = await loadImageElement(page.objectUrl);
+    const cutout = await extractObjectFromImage(img, point, {
+      box,
+      onStage: (stage) => {
+        if (stage === "loading-model") setDigitizeStatus(t("javascriptStrings.objectExtract.loadingModel"));
+      }
+    });
+    const finished = deps?.decorateCutout ? await deps.decorateCutout(cutout) : cutout;
+    const target = pages.find((item) => item.id === pageId);
+    if (!target) return;
+    if (target.crops.length >= MAX_CROPS_PER_PAGE) {
+      setDigitizeStatus(t("javascriptStrings.digitize.maxCrops"), true);
+      return;
+    }
+    const file = new File(
+      [finished],
+      `${target.name.replace(/\.[^/.]+$/, "")}-object${target.crops.length + 1}.png`,
+      { type: "image/png" }
+    );
+    target.crops.push({
+      id: newId("crop"),
+      name: file.name,
+      file,
+      objectUrl: URL.createObjectURL(file)
+    });
+    if (selectedPageId === pageId) renderCropsList();
+    setDigitizeStatus(t("javascriptStrings.digitize.objectExtracted"));
+  } catch (err) {
+    console.error(err);
+    setDigitizeStatus(objectExtractUserMessage(err, objectExtractMessages()), true);
+  } finally {
+    extractBusy = false;
     if (isolateBtn) isolateBtn.disabled = false;
   }
 }
@@ -1483,9 +1560,17 @@ async function importCviBookNookPdf(file) {
 function initCropInteraction() {
   const canvas = el("digitizeCropCanvas");
   if (!canvas) return;
+  let press = null;
+
+  const beginDrag = (pt) => {
+    cropDragging = true;
+    cropDrag = { x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y };
+    rememberPendingCrop();
+    drawCropOverlay();
+  };
 
   const onDown = (e) => {
-    if (!getSelectedPage()) return;
+    if (!getSelectedPage() || extractBusy) return;
     if (e.button != null && e.button !== 0) return;
     syncCropOverlaySize();
     const pt = imageNormFromEvent(e);
@@ -1496,12 +1581,23 @@ function initCropInteraction() {
     } catch (err) {
       /* The pointer can already be gone; later move events still update the box. */
     }
-    cropDragging = true;
-    cropDrag = { x0: pt.x, y0: pt.y, x1: pt.x, y1: pt.y };
-    rememberPendingCrop();
-    drawCropOverlay();
+    press = { x: pt.x, y: pt.y, dragged: false };
+    if (!clickExtractEnabled()) beginDrag(pt);
   };
   const onMove = (e) => {
+    if (press && !press.dragged) {
+      const pt = imageNormFromEvent(e);
+      const img = el("digitizePageImage");
+      const rect = img?.getBoundingClientRect();
+      if (pt && rect) {
+        const dx = (pt.x - press.x) * rect.width;
+        const dy = (pt.y - press.y) * rect.height;
+        if (Math.hypot(dx, dy) > 6) {
+          press.dragged = true;
+          if (clickExtractEnabled() && !cropDragging) beginDrag(press);
+        }
+      }
+    }
     if (!cropDragging || !cropDrag) return;
     const pt = imageNormFromEvent(e);
     if (!pt) return;
@@ -1512,6 +1608,14 @@ function initCropInteraction() {
     drawCropOverlay();
   };
   const onUp = (e) => {
+    const wasClick = Boolean(press && !press.dragged && clickExtractEnabled());
+    const clickPoint = press ? { x: press.x, y: press.y } : null;
+    press = null;
+    if (wasClick && clickPoint) {
+      cropDragging = false;
+      extractAtPoint(clickPoint);
+      return;
+    }
     if (!cropDragging) return;
     cropDragging = false;
     const pt = imageNormFromEvent(e);
@@ -1543,6 +1647,7 @@ function initCropInteraction() {
 /**
  * @param {{
  *   isolateBlob: (blob: Blob) => Promise<Blob>,
+ *   decorateCutout?: (blob: Blob) => Promise<Blob>,
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,
@@ -1594,6 +1699,12 @@ export function initDigitizeBook(options) {
     });
   }
   if (runOcrBtn) runOcrBtn.addEventListener("click", () => runOcrOnAllPages());
+  const clickExtract = el("digitizeClickExtract");
+  if (clickExtract) {
+    clickExtract.addEventListener("change", () => syncClickExtractFrame());
+  }
+  syncClickExtractFrame();
+
   if (isolateBtn) isolateBtn.addEventListener("click", () => isolateCurrentCrop());
   if (isolateAllPagesBtn) isolateAllPagesBtn.addEventListener("click", () => isolateAllPageImages());
   if (clearCropBtn) {

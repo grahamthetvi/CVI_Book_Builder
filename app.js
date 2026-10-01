@@ -1,5 +1,6 @@
 import { t, getLocale, applyDomTranslations } from "./i18n.js";
 import { initDigitizeBook, refreshDigitizeLocale, setDigitizeMode, setDigitizeTypeLocked } from "./digitize.js";
+import { extractObjectFromImage, normalizedPointOnImage, objectExtractUserMessage } from "./object-extract.js";
 
 const spreadsContainer = document.getElementById("spreadsContainer");
 const spreadTemplate = document.getElementById("spreadTemplate");
@@ -69,6 +70,7 @@ let currentSourceObjectUrl = null;
 let currentSourceName = "";
 let processedResultObjectUrl = null;
 let removeBackgroundFnPromise = null;
+let objectExtractBusy = false;
 
 function scheduleLivePreview(immediate = false) {
   if (immediate) {
@@ -812,6 +814,57 @@ async function searchWikimediaCommons() {
   }
 }
 
+function objectExtractMessages() {
+  return {
+    empty: t("javascriptStrings.objectExtract.empty"),
+    tooBroad: t("javascriptStrings.objectExtract.tooBroad"),
+    outside: t("javascriptStrings.objectExtract.outside"),
+    failed: t("javascriptStrings.objectExtract.failed")
+  };
+}
+
+function clickExtractModeEnabled() {
+  return Boolean(document.getElementById("isolateModeObject")?.checked);
+}
+
+function syncIsolateMode() {
+  const objectMode = clickExtractModeEnabled();
+  const hint = document.getElementById("extractClickHint");
+  const box = sourcePreviewImage?.closest(".image-preview-box");
+  if (hint) hint.hidden = !objectMode;
+  if (processImageButton) processImageButton.hidden = objectMode;
+  if (box) box.classList.toggle("is-click-extract", objectMode);
+}
+
+async function loadCurrentSourceBlob() {
+  if (!currentSourceUrl) throw new Error(t("javascriptStrings.imageTool.chooseImageSource"));
+  const sourceResponse = await fetch(currentSourceUrl);
+  if (!sourceResponse.ok) {
+    throw new Error(`Failed to load source image (${sourceResponse.status}).`);
+  }
+  return sourceResponse.blob();
+}
+
+function showProcessedBlob(finalBlob, downloadSuffix) {
+  revokeProcessedResultUrl();
+  processedResultObjectUrl = URL.createObjectURL(finalBlob);
+
+  if (processedPreviewImage) {
+    processedPreviewImage.src = processedResultObjectUrl;
+    processedPreviewImage.hidden = false;
+  }
+  if (processedPlaceholder) {
+    processedPlaceholder.hidden = true;
+  }
+  if (downloadProcessedButton) {
+    downloadProcessedButton.href = processedResultObjectUrl;
+    const baseName = currentSourceName ? currentSourceName.replace(/\.[^/.]+$/, "") : "isolated-object";
+    downloadProcessedButton.download = `${baseName}-${downloadSuffix}.png`;
+    downloadProcessedButton.setAttribute("aria-disabled", "false");
+    downloadProcessedButton.classList.remove("disabled");
+  }
+}
+
 async function processCurrentImage() {
   if (!currentSourceUrl) {
     setImageToolStatus(t("javascriptStrings.imageTool.chooseImageSource"), true);
@@ -823,31 +876,9 @@ async function processCurrentImage() {
   setImageToolStatus(t("javascriptStrings.imageTool.processingImage"));
 
   try {
-    const sourceResponse = await fetch(currentSourceUrl);
-    if (!sourceResponse.ok) {
-      throw new Error(`Failed to load source image (${sourceResponse.status}).`);
-    }
-    const sourceBlob = await sourceResponse.blob();
+    const sourceBlob = await loadCurrentSourceBlob();
     const finalBlob = await isolateImageBlob(sourceBlob);
-
-    revokeProcessedResultUrl();
-    processedResultObjectUrl = URL.createObjectURL(finalBlob);
-
-    if (processedPreviewImage) {
-      processedPreviewImage.src = processedResultObjectUrl;
-      processedPreviewImage.hidden = false;
-    }
-    if (processedPlaceholder) {
-      processedPlaceholder.hidden = true;
-    }
-    if (downloadProcessedButton) {
-      downloadProcessedButton.href = processedResultObjectUrl;
-      const baseName = currentSourceName ? currentSourceName.replace(/\.[^/.]+$/, "") : "isolated-object";
-      downloadProcessedButton.download = `${baseName}-isolated.png`;
-      downloadProcessedButton.setAttribute("aria-disabled", "false");
-      downloadProcessedButton.classList.remove("disabled");
-    }
-
+    showProcessedBlob(finalBlob, "isolated");
     setImageToolStatus(t("javascriptStrings.imageTool.processingDone"));
   } catch (err) {
     console.error(err);
@@ -857,6 +888,30 @@ async function processCurrentImage() {
     );
   } finally {
     processImageButton.disabled = false;
+  }
+}
+
+async function extractClickedObject(point) {
+  if (!currentSourceUrl || objectExtractBusy) return;
+  objectExtractBusy = true;
+  if (processImageButton) processImageButton.disabled = true;
+  setImageToolStatus(t("javascriptStrings.objectExtract.extracting"));
+  try {
+    const sourceBlob = await loadCurrentSourceBlob();
+    const cutout = await extractObjectFromImage(sourceBlob, point, {
+      onStage: (stage) => {
+        if (stage === "loading-model") setImageToolStatus(t("javascriptStrings.objectExtract.loadingModel"));
+      }
+    });
+    const finalBlob = await decorateCutoutBlob(cutout);
+    showProcessedBlob(finalBlob, "object");
+    setImageToolStatus(t("javascriptStrings.imageTool.objectExtracted"));
+  } catch (err) {
+    console.error(err);
+    setImageToolStatus(objectExtractUserMessage(err, objectExtractMessages()), true);
+  } finally {
+    objectExtractBusy = false;
+    if (processImageButton) processImageButton.disabled = false;
   }
 }
 
@@ -879,19 +934,21 @@ async function getBackgroundRemovalConfig() {
   return { device: "cpu" };
 }
 
+async function decorateCutoutBlob(blob) {
+  if (outlineEnabledInput && outlineEnabledInput.checked) {
+    const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
+    const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
+    return applyOutlineToBlob(blob, color, thickness);
+  }
+  return blob;
+}
+
 /** Remove background (and optional outline) from any image blob — shared with Digitize Book. */
 async function isolateImageBlob(sourceBlob) {
   const removeBackground = await getBackgroundRemover();
   const config = await getBackgroundRemovalConfig();
-  let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob, config));
-
-  if (outlineEnabledInput && outlineEnabledInput.checked) {
-    const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
-    const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
-    finalBlob = await applyOutlineToBlob(finalBlob, color, thickness);
-  }
-
-  return finalBlob;
+  const cutout = await normalizeReturnedBlob(await removeBackground(sourceBlob, config));
+  return decorateCutoutBlob(cutout);
 }
 
 function rebuildSpreadsFromDigitized(spreads) {
@@ -966,6 +1023,23 @@ function initImageIsolator() {
   }
 
   processImageButton.addEventListener("click", processCurrentImage);
+
+  document.querySelectorAll('input[name="isolateMode"]').forEach((radio) => {
+    radio.addEventListener("change", () => syncIsolateMode());
+  });
+  const sourceBox = sourcePreviewImage?.closest(".image-preview-box");
+  if (sourceBox && sourcePreviewImage) {
+    sourceBox.addEventListener("click", (e) => {
+      if (!clickExtractModeEnabled() || !currentSourceUrl || sourcePreviewImage.hidden) return;
+      const point = normalizedPointOnImage(sourcePreviewImage, e.clientX, e.clientY);
+      if (!point) {
+        setImageToolStatus(t("javascriptStrings.objectExtract.outside"), true);
+        return;
+      }
+      extractClickedObject(point);
+    });
+  }
+  syncIsolateMode();
 }
 
 // Screen copies only. Original files stay intact for PowerPoint export.
@@ -2562,6 +2636,7 @@ export function bootstrap() {
   initImageIsolator();
   initDigitizeBook({
     isolateBlob: isolateImageBlob,
+    decorateCutout: decorateCutoutBlob,
     rebuildSpreads: rebuildSpreadsFromDigitized,
     setStatus,
     ensureCompatibleImage: ensureBrowserCompatibleImageFile,

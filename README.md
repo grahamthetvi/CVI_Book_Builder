@@ -36,13 +36,13 @@ Choose a **book type** at the top of the Digitize Book panel.
 1. Keep **Normal book** selected (the default). Upload a **PDF**, **EPUB**, and/or **page photos** (up to 40 pages). EPUB text is extracted from the file; DRM-encrypted EPUBs cannot be opened. Reflowable EPUBs become one page per chapter file.
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
 3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
-4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
-5. Click **Crop & remove background** for the box you drew, or **Remove backgrounds from all pages** to process every page image together (uses the Image Isolator outline settings).
+4. Select each page and **edit the page text** to fix mistakes.
+5. Turn on **Click an object to extract it** and click a character. Flat illustrations are cut out on this device; shaded pictures use a local segmentation model (downloaded once). A box you already drew limits that click to the box. Or drag a box and click **Crop & remove background**. **Remove backgrounds from all pages** still runs background removal on every page image. Outlines follow the Image Isolator settings.
 6. Optionally **Copy all pages for AI review**, paste the tagged reply, and apply (isolated crops stay on matching pages).
 7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
 8. Refine spreads, preview, and download PowerPoint as usual.
 
-OCR and background removal run entirely in the browser. No book images are uploaded to a server. Background removal uses the browser’s WebGPU when the GPU supports 16-bit shaders, and CPU (WASM) otherwise.
+OCR, object extraction, and background removal run entirely in the browser. No book images are uploaded to a server. Background removal uses the browser’s WebGPU when the GPU supports 16-bit shaders, and CPU (WASM) otherwise. Click-to-extract uses a color select for flat artwork and MediaPipe MagicTouch for shaded pictures.
 
 ### CVI Book Nook print PDF
 
@@ -117,7 +117,7 @@ After parsing, add images in each spread before export.
 
 ## Privacy
 
-CVI Book Builder is free. Book text, photos, and the PowerPoint file are processed in the browser and are not uploaded to this site. Drafts stay in `localStorage` on that device. The [privacy policy](privacy.html) also covers the third parties your browser contacts for libraries, OCR models, background removal, optional Wikimedia search, and the optional tip link.
+CVI Book Builder is free. Book text, photos, and the PowerPoint file are processed in the browser and are not uploaded to this site. Drafts stay in `localStorage` on that device. The [privacy policy](privacy.html) also covers the third parties your browser contacts for libraries, OCR models, background removal, object extraction, optional Wikimedia search, and the optional tip link.
 
 ## License
 
@@ -133,6 +133,7 @@ The static web app loads additional libraries from CDNs at runtime. Notable term
 | [heic2any](https://github.com/alexcorvi/heic2any) | HEIC fallback conversion | MIT |
 | [PptxGenJS](https://github.com/gitbrent/PptxGenJS) | PowerPoint (`.pptx`) generation | MIT |
 | [@imgly/background-removal](https://github.com/imgly/background-removal-js) | Image Isolator / digitize crop background removal | AGPL-3.0 / commercial (see vendor terms) |
+| [@mediapipe/tasks-vision](https://github.com/google-ai-edge/mediapipe) | Click-to-extract (MagicTouch interactive segmenter) for shaded pictures | Apache-2.0 |
 | [pdf.js](https://github.com/mozilla/pdf.js) | Digitize Book PDF page rendering | Apache-2.0 |
 | [JSZip](https://github.com/Stuk/jszip) | Digitize Book EPUB unzip | MIT or GPLv3 |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | Digitize Book EPUB HTML page rasterization | MIT |
