@@ -1,5 +1,6 @@
 import { t, getLocale, applyDomTranslations } from "./i18n.js";
 import { initDigitizeBook, refreshDigitizeLocale, setDigitizeMode, setDigitizeTypeLocked } from "./digitize.js";
+import { outlineCutoutBlob, removeBackgroundFromBlob } from "./background-removal.js";
 
 const spreadsContainer = document.getElementById("spreadsContainer");
 const spreadTemplate = document.getElementById("spreadTemplate");
@@ -68,7 +69,6 @@ let currentSourceUrl = "";
 let currentSourceObjectUrl = null;
 let currentSourceName = "";
 let processedResultObjectUrl = null;
-let removeBackgroundFnPromise = null;
 
 function scheduleLivePreview(immediate = false) {
   if (immediate) {
@@ -634,105 +634,6 @@ function setSourcePreview(url, options = {}) {
   if (statusText) setImageToolStatus(statusText);
 }
 
-function normalizeReturnedBlob(result) {
-  if (result instanceof Blob) {
-    return Promise.resolve(result);
-  }
-  if (result && result.blob instanceof Blob) {
-    return Promise.resolve(result.blob);
-  }
-  if (result instanceof ArrayBuffer) {
-    return Promise.resolve(new Blob([result], { type: "image/png" }));
-  }
-  if (result && typeof result.arrayBuffer === "function") {
-    return result.arrayBuffer().then((ab) => new Blob([ab], { type: result.type || "image/png" }));
-  }
-  return Promise.reject(new Error("Unexpected output from background remover."));
-}
-
-function loadImageFromBlob(blob) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to decode image for outlining."));
-    };
-    img.src = url;
-  });
-}
-
-async function applyOutlineToBlob(blob, color, thickness) {
-  const img = await loadImageFromBlob(blob);
-  const width = img.naturalWidth || img.width;
-  const height = img.naturalHeight || img.height;
-  const radius = Math.max(1, Math.round((Number(thickness) || 1) * 1.15));
-  const pad = radius + 2;
-
-  const tintCanvas = document.createElement("canvas");
-  tintCanvas.width = width;
-  tintCanvas.height = height;
-  const tintCtx = tintCanvas.getContext("2d");
-  tintCtx.drawImage(img, 0, 0);
-  tintCtx.globalCompositeOperation = "source-in";
-  tintCtx.fillStyle = color || "#FFFF00";
-  tintCtx.fillRect(0, 0, width, height);
-  tintCtx.globalCompositeOperation = "source-over";
-
-  const outCanvas = document.createElement("canvas");
-  outCanvas.width = width + pad * 2;
-  outCanvas.height = height + pad * 2;
-  const outCtx = outCanvas.getContext("2d");
-  const steps = Math.max(16, Math.ceil(2 * Math.PI * radius * 2));
-
-  for (let i = 0; i < steps; i += 1) {
-    const angle = (i / steps) * Math.PI * 2;
-    const dx = Math.cos(angle) * radius;
-    const dy = Math.sin(angle) * radius;
-    outCtx.drawImage(tintCanvas, pad + dx, pad + dy);
-  }
-
-  outCtx.drawImage(img, pad, pad);
-
-  return new Promise((resolve, reject) => {
-    outCanvas.toBlob((finalBlob) => {
-      if (!finalBlob) {
-        reject(new Error("Failed to create outlined PNG."));
-        return;
-      }
-      resolve(finalBlob);
-    }, "image/png");
-  });
-}
-
-async function getBackgroundRemover() {
-  if (removeBackgroundFnPromise) return removeBackgroundFnPromise;
-
-  removeBackgroundFnPromise = import("https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm")
-    .then((mod) => {
-      const candidates = [
-        mod.default,
-        mod.removeBackground,
-        mod.removeBg,
-        mod.default && mod.default.removeBackground
-      ];
-      const fn = candidates.find((candidate) => typeof candidate === "function");
-      if (!fn) {
-        throw new Error(`Could not find remover function. Module keys: ${Object.keys(mod).join(", ")}`);
-      }
-      return fn;
-    })
-    .catch((err) => {
-      removeBackgroundFnPromise = null;
-      throw err;
-    });
-
-  return removeBackgroundFnPromise;
-}
 
 function renderWikimediaResults(items) {
   if (!wikimediaResults) return;
@@ -812,6 +713,35 @@ async function searchWikimediaCommons() {
   }
 }
 
+async function loadCurrentSourceBlob() {
+  if (!currentSourceUrl) throw new Error(t("javascriptStrings.imageTool.chooseImageSource"));
+  const sourceResponse = await fetch(currentSourceUrl);
+  if (!sourceResponse.ok) {
+    throw new Error(`Failed to load source image (${sourceResponse.status}).`);
+  }
+  return sourceResponse.blob();
+}
+
+function showProcessedBlob(finalBlob, downloadSuffix) {
+  revokeProcessedResultUrl();
+  processedResultObjectUrl = URL.createObjectURL(finalBlob);
+
+  if (processedPreviewImage) {
+    processedPreviewImage.src = processedResultObjectUrl;
+    processedPreviewImage.hidden = false;
+  }
+  if (processedPlaceholder) {
+    processedPlaceholder.hidden = true;
+  }
+  if (downloadProcessedButton) {
+    downloadProcessedButton.href = processedResultObjectUrl;
+    const baseName = currentSourceName ? currentSourceName.replace(/\.[^/.]+$/, "") : "isolated-object";
+    downloadProcessedButton.download = `${baseName}-${downloadSuffix}.png`;
+    downloadProcessedButton.setAttribute("aria-disabled", "false");
+    downloadProcessedButton.classList.remove("disabled");
+  }
+}
+
 async function processCurrentImage() {
   if (!currentSourceUrl) {
     setImageToolStatus(t("javascriptStrings.imageTool.chooseImageSource"), true);
@@ -823,31 +753,11 @@ async function processCurrentImage() {
   setImageToolStatus(t("javascriptStrings.imageTool.processingImage"));
 
   try {
-    const sourceResponse = await fetch(currentSourceUrl);
-    if (!sourceResponse.ok) {
-      throw new Error(`Failed to load source image (${sourceResponse.status}).`);
-    }
-    const sourceBlob = await sourceResponse.blob();
-    const finalBlob = await isolateImageBlob(sourceBlob);
-
-    revokeProcessedResultUrl();
-    processedResultObjectUrl = URL.createObjectURL(finalBlob);
-
-    if (processedPreviewImage) {
-      processedPreviewImage.src = processedResultObjectUrl;
-      processedPreviewImage.hidden = false;
-    }
-    if (processedPlaceholder) {
-      processedPlaceholder.hidden = true;
-    }
-    if (downloadProcessedButton) {
-      downloadProcessedButton.href = processedResultObjectUrl;
-      const baseName = currentSourceName ? currentSourceName.replace(/\.[^/.]+$/, "") : "isolated-object";
-      downloadProcessedButton.download = `${baseName}-isolated.png`;
-      downloadProcessedButton.setAttribute("aria-disabled", "false");
-      downloadProcessedButton.classList.remove("disabled");
-    }
-
+    const sourceBlob = await loadCurrentSourceBlob();
+    const finalBlob = await isolateImageBlob(sourceBlob, (stage) => {
+      if (stage === "loading-model") setImageToolStatus(t("javascriptStrings.imageTool.loadingBackgroundModel"));
+    });
+    showProcessedBlob(finalBlob, "isolated");
     setImageToolStatus(t("javascriptStrings.imageTool.processingDone"));
   } catch (err) {
     console.error(err);
@@ -860,38 +770,15 @@ async function processCurrentImage() {
   }
 }
 
-/**
- * WebGPU only when the adapter can run the fp16 ISNet model.
- * Without shader-f16, that model fails in WebGPU and returns a blank image.
- */
-async function getBackgroundRemovalConfig() {
-  if (typeof navigator === "undefined" || !navigator.gpu || typeof navigator.gpu.requestAdapter !== "function") {
-    return { device: "cpu" };
-  }
-  try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (adapter && adapter.features && adapter.features.has("shader-f16")) {
-      return { device: "gpu" };
-    }
-  } catch (err) {
-    console.warn("WebGPU adapter request failed; background removal will use the CPU.", err);
-  }
-  return { device: "cpu" };
-}
-
-/** Remove background (and optional outline) from any image blob — shared with Digitize Book. */
-async function isolateImageBlob(sourceBlob) {
-  const removeBackground = await getBackgroundRemover();
-  const config = await getBackgroundRemovalConfig();
-  let finalBlob = await normalizeReturnedBlob(await removeBackground(sourceBlob, config));
-
+/** Remove background (and optional per-object outline) — shared with Digitize Book. */
+async function isolateImageBlob(sourceBlob, onStage) {
+  const cutout = await removeBackgroundFromBlob(sourceBlob, { onStage });
   if (outlineEnabledInput && outlineEnabledInput.checked) {
     const color = outlineColorInput ? outlineColorInput.value : "#FFFF00";
     const thickness = outlineThicknessInput ? Number(outlineThicknessInput.value) : 6;
-    finalBlob = await applyOutlineToBlob(finalBlob, color, thickness);
+    return outlineCutoutBlob(cutout, color, thickness);
   }
-
-  return finalBlob;
+  return cutout;
 }
 
 function rebuildSpreadsFromDigitized(spreads) {

@@ -32,7 +32,7 @@ let cropDragging = false;
 let cropResizeObserver = null;
 
 /** @type {null | {
- *   isolateBlob: (blob: Blob) => Promise<Blob>,
+ *   isolateBlob: (blob: Blob, onStage?: (stage: "loading-model" | "removing") => void) => Promise<Blob>,
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,
@@ -678,6 +678,13 @@ function imageNormFromEvent(e) {
   };
 }
 
+function isolatePageBlob(blob) {
+  if (!deps?.isolateBlob) throw new Error("Background remover is not ready.");
+  return deps.isolateBlob(blob, (stage) => {
+    if (stage === "loading-model") setDigitizeStatus(t("javascriptStrings.digitize.loadingBackgroundModel"));
+  });
+}
+
 function cropSelectionIsBigEnough(norm = cropDrag) {
   const img = el("digitizePageImage");
   if (!img || !norm || !img.naturalWidth) return false;
@@ -965,7 +972,7 @@ async function isolateCurrentCrop() {
     const cropBlob = await cropSelectionToBlob();
     if (!cropBlob) throw new Error(t("javascriptStrings.digitize.drawCropFirst"));
     if (!deps?.isolateBlob) throw new Error("Background remover is not ready.");
-    const isolated = await deps.isolateBlob(cropBlob);
+    const isolated = await isolatePageBlob(cropBlob);
     const file = new File(
       [isolated],
       `${page.name.replace(/\.[^/.]+$/, "")}-crop${page.crops.length + 1}.png`,
@@ -1019,7 +1026,7 @@ async function isolateAllPageImages() {
           ? await cropNormalizedRegionToBlob(page, page.pendingCrop)
           : page.blob;
         if (!source) throw new Error(t("javascriptStrings.digitize.drawCropFirst"));
-        const isolated = await deps.isolateBlob(source);
+        const isolated = await isolatePageBlob(source);
         const file = new File(
           [isolated],
           `${page.name.replace(/\.[^/.]+$/, "")}-isolated.png`,
@@ -1436,7 +1443,7 @@ async function importCviBookNookPdf(file) {
       const concurrency = isolateAll ? Math.min(4, withPhotos.length || 1) : 1;
       await runPool(withPhotos, concurrency, async (job) => {
         try {
-          const isolated = await deps.isolateBlob(job.imageFile);
+          const isolated = await isolatePageBlob(job.imageFile);
           job.imageFile = new File([isolated], job.imageFile.name, { type: "image/png" });
         } catch (err) {
           console.error(err);
@@ -1542,7 +1549,7 @@ function initCropInteraction() {
 
 /**
  * @param {{
- *   isolateBlob: (blob: Blob) => Promise<Blob>,
+ *   isolateBlob: (blob: Blob, onStage?: (stage: "loading-model" | "removing") => void) => Promise<Blob>,
  *   rebuildSpreads: (spreads: { storyText: string, oddText: string, salientFeatures?: string, imageFiles?: File[] }[]) => void,
  *   setStatus: (text: string, isError?: boolean) => void,
  *   ensureCompatibleImage: (file: File) => Promise<File>,

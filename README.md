@@ -36,13 +36,13 @@ Choose a **book type** at the top of the Digitize Book panel.
 1. Keep **Normal book** selected (the default). Upload a **PDF**, **EPUB**, and/or **page photos** (up to 40 pages). EPUB text is extracted from the file; DRM-encrypted EPUBs cannot be opened. Reflowable EPUBs become one page per chapter file.
 2. Choose an OCR model (default **PP-OCRv6 Small**; English and Arabic PP-OCRv5 options available).
 3. For PDF and photos, click **Run OCR on all pages**. Models download once into the browser (first run can take a minute). EPUB already has text; OCR is optional.
-4. Select each page, **edit the page text** to fix mistakes, and drag a box around a character or object.
-5. Click **Crop & remove background** for the box you drew, or **Remove backgrounds from all pages** to process every page image together (uses the Image Isolator outline settings).
+4. Select each page and **edit the page text** to fix mistakes.
+5. Drag a box around a character or object and click **Crop & remove background**, or click **Remove backgrounds from all pages**. When **Add object outline** is on, each kept object gets its own ring. Isolation uses the Image Isolator settings.
 6. Optionally **Copy all pages for AI review**, paste the tagged reply, and apply (isolated crops stay on matching pages).
 7. Click **Build book from pages** to create one spread per page with corrected text and isolated crops.
 8. Refine spreads, preview, and download PowerPoint as usual.
 
-OCR and background removal run entirely in the browser. No book images are uploaded to a server. Background removal uses the browser’s WebGPU when the GPU supports 16-bit shaders, and CPU (WASM) otherwise.
+OCR and background removal run entirely in the browser. No book images are uploaded to a server. The Image Isolator uses [BiRefNet-lite 512](https://huggingface.co/studioludens/birefnet-lite-512) (MIT) on WebGPU when the GPU supports 16-bit shaders, and on CPU (WASM) otherwise. If that model cannot run, removal falls back to IMG.LY. The first run downloads the model; the photo stays on the device.
 
 ### CVI Book Nook print PDF
 
@@ -132,7 +132,9 @@ The static web app loads additional libraries from CDNs at runtime. Notable term
 | [heic-to](https://github.com/hoppergee/heic-to) | HEIC/HEIF → JPEG in the browser (primary converter) | [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.html) |
 | [heic2any](https://github.com/alexcorvi/heic2any) | HEIC fallback conversion | MIT |
 | [PptxGenJS](https://github.com/gitbrent/PptxGenJS) | PowerPoint (`.pptx`) generation | MIT |
-| [@imgly/background-removal](https://github.com/imgly/background-removal-js) | Image Isolator / digitize crop background removal | AGPL-3.0 / commercial (see vendor terms) |
+| [@huggingface/transformers](https://github.com/huggingface/transformers.js) | Loads the BiRefNet background-removal model in the browser | Apache-2.0 |
+| [BiRefNet-lite 512](https://huggingface.co/studioludens/birefnet-lite-512) | Image Isolator / digitize crop background removal | MIT |
+| [@imgly/background-removal](https://github.com/imgly/background-removal-js) | Fallback background removal if BiRefNet cannot run | AGPL-3.0 / commercial (see vendor terms) |
 | [pdf.js](https://github.com/mozilla/pdf.js) | Digitize Book PDF page rendering | Apache-2.0 |
 | [JSZip](https://github.com/Stuk/jszip) | Digitize Book EPUB unzip | MIT or GPLv3 |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | Digitize Book EPUB HTML page rasterization | MIT |
