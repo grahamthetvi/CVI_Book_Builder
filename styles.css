@@ -584,8 +584,7 @@ label.checkbox-label input[type="radio"] {
   margin-left: 8px;
 }
 
-.digitize-book-type,
-.choice-fieldset {
+.digitize-book-type {
   border: 1px solid var(--border-muted);
   border-radius: 8px;
   padding: 0.75rem 1rem;
@@ -596,13 +595,11 @@ label.checkbox-label input[type="radio"] {
   align-items: center;
 }
 
-.digitize-book-type[hidden],
-.choice-fieldset[hidden] {
+.digitize-book-type[hidden] {
   display: none !important;
 }
 
-.digitize-book-type legend,
-.choice-fieldset legend {
+.digitize-book-type legend {
   padding: 0 0.35rem;
   font-weight: 600;
 }
@@ -878,17 +875,6 @@ button:hover {
   height: 100%;
   max-height: 420px;
   object-fit: contain;
-}
-
-.image-preview-box.is-click-extract {
-  border-style: solid;
-  border-color: var(--link-default);
-  cursor: crosshair;
-}
-
-.image-preview-box.is-click-extract img,
-.digitize-crop-frame.is-click-extract .digitize-crop-canvas {
-  cursor: crosshair;
 }
 
 .actions,

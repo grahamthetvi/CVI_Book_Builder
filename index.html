@@ -459,19 +459,6 @@
               </label>
             </div>
 
-            <fieldset class="choice-fieldset top-gap">
-              <legend data-i18n="imageIsolator.methodLegend">Isolation method</legend>
-              <label class="checkbox-label">
-                <input type="radio" name="isolateMode" id="isolateModeBackground" value="background" checked>
-                <span data-i18n="imageIsolator.methodBackground">Remove background</span>
-              </label>
-              <label class="checkbox-label">
-                <input type="radio" name="isolateMode" id="isolateModeObject" value="object">
-                <span data-i18n="imageIsolator.methodObject">Click to extract an object</span>
-              </label>
-            </fieldset>
-            <p id="extractClickHint" class="hint" data-i18n="imageIsolator.clickHint" hidden>Click the character or object in the source image. Flat colors are cut out on this device. Shaded pictures download a segmentation model once; the photo is not uploaded.</p>
-
             <div class="story-input-actions top-gap">
               <button id="process-image-btn" type="button" data-i18n="imageIsolator.removeBgBtn">Remove Background</button>
               <a id="download-processed-btn" class="download-link disabled" href="#" download="isolated-object.png" aria-disabled="true" data-i18n="imageIsolator.downloadResultBtn">Download Result</a>
@@ -564,10 +551,6 @@
               <div id="digitizeWorkspace" class="digitize-workspace top-gap" hidden>
                 <div class="digitize-page-stage">
                   <h3 data-i18n="digitizeBook.pagePreview">Page preview — drag to crop</h3>
-                  <label class="checkbox-label">
-                    <input id="digitizeClickExtract" type="checkbox">
-                    <span data-i18n="digitizeBook.clickExtract">Click an object to extract it</span>
-                  </label>
                   <div class="digitize-crop-frame">
                     <img id="digitizePageImage" alt="" data-i18n-alt="digitizeBook.pagePreviewAlt" draggable="false">
                     <canvas id="digitizeCropCanvas" class="digitize-crop-canvas" aria-hidden="true"></canvas>
@@ -577,7 +560,7 @@
                     <button id="digitizeIsolateAllPagesBtn" type="button" data-i18n="digitizeBook.isolateAllPagesBtn" disabled>Remove backgrounds from all pages</button>
                     <button id="digitizeClearCropBtn" type="button" data-i18n="digitizeBook.clearCropBtn">Clear crop</button>
                   </div>
-                  <p class="hint" data-i18n="digitizeBook.cropHint">Turn on click-to-extract and click a character. A box you already drew limits that click to the box. Or drag a box and use Crop &amp; remove background. Outlines follow the Image Isolator settings.</p>
+                  <p class="hint" data-i18n="digitizeBook.cropHint">Draw a box around a character or object, or remove backgrounds from every page image at once. When an outline is on, each object gets its own ring. Isolation uses the Image Isolator settings.</p>
                 </div>
 
                 <div class="digitize-text-stage">
