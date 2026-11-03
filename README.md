@@ -18,12 +18,14 @@ Static GitHub Pages app that builds a downloadable `.pptx` CVI story book.
 - **High Support visual complexity** — increased spacing between images on odd slides for reduced visual clutter
 - **Automated Activity Extensions slide** — optional final slide with standard CVI activities plus a story-specific activity from the AI prompt
 - User controls for:
-  - odd-page text color
-  - odd-page text size
-  - odd-page border color
-  - odd-page border size
-  - odd-page background color (default black)
+  - odd-page text color (book default, overridable per spread)
+  - odd-page text size (book-wide)
+  - odd-page border color (book default, overridable per spread)
+  - odd-page border size (book-wide)
+  - odd-page background color (book default, overridable per spread; default black)
+  - story text color (book default, overridable per spread)
   - odd-page text position (top, bottom, left, right)
+- **Page colors** on each spread — follow the Style palette, or set that picture page and story page on their own. The cover and activity slide keep the book defaults. Text size and border thickness stay book-wide.
 - AI formatted text parsing + manual spread editing
 - Live preview refresh button before export
 
