@@ -1631,6 +1631,63 @@ button.linkish:hover,
   min-width: 12rem;
 }
 
+.spread-colors {
+  margin-top: 4px;
+}
+
+.spread-colors summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.spread-colors[open] summary {
+  margin-bottom: 8px;
+}
+
+.spread-color-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: 8px;
+  font-size: 12px;
+}
+
+.spread-color-swatches {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.spread-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border-control);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.spread-color-hint {
+  margin: 6px 0 0;
+}
+
+.spread-color-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.spread-color-fields[hidden] {
+  display: none;
+}
+
+.spread-color-heading {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 .spread-more {
   margin-top: 4px;
 }

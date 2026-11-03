@@ -106,10 +106,7 @@ function hexToColorName(hex) {
   return `${t("javascriptStrings.colorHelper.customPrefix")} (${h})`;
 }
 
-function syncColorDisplay(colorInputId) {
-  const colorInput = document.getElementById(colorInputId);
-  const presetSelect = document.getElementById(colorInputId + "Preset");
-  const nameSpan = document.getElementById(colorInputId + "-name");
+function syncColorDisplayElements(colorInput, presetSelect, nameSpan) {
   if (!colorInput || !nameSpan) return;
   const hex = colorInput.value.toUpperCase();
   const withHash = hex.startsWith("#") ? hex : "#" + hex;
@@ -127,8 +124,240 @@ function syncColorDisplay(colorInputId) {
     }
   }
 
-  nameSpan.textContent = label;
-  nameSpan.setAttribute("aria-label", `${t("javascriptStrings.colorHelper.colorNameAria")} ${label}`);
+  if (nameSpan.textContent !== label) nameSpan.textContent = label;
+  const nameAria = `${t("javascriptStrings.colorHelper.colorNameAria")} ${label}`;
+  if (nameSpan.getAttribute("aria-label") !== nameAria) nameSpan.setAttribute("aria-label", nameAria);
+}
+
+function syncColorDisplay(colorInputId) {
+  syncColorDisplayElements(
+    document.getElementById(colorInputId),
+    document.getElementById(colorInputId + "Preset"),
+    document.getElementById(colorInputId + "-name")
+  );
+}
+
+const SPREAD_COLOR_FIELDS = [
+  {
+    key: "oddTextColor",
+    preset: ".spread-odd-text-preset",
+    input: ".spread-odd-text-color",
+    name: ".spread-odd-text-name",
+    label: ".spread-odd-text-label",
+    fallback: "#000000"
+  },
+  {
+    key: "oddBorderColor",
+    preset: ".spread-odd-border-preset",
+    input: ".spread-odd-border-color",
+    name: ".spread-odd-border-name",
+    label: ".spread-odd-border-label",
+    fallback: "#FF0000"
+  },
+  {
+    key: "oddBgColor",
+    preset: ".spread-odd-bg-preset",
+    input: ".spread-odd-bg-color",
+    name: ".spread-odd-bg-name",
+    label: ".spread-odd-bg-label",
+    fallback: "#000000"
+  },
+  {
+    key: "storyTextColor",
+    preset: ".spread-story-text-preset",
+    input: ".spread-story-text-color",
+    name: ".spread-story-text-name",
+    label: ".spread-story-text-label",
+    fallback: "#111111"
+  }
+];
+
+const SPREAD_SWATCH_KEYS = {
+  oddBg: "oddBgColor",
+  oddText: "oddTextColor",
+  oddBorder: "oddBorderColor",
+  storyText: "storyTextColor"
+};
+
+let spreadColorUid = 0;
+
+function normalizeHex(hex, fallback = "#000000") {
+  let h = (hex || "").trim();
+  if (!h) h = fallback;
+  if (!h.startsWith("#")) h = `#${h}`;
+  if (/^#[0-9a-fA-F]{3}$/.test(h)) {
+    h = `#${h[1]}${h[1]}${h[2]}${h[2]}${h[3]}${h[3]}`;
+  }
+  if (!/^#[0-9a-fA-F]{6}$/.test(h)) return fallback.toUpperCase();
+  return h.toUpperCase();
+}
+
+function getBookColors() {
+  return {
+    oddTextColor: normalizeHex(oddTextColorInput?.value, "#000000"),
+    oddBorderColor: normalizeHex(oddBorderColorInput?.value, "#FF0000"),
+    oddBgColor: normalizeHex(oddBgColorInput?.value, "#000000"),
+    storyTextColor: normalizeHex(storyTextColorInput?.value, "#111111")
+  };
+}
+
+function readSpreadColorInputs(card) {
+  const book = getBookColors();
+  const colors = {};
+  for (const field of SPREAD_COLOR_FIELDS) {
+    const input = card.querySelector(field.input);
+    colors[field.key] = normalizeHex(input?.value, book[field.key] || field.fallback);
+  }
+  return colors;
+}
+
+function colorsDifferFromBook(colors) {
+  const book = getBookColors();
+  return SPREAD_COLOR_FIELDS.some((field) => {
+    if (typeof colors[field.key] !== "string" || !colors[field.key].trim()) return false;
+    return normalizeHex(colors[field.key], field.fallback) !== normalizeHex(book[field.key], field.fallback);
+  });
+}
+
+function mirrorBookColorsOntoCard(card) {
+  const book = getBookColors();
+  for (const field of SPREAD_COLOR_FIELDS) {
+    const input = card.querySelector(field.input);
+    const preset = card.querySelector(field.preset);
+    const name = card.querySelector(field.name);
+    if (!input) continue;
+    input.value = normalizeHex(book[field.key], field.fallback);
+    syncColorDisplayElements(input, preset, name);
+  }
+}
+
+function syncFollowingSpreadColorsFromBook() {
+  if (!spreadsContainer) return;
+  spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
+    const useBook = card.querySelector(".use-book-colors");
+    if (!useBook || !useBook.checked) return;
+    if (card.dataset.colorsDirty === "1") return;
+    mirrorBookColorsOntoCard(card);
+  });
+}
+
+function resolveSpreadColors(card) {
+  const useBookColors = card.querySelector(".use-book-colors")?.checked !== false;
+  if (useBookColors) return { useBookColors: true, ...getBookColors() };
+  return { useBookColors: false, ...readSpreadColorInputs(card) };
+}
+
+function refreshSpreadColorNames(card) {
+  for (const field of SPREAD_COLOR_FIELDS) {
+    syncColorDisplayElements(
+      card.querySelector(field.input),
+      card.querySelector(field.preset),
+      card.querySelector(field.name)
+    );
+  }
+}
+
+function updateSpreadColorSummary(card) {
+  const colors = resolveSpreadColors(card);
+  const status = colors.useBookColors
+    ? t("spreadCard.usingBookColors")
+    : t("spreadCard.usingCustomColors");
+  const statusEl = card.querySelector(".spread-color-status");
+  if (statusEl && statusEl.textContent !== status) statusEl.textContent = status;
+  card.querySelectorAll(".spread-color-swatch").forEach((swatch) => {
+    const key = SPREAD_SWATCH_KEYS[swatch.dataset.swatch];
+    if (!key) return;
+    const next = colors[key];
+    const name = hexToColorName(next);
+    if (swatch.dataset.hex !== next) {
+      swatch.style.background = next;
+      swatch.dataset.hex = next;
+    }
+    if (swatch.title !== name) swatch.title = name;
+  });
+  const summary = card.querySelector(".spread-colors summary");
+  if (summary) {
+    const summaryLabel = t("spreadCard.colorsSummaryAria", {
+      status,
+      bg: hexToColorName(colors.oddBgColor),
+      text: hexToColorName(colors.oddTextColor),
+      border: hexToColorName(colors.oddBorderColor),
+      story: hexToColorName(colors.storyTextColor)
+    });
+    if (summary.getAttribute("aria-label") !== summaryLabel) summary.setAttribute("aria-label", summaryLabel);
+  }
+}
+
+function wireSpreadColors(card, initial = {}) {
+  const useBookInput = card.querySelector(".use-book-colors");
+  const fields = card.querySelector(".spread-color-fields");
+  const details = card.querySelector(".spread-colors");
+  if (!useBookInput || !fields) return;
+
+  spreadColorUid += 1;
+  const uid = `spread-color-${spreadColorUid}`;
+  const book = getBookColors();
+  const stored = {};
+  let hasStored = false;
+  for (const field of SPREAD_COLOR_FIELDS) {
+    if (typeof initial[field.key] === "string" && initial[field.key].trim()) {
+      stored[field.key] = initial[field.key];
+      hasStored = true;
+    }
+  }
+  const useCustom = initial.useBookColors === false;
+
+  for (const field of SPREAD_COLOR_FIELDS) {
+    const input = card.querySelector(field.input);
+    const preset = card.querySelector(field.preset);
+    const name = card.querySelector(field.name);
+    const label = card.querySelector(field.label);
+    if (!input || !preset || !name) continue;
+    input.id = `${uid}-${field.key}`;
+    preset.id = `${uid}-${field.key}-preset`;
+    name.id = `${uid}-${field.key}-name`;
+    preset.setAttribute("aria-describedby", name.id);
+    input.setAttribute("aria-describedby", name.id);
+    if (label) label.setAttribute("for", preset.id);
+
+    const sourceHex = hasStored ? stored[field.key] || book[field.key] : book[field.key];
+    input.value = normalizeHex(sourceHex, field.fallback);
+    syncColorDisplayElements(input, preset, name);
+
+    input.addEventListener("input", () => {
+      card.dataset.colorsDirty = "1";
+      syncColorDisplayElements(input, preset, name);
+      updateSpreadColorSummary(card);
+      scheduleLivePreview(true);
+    });
+    preset.addEventListener("change", () => {
+      if (preset.value !== "custom") input.value = preset.value;
+      card.dataset.colorsDirty = "1";
+      syncColorDisplayElements(input, preset, name);
+      if (preset.value === "custom") input.focus();
+      updateSpreadColorSummary(card);
+      scheduleLivePreview(true);
+    });
+  }
+
+  const differs = hasStored && colorsDifferFromBook(stored);
+  if (useCustom || differs) card.dataset.colorsDirty = "1";
+  else delete card.dataset.colorsDirty;
+
+  useBookInput.checked = !useCustom;
+  fields.hidden = !useCustom;
+  if (details && useCustom) details.open = true;
+
+  useBookInput.addEventListener("change", () => {
+    if (!useBookInput.checked && card.dataset.colorsDirty !== "1") {
+      mirrorBookColorsOntoCard(card);
+    }
+    fields.hidden = useBookInput.checked;
+    updateSpreadColorSummary(card);
+    scheduleLivePreview(true);
+  });
+
+  updateSpreadColorSummary(card);
 }
 
 function initColorPickers() {
@@ -1185,6 +1414,7 @@ function addSpread(initial = {}) {
 
   spreadsContainer.appendChild(fragment);
   applyDomTranslations(card);
+  wireSpreadColors(card, initial);
   renumberSpreads();
   scheduleLivePreview(true);
 }
@@ -1235,13 +1465,19 @@ function collectSpreadsFromForm() {
     const imagePromptEl = card.querySelector(".image-prompt");
     const imagePrompt = imagePromptEl ? imagePromptEl.value.trim() : "";
     const imageFiles = card.currentFiles || [];
+    const colors = resolveSpreadColors(card);
     return {
       index,
       storyText,
       salientFeatures,
       oddText,
       imagePrompt,
-      imageFiles
+      imageFiles,
+      useBookColors: colors.useBookColors,
+      oddTextColor: colors.oddTextColor,
+      oddBorderColor: colors.oddBorderColor,
+      oddBgColor: colors.oddBgColor,
+      storyTextColor: colors.storyTextColor
     };
   });
 }
@@ -1299,11 +1535,17 @@ async function collectBookState() {
       const dataUrl = await readFileAsDataUrl(file);
       imageDataUrls.push({ name: file.name, dataUrl });
     }
+    const picked = readSpreadColorInputs(card);
     spreads.push({
       storyText: card.querySelector(".story-text")?.value ?? "",
       salientFeatures: card.querySelector(".salient-features")?.value ?? "",
       oddText: card.querySelector(".odd-text")?.value ?? "",
       imagePrompt: card.querySelector(".image-prompt")?.value ?? "",
+      useBookColors: card.querySelector(".use-book-colors")?.checked !== false,
+      oddTextColor: picked.oddTextColor,
+      oddBorderColor: picked.oddBorderColor,
+      oddBgColor: picked.oddBgColor,
+      storyTextColor: picked.storyTextColor,
       imageDataUrls
     });
   }
@@ -1373,7 +1615,12 @@ async function applyBookState(state) {
         salientFeatures: s.salientFeatures,
         oddText: s.oddText,
         imagePrompt: s.imagePrompt,
-        imageDataUrls: s.imageDataUrls || []
+        imageDataUrls: s.imageDataUrls || [],
+        useBookColors: s.useBookColors,
+        oddTextColor: s.oddTextColor,
+        oddBorderColor: s.oddBorderColor,
+        oddBgColor: s.oddBgColor,
+        storyTextColor: s.storyTextColor
       });
     });
     renderPreview();
@@ -1722,6 +1969,11 @@ function shrinkEvenPageStoryToFit(storyWrapper) {
 }
 
 function renderPreview() {
+  syncFollowingSpreadColorsFromBook();
+  if (spreadsContainer) {
+    spreadsContainer.querySelectorAll(".spread-card").forEach((card) => updateSpreadColorSummary(card));
+  }
+
   previewContainer.innerHTML = "";
 
   const spreads = collectSpreadsFromForm();
@@ -1735,7 +1987,6 @@ function renderPreview() {
   const oddTextColor = oddTextColorInput.value;
   const oddBorderColor = oddBorderColorInput.value;
   const oddBgColor = oddBgColorInput.value;
-  const storyTextColor = storyTextColorInput.value;
   const oddBorderSize = Math.max(0, Number(oddBorderSizeInput.value) || 0);
   const outline = getTextOutlineCss(oddBorderSize, oddBorderColor);
 
@@ -1746,6 +1997,7 @@ function renderPreview() {
   previewContainer.appendChild(titlePage);
 
   spreads.forEach((spread, spreadIndex) => {
+    const spreadOutline = getTextOutlineCss(oddBorderSize, spread.oddBorderColor);
     const evenPage = document.createElement("div");
     evenPage.className = "preview-page";
     evenPage.style.background = "#FFFFFF";
@@ -1755,7 +2007,7 @@ function renderPreview() {
     storyWrapper.style.gap = "0.5em";
     storyWrapper.style.fontSize = "34px";
     const storyText = document.createElement("span");
-    storyText.style.color = storyTextColor;
+    storyText.style.color = spread.storyTextColor;
     storyText.textContent = spread.storyText || "";
     storyWrapper.appendChild(storyText);
     if (spread.salientFeatures) {
@@ -1778,7 +2030,7 @@ function renderPreview() {
 
     const oddPage = document.createElement("div");
     oddPage.className = "preview-page odd";
-    oddPage.style.background = oddBgColor;
+    oddPage.style.background = spread.oddBgColor;
 
     const regions = getOddRegions(oddTextPosition);
     const textRect = toPercentRect(regions.textRect);
@@ -1791,8 +2043,8 @@ function renderPreview() {
     oddTextZone.style.width = textRect.width;
     oddTextZone.style.height = textRect.height;
     oddTextZone.style.fontSize = `${oddTextSize}px`;
-    oddTextZone.style.color = oddTextColor;
-    oddTextZone.style.textShadow = outline;
+    oddTextZone.style.color = spread.oddTextColor;
+    oddTextZone.style.textShadow = spreadOutline;
     oddTextZone.textContent = spread.oddText || "";
 
     const oddImagesZone = document.createElement("div");
@@ -1928,7 +2180,6 @@ async function exportPptx() {
   const oddTextColor = safePptColor(oddTextColorInput.value);
   const oddBorderColor = safePptColor(oddBorderColorInput.value);
   const oddBgColor = safePptColor(oddBgColorInput.value);
-  const storyTextColor = safePptColor(storyTextColorInput.value);
   const oddTextSize = Number(oddTextSizeInput.value) || 72;
   const oddBorderSize = Number(oddBorderSizeInput.value) || 0;
   const bookTitle = (bookTitleInput.value || t("javascriptStrings.previewLabels.defaultTitle")).trim();
@@ -1987,6 +2238,10 @@ async function exportPptx() {
     });
 
     for (const spread of spreadsWithData) {
+      const spreadStoryColor = safePptColor(spread.storyTextColor);
+      const spreadOddTextColor = safePptColor(spread.oddTextColor);
+      const spreadOddBorderColor = safePptColor(spread.oddBorderColor);
+      const spreadOddBgColor = safePptColor(spread.oddBgColor);
       const evenSlide = pptx.addSlide();
       evenSlide.background = { color: EVEN_PAGE_BG };
 
@@ -1994,7 +2249,7 @@ async function exportPptx() {
       if (spread.storyText) {
         evenTextRuns.push({
           text: spread.storyText + (spread.salientFeatures ? "\n\n" : ""),
-          options: { color: storyTextColor, fontSize: STORY_FONT_SIZE }
+          options: { color: spreadStoryColor, fontSize: STORY_FONT_SIZE }
         });
       }
       if (spread.salientFeatures) {
@@ -2004,7 +2259,7 @@ async function exportPptx() {
         });
       }
       if (evenTextRuns.length === 0) {
-        evenTextRuns.push({ text: " ", options: { color: storyTextColor, fontSize: STORY_FONT_SIZE } });
+        evenTextRuns.push({ text: " ", options: { color: spreadStoryColor, fontSize: STORY_FONT_SIZE } });
       }
 
       evenSlide.addText(evenTextRuns, {
@@ -2020,7 +2275,7 @@ async function exportPptx() {
       });
 
       const oddSlide = pptx.addSlide();
-      oddSlide.background = { color: oddBgColor };
+      oddSlide.background = { color: spreadOddBgColor };
       const { textRect, imageRect } = getOddRegions(position);
 
       if (spread.oddText) {
@@ -2033,9 +2288,9 @@ async function exportPptx() {
           valign: "mid",
           bold: true,
           fontSize: oddTextSize,
-          color: oddTextColor,
+          color: spreadOddTextColor,
           fit: "shrink",
-          outline: { color: oddBorderColor, size: oddBorderToOutlinePt(oddBorderSize) }
+          outline: { color: spreadOddBorderColor, size: oddBorderToOutlinePt(oddBorderSize) }
         });
       }
 
@@ -2181,6 +2436,24 @@ function copyFvaLmaSummary() {
       complexity: complexityLabel
     })
   );
+
+  const customColorLines = [];
+  Array.from(spreadsContainer.querySelectorAll(".spread-card")).forEach((card, index) => {
+    const colors = resolveSpreadColors(card);
+    if (colors.useBookColors) return;
+    customColorLines.push(
+      t("javascriptStrings.fvaLmaSummary.spreadColorLine", {
+        n: index + 1,
+        textColor: colors.oddTextColor,
+        borderColor: colors.oddBorderColor,
+        bgColor: colors.oddBgColor,
+        storyColor: colors.storyTextColor
+      })
+    );
+  });
+  if (customColorLines.length) {
+    parts.push("", t("javascriptStrings.fvaLmaSummary.customPageColors"), ...customColorLines);
+  }
 
   if (activityPrompt) {
     parts.push("", `${t("javascriptStrings.fvaLmaSummary.activity")} ${activityPrompt}`);
@@ -2441,6 +2714,8 @@ export function applyLocaleRefresh() {
     }
     const prefix = card.querySelector(".spread-title-row h3 [data-i18n]");
     if (prefix) prefix.textContent = t("spreadCard.titlePrefix");
+    refreshSpreadColorNames(card);
+    updateSpreadColorSummary(card);
   });
 }
 

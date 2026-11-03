@@ -314,6 +314,7 @@
         <div id="drawerStyleBody" class="drawer-panel" hidden>
           <section class="panel nested-panel">
             <h3 data-i18n="quickPresets.title">Quick Presets</h3>
+            <p class="hint" data-i18n="quickPresets.hint">Presets set the book default colors. Spreads with their own colors stay as they are.</p>
             <div class="grid three-col">
               <button id="presetMaxContrast" type="button" data-i18n="quickPresets.maxContrast">Maximum Contrast</button>
               <button id="presetHighContrast" type="button" data-i18n="quickPresets.highContrast">High Contrast</button>
@@ -323,6 +324,7 @@
 
           <section class="panel nested-panel">
             <h3 data-i18n="accessibilityTextStyle.title">Picture page text style</h3>
+            <p class="hint" data-i18n="accessibilityTextStyle.defaultHint">These are the book defaults. They apply to the cover, the activity slide, and any spread still using book colors.</p>
             <div class="grid four-col">
               <div class="color-picker-group">
                 <label for="oddTextColorPreset" data-i18n="accessibilityTextStyle.labels.textColor">Text color</label>
@@ -704,6 +706,98 @@
       </div>
       <div class="image-preview-list"></div>
       <p class="selected-images"></p>
+      <details class="spread-colors">
+        <summary>
+          <span data-i18n="spreadCard.colorsSummary">Page colors</span>
+          <span class="spread-color-summary">
+            <span class="spread-color-status"></span>
+            <span class="spread-color-swatches">
+              <span class="spread-color-swatch" data-swatch="oddBg"></span>
+              <span class="spread-color-swatch" data-swatch="oddText"></span>
+              <span class="spread-color-swatch" data-swatch="oddBorder"></span>
+              <span class="spread-color-swatch" data-swatch="storyText"></span>
+            </span>
+          </span>
+        </summary>
+        <label class="checkbox-label">
+          <input type="checkbox" class="use-book-colors" checked>
+          <span data-i18n="spreadCard.useBookColors">Use book colors</span>
+        </label>
+        <p class="hint spread-color-hint" data-i18n="spreadCard.colorHint">Turn this off to set colors for this picture page and story page only. Text size and border thickness still come from Style. Turn it back on to follow the book colors again; custom colors stay saved on this spread.</p>
+        <div class="spread-color-fields" hidden>
+          <p class="spread-color-heading" data-i18n="spreadCard.picturePageHeading">Picture page</p>
+          <div class="color-picker-group">
+            <label class="spread-odd-text-label" data-i18n="accessibilityTextStyle.labels.textColor">Text color</label>
+            <div class="color-input-row">
+              <select class="spread-odd-text-preset color-preset" data-i18n-options="accessibilityTextStyle.colors" data-i18n-aria-label="accessibilityTextStyle.aria.textColorPreset">
+                <option value="#FFFFFF" data-i18n-opt="white">White</option>
+                <option value="#FFFF00" data-i18n-opt="yellow">Yellow</option>
+                <option value="#FF0000" data-i18n-opt="red">Red</option>
+                <option value="#00FF00" data-i18n-opt="green">Green</option>
+                <option value="#00FFFF" data-i18n-opt="cyan">Cyan</option>
+                <option value="#0000FF" data-i18n-opt="blue">Blue</option>
+                <option value="#111111" data-i18n-opt="veryDarkGray">Very dark gray</option>
+                <option value="#000000" data-i18n-opt="black">Black</option>
+                <option value="custom" data-i18n-opt="custom">Custom...</option>
+              </select>
+              <input class="spread-odd-text-color" type="color" value="#000000" data-i18n-aria-label="accessibilityTextStyle.aria.customTextColorOdd">
+            </div>
+            <span class="spread-odd-text-name color-name" aria-live="polite">Black</span>
+          </div>
+          <div class="color-picker-group">
+            <label class="spread-odd-border-label" data-i18n="accessibilityTextStyle.labels.borderColor">Border color</label>
+            <div class="color-input-row">
+              <select class="spread-odd-border-preset color-preset" data-i18n-options="accessibilityTextStyle.colors" data-i18n-aria-label="accessibilityTextStyle.aria.borderColorPreset">
+                <option value="#FFFFFF" data-i18n-opt="white">White</option>
+                <option value="#FFFF00" data-i18n-opt="yellow">Yellow</option>
+                <option value="#FF0000" data-i18n-opt="red">Red</option>
+                <option value="#00FF00" data-i18n-opt="green">Green</option>
+                <option value="#00FFFF" data-i18n-opt="cyan">Cyan</option>
+                <option value="#0000FF" data-i18n-opt="blue">Blue</option>
+                <option value="#111111" data-i18n-opt="veryDarkGray">Very dark gray</option>
+                <option value="#000000" data-i18n-opt="black">Black</option>
+                <option value="custom" data-i18n-opt="custom">Custom...</option>
+              </select>
+              <input class="spread-odd-border-color" type="color" value="#FF0000" data-i18n-aria-label="accessibilityTextStyle.aria.customBorderOdd">
+            </div>
+            <span class="spread-odd-border-name color-name" aria-live="polite">Red</span>
+          </div>
+          <div class="color-picker-group">
+            <label class="spread-odd-bg-label" data-i18n="accessibilityTextStyle.labels.oddPageBgColor">Picture page background color</label>
+            <div class="color-input-row">
+              <select class="spread-odd-bg-preset color-preset" data-i18n-options="accessibilityTextStyle.colors" data-i18n-aria-label="accessibilityTextStyle.aria.oddBgPreset">
+                <option value="#000000" data-i18n-opt="black">Black</option>
+                <option value="#111111" data-i18n-opt="veryDarkGray">Very dark gray</option>
+                <option value="#0000FF" data-i18n-opt="blue">Blue</option>
+                <option value="#003300" data-i18n-opt="darkGreen">Dark green</option>
+                <option value="#FFFFFF" data-i18n-opt="white">White</option>
+                <option value="#FFFF00" data-i18n-opt="yellow">Yellow</option>
+                <option value="#FF0000" data-i18n-opt="red">Red</option>
+                <option value="custom" data-i18n-opt="custom">Custom...</option>
+              </select>
+              <input class="spread-odd-bg-color" type="color" value="#000000" data-i18n-aria-label="accessibilityTextStyle.aria.customOddBg">
+            </div>
+            <span class="spread-odd-bg-name color-name" aria-live="polite">Black</span>
+          </div>
+          <p class="spread-color-heading" data-i18n="spreadCard.storyPageHeading">Story page</p>
+          <div class="color-picker-group">
+            <label class="spread-story-text-label" data-i18n="accessibilityTextStyle.labels.storyTextColor">Story text color (story pages)</label>
+            <div class="color-input-row">
+              <select class="spread-story-text-preset color-preset" data-i18n-options="accessibilityTextStyle.colors" data-i18n-aria-label="accessibilityTextStyle.aria.storyTextPreset">
+                <option value="#111111" data-i18n-opt="veryDarkGray">Very dark gray</option>
+                <option value="#000000" data-i18n-opt="black">Black</option>
+                <option value="#0000FF" data-i18n-opt="blue">Blue</option>
+                <option value="#006600" data-i18n-opt="green">Green</option>
+                <option value="#CC0000" data-i18n-opt="red">Red</option>
+                <option value="#FFFFFF" data-i18n-opt="white">White</option>
+                <option value="custom" data-i18n-opt="custom">Custom...</option>
+              </select>
+              <input class="spread-story-text-color" type="color" value="#111111" data-i18n-aria-label="accessibilityTextStyle.aria.customStoryText">
+            </div>
+            <span class="spread-story-text-name color-name" aria-live="polite">Very dark gray</span>
+          </div>
+        </div>
+      </details>
       <details class="spread-more">
         <summary data-i18n="spreadCard.moreSummary">More on this spread</summary>
         <label>
