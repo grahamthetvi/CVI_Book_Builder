@@ -885,6 +885,126 @@ button:hover {
   gap: 8px;
 }
 
+.ai-step + .ai-step {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-default);
+}
+
+.ai-step h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--text-heading);
+}
+
+.ai-step > * + * {
+  margin-top: 10px;
+}
+
+.ai-page-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ai-page-row input[type="number"] {
+  width: 5.5rem;
+}
+
+#aiPageCountSummary {
+  margin-top: 6px;
+}
+
+.ai-page-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-page-chips button[aria-pressed="true"] {
+  background: var(--bg-primary);
+  border-color: var(--border-primary);
+  color: #ffffff;
+}
+
+.ai-theme-choice {
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-theme-choice legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
+}
+
+#aiColorNotesLabel[hidden] {
+  display: none !important;
+}
+
+.ai-applied-theme {
+  padding: 10px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-page);
+}
+
+.ai-applied-theme[hidden] {
+  display: none !important;
+}
+
+.ai-applied-theme-name {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.ai-theme-swatches {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 8px 0;
+  padding: 0;
+}
+
+.ai-theme-swatches li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.ai-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-control);
+  flex-shrink: 0;
+}
+
+.ai-flow-status:empty {
+  display: none;
+}
+
+.ai-flow-status-error {
+  color: #ffb4b4;
+}
+
+:root[data-theme="light"] .ai-flow-status-error {
+  color: #9f1239;
+}
+
+body[data-app-view="path"][data-app-path="ai"] #storyInputPanel > h3 {
+  display: none;
+}
+
 #statusMessage {
   margin: 0;
   color: var(--text-aux);

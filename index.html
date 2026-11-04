@@ -214,7 +214,7 @@
       <div class="start-path-grid">
         <button type="button" class="start-path-card" data-start-path="ai">
           <span class="start-path-title" data-i18n="startScreen.paths.ai.title">Write with AI</span>
-          <span class="start-path-blurb" data-i18n="startScreen.paths.ai.blurb">Copy a prompt, paste the tagged reply, and turn it into spreads.</span>
+          <span class="start-path-blurb" data-i18n="startScreen.paths.ai.blurb">Set the length and color theme, copy a prompt, then paste the reply into spreads.</span>
         </button>
         <button type="button" class="start-path-card" data-start-path="digitize">
           <span class="start-path-title" data-i18n="startScreen.paths.digitize.title">Digitize a book</span>
@@ -658,15 +658,82 @@
     </div>
 
     <section class="panel nested-panel" id="storyInputPanel">
-      <h3 data-i18n="storyInput.title">Story Input</h3>
-      <p class="hint" data-i18n="storyInput.hint">Use one or both</p>
-      <label>
-        <span data-i18n="storyInput.aiFormattedText">AI formatted text</span>
-        <textarea id="aiInput" rows="6" data-i18n-placeholder="storyInput.aiPlaceholder" placeholder="TITLE:"></textarea>
-      </label>
-      <div class="story-input-actions">
-        <button id="copyAiPromptButton" type="button" data-i18n="storyInput.copyAiPromptBtn">Copy AI Formatting Prompt</button>
-        <button id="parseAiButton" type="button" data-i18n="storyInput.parseBtn">Parse Into Spreads</button>
+      <h3 data-i18n="storyInput.title">Write with AI</h3>
+      <p class="hint" data-i18n="storyInput.hint">Describe the book you want. Copy a prompt into any AI, then paste the tagged reply here.</p>
+
+      <div class="ai-step">
+        <h4 data-i18n="storyInput.stepBrief">1. Describe the book</h4>
+        <label>
+          <span data-i18n="storyInput.ideaLabel">What should this book be about?</span>
+          <textarea id="aiIdea" rows="3" data-i18n-placeholder="storyInput.ideaPlaceholder" placeholder="Maya finds her yellow ball, rolls it, and shares it with a friend."></textarea>
+        </label>
+        <label>
+          <span data-i18n="storyInput.audienceLabel">Who is it for? (optional)</span>
+          <input id="aiAudience" type="text" data-i18n-placeholder="storyInput.audiencePlaceholder" placeholder="Age 4, likes dogs, knows a few words">
+        </label>
+        <p class="hint" data-i18n="storyInput.audienceHint">Skip the student's name. This text is copied into the prompt you paste into your AI.</p>
+
+        <div class="ai-page-count">
+          <label for="aiPageCount" data-i18n="storyInput.pageCountLabel">Number of pages</label>
+          <div class="ai-page-row">
+            <input id="aiPageCount" type="number" min="2" max="40" step="2" value="8" inputmode="numeric">
+            <div class="ai-page-chips" role="group" data-i18n-aria-label="storyInput.pageChipGroup">
+              <button type="button" data-ai-pages="4" aria-pressed="false">4</button>
+              <button type="button" data-ai-pages="8" aria-pressed="true">8</button>
+              <button type="button" data-ai-pages="12" aria-pressed="false">12</button>
+              <button type="button" data-ai-pages="16" aria-pressed="false">16</button>
+            </div>
+          </div>
+          <p id="aiPageCountSummary" class="hint" aria-live="polite">8 pages means 4 story pages and 4 picture pages, plus a cover.</p>
+        </div>
+
+        <fieldset class="ai-theme-choice">
+          <legend data-i18n="storyInput.themeLegend">Color theme</legend>
+          <label class="checkbox-label">
+            <input type="radio" name="aiColorTheme" id="aiThemeAi" value="ai" checked>
+            <span data-i18n="storyInput.themeAi">Let the AI choose a theme</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="radio" name="aiColorTheme" id="aiThemeMine" value="mine">
+            <span data-i18n="storyInput.themeMine">Keep the colors I already set</span>
+          </label>
+          <label id="aiColorNotesLabel">
+            <span data-i18n="storyInput.colorNotesLabel">Color notes for the AI (optional)</span>
+            <input id="aiColorNotes" type="text" data-i18n-placeholder="storyInput.colorNotesPlaceholder" placeholder="Yellow on black works well. Avoid red.">
+          </label>
+          <p id="aiThemeHint" class="hint" data-i18n="storyInput.themeHint">The AI picks one high-contrast palette that fits the story. Picture text must stand out on the picture page. Story text sits on a white page. You can change the colors later in Style.</p>
+        </fieldset>
+
+        <label>
+          <span data-i18n="storyInput.notesLabel">Anything else the AI should follow (optional)</span>
+          <textarea id="aiNotes" rows="2" data-i18n-placeholder="storyInput.notesPlaceholder" placeholder="Short sentences. Use the word ball on every page. No metaphors."></textarea>
+        </label>
+        <p class="hint" data-i18n="storyInput.notesHint">If you already have spreads, say what to change. The copied prompt includes the book you have now.</p>
+      </div>
+
+      <div class="ai-step">
+        <h4 data-i18n="storyInput.stepCopy">2. Copy the prompt</h4>
+        <p class="hint" data-i18n="storyInput.copyHint">Paste it into ChatGPT, Gemini, Claude, or another assistant. You can ask for changes there, then bring the full tagged reply back.</p>
+        <div class="story-input-actions">
+          <button id="copyAiPromptButton" type="button" class="primary" data-i18n="storyInput.copyAiPromptBtn">Copy prompt for your AI</button>
+        </div>
+      </div>
+
+      <div class="ai-step">
+        <h4 data-i18n="storyInput.stepPaste">3. Paste the reply</h4>
+        <label>
+          <span data-i18n="storyInput.aiFormattedText">AI reply</span>
+          <textarea id="aiInput" rows="8"></textarea>
+        </label>
+        <div class="story-input-actions">
+          <button id="parseAiButton" type="button" class="primary" data-i18n="storyInput.parseBtn">Build spreads from reply</button>
+        </div>
+        <div id="aiAppliedTheme" class="ai-applied-theme" hidden>
+          <p id="aiAppliedThemeName" class="ai-applied-theme-name"></p>
+          <ul id="aiAppliedThemeSwatches" class="ai-theme-swatches"></ul>
+          <p class="hint" data-i18n="storyInput.themeAppliedHint">These colors are now the book colors for the cover and every spread that uses book colors. Change them in Style.</p>
+        </div>
+        <p id="aiFlowStatus" class="hint ai-flow-status" aria-live="polite"></p>
       </div>
     </section>
   </div>

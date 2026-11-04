@@ -31,6 +31,13 @@ const presetMaxContrastButton = document.getElementById("presetMaxContrast");
 const presetHighContrastButton = document.getElementById("presetHighContrast");
 const presetStandardPrintButton = document.getElementById("presetStandardPrint");
 const aiInput = document.getElementById("aiInput");
+const aiIdeaInput = document.getElementById("aiIdea");
+const aiAudienceInput = document.getElementById("aiAudience");
+const aiPageCountInput = document.getElementById("aiPageCount");
+const aiColorNotesInput = document.getElementById("aiColorNotes");
+const aiNotesInput = document.getElementById("aiNotes");
+const aiThemeMineInput = document.getElementById("aiThemeMine");
+const aiFlowStatus = document.getElementById("aiFlowStatus");
 const localImageInput = document.getElementById("local-image-input");
 const wikimediaQueryInput = document.getElementById("wikimedia-query");
 const wikimediaSearchButton = document.getElementById("wikimedia-search-btn");
@@ -180,6 +187,142 @@ const SPREAD_SWATCH_KEYS = {
 };
 
 let spreadColorUid = 0;
+
+const AI_PAGE_MIN = 2;
+const AI_PAGE_MAX = 40;
+const AI_TEXT_CONTRAST_MIN = 4.5;
+const AI_BORDER_CONTRAST_MIN = 3;
+const STORY_PAGE_BG = "#FFFFFF";
+const AI_NAMED_COLORS = {
+  black: "#000000",
+  white: "#FFFFFF",
+  yellow: "#FFFF00",
+  red: "#FF0000",
+  green: "#00FF00",
+  "dark green": "#003300",
+  blue: "#0000FF",
+  "dark blue": "#000066",
+  cyan: "#00FFFF",
+  magenta: "#FF00FF",
+  "very dark gray": "#111111",
+  "dark gray": "#222222",
+  gray: "#333333",
+  grey: "#333333"
+};
+
+let lastAppliedAiTheme = null;
+
+function normalizeAiPageCount(value) {
+  let n = Number(value);
+  if (!Number.isFinite(n)) n = 8;
+  n = Math.round(n);
+  if (n < AI_PAGE_MIN) n = AI_PAGE_MIN;
+  if (n > AI_PAGE_MAX) n = AI_PAGE_MAX;
+  if (n % 2 === 1) n = Math.min(AI_PAGE_MAX, n + 1);
+  if (n % 2 === 1) n -= 1;
+  return n;
+}
+
+function updateAiPageCountSummary({ snap = false } = {}) {
+  if (!aiPageCountInput) return 8;
+  const raw = aiPageCountInput.value.trim();
+  const normalized = normalizeAiPageCount(raw === "" ? 8 : raw);
+  const rawNumber = Number(raw);
+  const adjusted = raw !== "" && Number.isFinite(rawNumber) && rawNumber !== normalized;
+  if (snap) aiPageCountInput.value = String(normalized);
+  const summary = document.getElementById("aiPageCountSummary");
+  if (summary) {
+    summary.textContent = t(!snap && adjusted ? "storyInput.pageCountAdjusted" : "storyInput.pageCountSummary", {
+      pages: normalized,
+      spreads: normalized / 2
+    });
+  }
+  document.querySelectorAll("[data-ai-pages]").forEach((btn) => {
+    const pages = btn.getAttribute("data-ai-pages");
+    btn.setAttribute("aria-pressed", Number(pages) === normalized ? "true" : "false");
+    btn.setAttribute("aria-label", t("storyInput.pageChipAria", { n: pages }));
+  });
+  return normalized;
+}
+
+function aiThemeMode() {
+  return aiThemeMineInput?.checked ? "mine" : "ai";
+}
+
+function syncAiThemeChoice() {
+  const aiChooses = aiThemeMode() === "ai";
+  const notes = document.getElementById("aiColorNotesLabel");
+  if (notes) notes.hidden = !aiChooses;
+  const hint = document.getElementById("aiThemeHint");
+  if (hint) hint.textContent = t(aiChooses ? "storyInput.themeHint" : "storyInput.themeHintMine");
+  if (aiInput) aiInput.placeholder = t(aiChooses ? "storyInput.aiPlaceholderTheme" : "storyInput.aiPlaceholder");
+}
+
+function setAiFlowStatus(text, isError = false) {
+  if (!aiFlowStatus) return;
+  aiFlowStatus.textContent = text || "";
+  aiFlowStatus.classList.toggle("ai-flow-status-error", Boolean(isError) && Boolean(text));
+}
+
+function initAiBrief() {
+  if (aiPageCountInput) {
+    aiPageCountInput.addEventListener("input", () => updateAiPageCountSummary({ snap: false }));
+    aiPageCountInput.addEventListener("change", () => updateAiPageCountSummary({ snap: true }));
+  }
+  document.querySelectorAll("[data-ai-pages]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!aiPageCountInput) return;
+      aiPageCountInput.value = btn.getAttribute("data-ai-pages") || "8";
+      updateAiPageCountSummary({ snap: true });
+    });
+  });
+  document.querySelectorAll('input[name="aiColorTheme"]').forEach((el) => {
+    el.addEventListener("change", syncAiThemeChoice);
+  });
+  updateAiPageCountSummary({ snap: true });
+  syncAiThemeChoice();
+}
+
+function parseAiColorToken(raw) {
+  if (!raw) return "";
+  const text = String(raw).trim();
+  const hexMatch = text.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/);
+  const bareMatch = hexMatch ? null : text.match(/(?:^|\s)([0-9a-fA-F]{6})(?:\s|$)/);
+  let h = "";
+  if (hexMatch) h = `#${hexMatch[1]}`;
+  else if (bareMatch) h = `#${bareMatch[1]}`;
+  if (h) {
+    if (/^#[0-9a-fA-F]{3}$/.test(h)) h = `#${h[1]}${h[1]}${h[2]}${h[2]}${h[3]}${h[3]}`;
+    if (/^#[0-9a-fA-F]{6}$/.test(h)) return h.toUpperCase();
+  }
+  return AI_NAMED_COLORS[text.toLowerCase()] || "";
+}
+
+function hexToRgbBytes(hex) {
+  const h = parseAiColorToken(hex);
+  if (!h) return null;
+  return {
+    r: parseInt(h.slice(1, 3), 16),
+    g: parseInt(h.slice(3, 5), 16),
+    b: parseInt(h.slice(5, 7), 16)
+  };
+}
+
+function channelLuminance(channel) {
+  const s = channel / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+function contrastRatio(hexA, hexB) {
+  const a = hexToRgbBytes(hexA);
+  const b = hexToRgbBytes(hexB);
+  if (!a || !b) return 1;
+  const l1 = 0.2126 * channelLuminance(a.r) + 0.7152 * channelLuminance(a.g) + 0.0722 * channelLuminance(a.b);
+  const l2 = 0.2126 * channelLuminance(b.r) + 0.7152 * channelLuminance(b.g) + 0.0722 * channelLuminance(b.b);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
 
 function normalizeHex(hex, fallback = "#000000") {
   let h = (hex || "").trim();
@@ -1453,7 +1596,118 @@ function parseAiFormattedText(raw) {
     }
   }
 
-  return { title, eccArea, activityPrompt, spreads };
+  return { title, eccArea, activityPrompt, spreads, theme: parseAiTheme(raw) };
+}
+
+function aiTaggedLine(raw, tag) {
+  const match = raw.match(new RegExp(`^\\s*${tag}:\\s*(.+)\\s*$`, "im"));
+  return match ? match[1].trim() : "";
+}
+
+function parseAiTheme(raw) {
+  const nameLine = aiTaggedLine(raw, "THEME_NAME").split("\n")[0].trim();
+  const name = !nameLine || nameLine.startsWith("[") ? "" : nameLine.slice(0, 80);
+  const pictureBg = parseAiColorToken(aiTaggedLine(raw, "PICTURE_BG"));
+  const pictureText = parseAiColorToken(aiTaggedLine(raw, "PICTURE_TEXT"));
+  const pictureBorder = parseAiColorToken(aiTaggedLine(raw, "PICTURE_BORDER"));
+  const storyText = parseAiColorToken(aiTaggedLine(raw, "STORY_TEXT"));
+  if (!pictureBg && !pictureText && !pictureBorder && !storyText) return null;
+  return { name, pictureBg, pictureText, pictureBorder, storyText };
+}
+
+function renderAppliedAiTheme(theme) {
+  lastAppliedAiTheme = theme;
+  const box = document.getElementById("aiAppliedTheme");
+  const nameEl = document.getElementById("aiAppliedThemeName");
+  const list = document.getElementById("aiAppliedThemeSwatches");
+  if (!box || !nameEl || !list) return;
+  if (!theme) {
+    box.hidden = true;
+    nameEl.textContent = "";
+    list.replaceChildren();
+    return;
+  }
+  box.hidden = false;
+  nameEl.textContent = theme.name
+    ? t("storyInput.themeApplied", { name: theme.name })
+    : t("storyInput.themeAppliedUntitled");
+  const items = [
+    ["pictureBg", "storyInput.swatchPictureBg"],
+    ["pictureText", "storyInput.swatchPictureText"],
+    ["pictureBorder", "storyInput.swatchPictureBorder"],
+    ["storyText", "storyInput.swatchStoryText"]
+  ];
+  list.replaceChildren();
+  items.forEach(([key, labelKey]) => {
+    const color = theme[key];
+    if (!color) return;
+    const li = document.createElement("li");
+    const swatch = document.createElement("span");
+    swatch.className = "ai-swatch";
+    swatch.style.background = color;
+    swatch.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.textContent = `${t(labelKey)} ${hexToColorName(color)}`;
+    li.append(swatch, label);
+    list.appendChild(li);
+  });
+}
+
+function applyParsedAiTheme(theme) {
+  if (!theme) {
+    renderAppliedAiTheme(null);
+    return "missing";
+  }
+  const applied = { name: theme.name || "" };
+  let any = false;
+  if (
+    theme.pictureBg &&
+    theme.pictureText &&
+    contrastRatio(theme.pictureBg, theme.pictureText) >= AI_TEXT_CONTRAST_MIN
+  ) {
+    applyPresetAndColor("oddBgColorPreset", "oddBgColor", theme.pictureBg);
+    applyPresetAndColor("oddTextColorPreset", "oddTextColor", theme.pictureText);
+    applied.pictureBg = normalizeHex(theme.pictureBg, "#000000");
+    applied.pictureText = normalizeHex(theme.pictureText, "#FFFFFF");
+    const borderSource =
+      theme.pictureBorder && contrastRatio(theme.pictureBg, theme.pictureBorder) >= AI_BORDER_CONTRAST_MIN
+        ? theme.pictureBorder
+        : theme.pictureText;
+    applyPresetAndColor("oddBorderColorPreset", "oddBorderColor", borderSource);
+    applied.pictureBorder = normalizeHex(borderSource, applied.pictureText);
+    any = true;
+  }
+  if (theme.storyText && contrastRatio(theme.storyText, STORY_PAGE_BG) >= AI_TEXT_CONTRAST_MIN) {
+    applyPresetAndColor("storyTextColorPreset", "storyTextColor", theme.storyText);
+    applied.storyText = normalizeHex(theme.storyText, "#111111");
+    any = true;
+  }
+  if (!any) {
+    renderAppliedAiTheme(null);
+    return "weak";
+  }
+  syncFollowingSpreadColorsFromBook();
+  spreadsContainer?.querySelectorAll(".spread-card").forEach((card) => updateSpreadColorSummary(card));
+  renderAppliedAiTheme(applied);
+  return "applied";
+}
+
+function aiParseStatusMessage(result, n, name) {
+  switch (result) {
+    case "applied":
+      return t("javascriptStrings.exportStatus.parsedSpreadsTheme", {
+        n,
+        name: name ? t("javascriptStrings.exportStatus.themeNameBit", { name }) : ""
+      });
+    case "weak":
+      return t("javascriptStrings.exportStatus.parsedSpreadsThemeWeak", { n });
+    case "missing":
+      return t("javascriptStrings.exportStatus.parsedSpreadsThemeMissing", { n });
+    case "skipped":
+      return t("javascriptStrings.exportStatus.parsedSpreads", { n });
+    default:
+      return t("javascriptStrings.exportStatus.parsedSpreads", { n });
+  }
 }
 
 function collectSpreadsFromForm() {
@@ -1557,6 +1811,12 @@ async function collectBookState() {
     activityPrompt: activityPromptInput?.value ?? "",
     studentCviTips: studentCviTipsInput?.value ?? "",
     aiInput: aiInput?.value ?? "",
+    aiIdea: aiIdeaInput?.value ?? "",
+    aiAudience: aiAudienceInput?.value ?? "",
+    aiPageCount: normalizeAiPageCount(aiPageCountInput?.value || 8),
+    aiColorTheme: aiThemeMode(),
+    aiColorNotes: aiColorNotesInput?.value ?? "",
+    aiNotes: aiNotesInput?.value ?? "",
     oddTextPosition: oddTextPositionInput?.value ?? "top",
     visualComplexity: visualComplexityInput?.value ?? "normal",
     includeTeachingActivities: includeTeachingActivitiesInput?.checked ?? false,
@@ -1593,6 +1853,16 @@ async function applyBookState(state) {
     if (activityPromptInput) activityPromptInput.value = state.activityPrompt ?? "";
     if (studentCviTipsInput) studentCviTipsInput.value = state.studentCviTips ?? "";
     if (aiInput) aiInput.value = state.aiInput ?? "";
+    if (aiIdeaInput) aiIdeaInput.value = state.aiIdea ?? "";
+    if (aiAudienceInput) aiAudienceInput.value = state.aiAudience ?? "";
+    if (aiPageCountInput && state.aiPageCount) aiPageCountInput.value = String(state.aiPageCount);
+    const themeChoice = state.aiColorTheme === "ai" || state.aiColorTheme === "mine" ? state.aiColorTheme : "mine";
+    const themeRadio = document.querySelector(`input[name="aiColorTheme"][value="${themeChoice}"]`);
+    if (themeRadio) themeRadio.checked = true;
+    if (aiColorNotesInput) aiColorNotesInput.value = state.aiColorNotes ?? "";
+    if (aiNotesInput) aiNotesInput.value = state.aiNotes ?? "";
+    updateAiPageCountSummary({ snap: true });
+    syncAiThemeChoice();
 
     if (oddTextPositionInput) oddTextPositionInput.value = state.oddTextPosition ?? "top";
     if (visualComplexityInput) visualComplexityInput.value = state.visualComplexity ?? "normal";
@@ -2340,7 +2610,35 @@ function getSelectedOptionLabel(selectElement) {
   return selected ? selected.textContent : "";
 }
 
+function formatCurrentBookForAiPrompt() {
+  if (!spreadsContainer) return "";
+  const blocks = [];
+  spreadsContainer.querySelectorAll(".spread-card").forEach((card) => {
+    const story = card.querySelector(".story-text")?.value.trim() || "";
+    const odd = card.querySelector(".odd-text")?.value.trim() || "";
+    const salient = card.querySelector(".salient-features")?.value.trim() || "";
+    const image = card.querySelector(".image-prompt")?.value.trim() || "";
+    if (!story && !odd && !salient && !image) return;
+    blocks.push(
+      ["SPREAD:", `STORY: ${story}`, `ODD_TEXT: ${odd}`, `SALIENT_FEATURES: ${salient}`, `IMAGE_PROMPT: ${image}`].join(
+        "\n"
+      )
+    );
+  });
+  if (!blocks.length) return "";
+  const header = [];
+  const title = (bookTitleInput?.value || "").trim();
+  const ecc = (eccAreaInput?.value || "").trim();
+  const activity = (activityPromptInput?.value || "").trim();
+  if (title) header.push(`TITLE: ${title}`);
+  if (ecc) header.push(`ECC_AREA: ${ecc}`);
+  if (activity) header.push(`ACTIVITY_PROMPT: ${activity}`);
+  return [...header, ...blocks].join("\n\n");
+}
+
 function buildAiFormattingPromptWithSetup() {
+  const pages = updateAiPageCountSummary({ snap: true });
+  const spreads = pages / 2;
   const bookTitle = (bookTitleInput.value || "").trim();
   const eccArea = (eccAreaInput.value || "").trim();
   const activityPrompt = (activityPromptInput.value || "").trim();
@@ -2349,25 +2647,61 @@ function buildAiFormattingPromptWithSetup() {
   const includeActivities = includeTeachingActivitiesInput.checked
     ? t("javascriptStrings.aiCopyPrompt.yes")
     : t("javascriptStrings.aiCopyPrompt.no");
+  const idea = (aiIdeaInput?.value || "").trim();
+  const audience = (aiAudienceInput?.value || "").trim();
+  const colorNotes = (aiColorNotesInput?.value || "").trim();
+  const notes = (aiNotesInput?.value || "").trim();
+  const themeMode = aiThemeMode();
 
-  return `${t("javascriptStrings.aiCopyPrompt.useSetupLine")}
+  const lines = [
+    t("javascriptStrings.aiCopyPrompt.role"),
+    "",
+    t("javascriptStrings.aiCopyPrompt.requestHeading"),
+    `- ${t("javascriptStrings.aiCopyPrompt.ideaLabel")} ${idea || t("javascriptStrings.aiCopyPrompt.ideaMissing")}`
+  ];
+  if (audience) lines.push(`- ${t("javascriptStrings.aiCopyPrompt.audienceLabel")} ${audience}`);
+  lines.push(
+    `- ${t("javascriptStrings.aiCopyPrompt.lengthLine", { pages, spreads })}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.prefTitle")} ${bookTitle || "[Book title]"}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.prefEcc")} ${eccArea || "[ECC area]"}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.prefActivity")} ${activityPrompt || "[One-sentence sensory activity]"}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.oddPosition")} ${oddTextPosition}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.visualComplexity")} ${visualComplexity}`,
+    `- ${t("javascriptStrings.aiCopyPrompt.includeActivities")} ${includeActivities}`
+  );
+  if (themeMode === "ai") {
+    lines.push(`- ${t("javascriptStrings.aiCopyPrompt.themeAsk")}`);
+    if (colorNotes) lines.push(`- ${t("javascriptStrings.aiCopyPrompt.colorNotesLabel")} ${colorNotes}`);
+  } else {
+    lines.push(`- ${t("javascriptStrings.aiCopyPrompt.themeSkip")}`);
+  }
+  if (notes) lines.push(`- ${t("javascriptStrings.aiCopyPrompt.notesLabel")} ${notes}`);
 
-${t("javascriptStrings.aiCopyPrompt.currentSetupHeading")}
-- ${t("javascriptStrings.aiCopyPrompt.prefTitle")} ${bookTitle || "[Book title]"}
-- ${t("javascriptStrings.aiCopyPrompt.prefEcc")} ${eccArea || "[ECC area]"}
-- ${t("javascriptStrings.aiCopyPrompt.prefActivity")} ${activityPrompt || "[One-sentence sensory activity]"}
-- ${t("javascriptStrings.aiCopyPrompt.oddPosition")} ${oddTextPosition}
-- ${t("javascriptStrings.aiCopyPrompt.visualComplexity")} ${visualComplexity}
-- ${t("javascriptStrings.aiCopyPrompt.includeActivities")} ${includeActivities}
+  const currentBook = formatCurrentBookForAiPrompt();
+  if (currentBook) {
+    lines.push("", t("javascriptStrings.aiCopyPrompt.currentBookHeading"), currentBook);
+  }
 
-${t("javascriptStrings.aiTemplate")}`.trim();
+  lines.push("", t("javascriptStrings.aiTemplateIntro"));
+  if (themeMode === "ai") lines.push("", t("javascriptStrings.aiTemplateTheme"));
+  lines.push(
+    "",
+    t("javascriptStrings.aiTemplateSpreads"),
+    "",
+    t("javascriptStrings.aiCopyPrompt.lengthReminder", { pages, spreads })
+  );
+  return lines.join("\n").trim();
 }
 
-function copyToClipboardFallback(text, successMsg, failMsg) {
+function copyToClipboardFallback(text, successMsg, failMsg, onDone) {
+  const finish = (ok) => {
+    setStatus(ok ? successMsg : failMsg, !ok);
+    if (typeof onDone === "function") onDone(ok);
+  };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(
-      () => setStatus(successMsg),
-      () => setStatus(failMsg, true)
+      () => finish(true),
+      () => finish(false)
     );
   } else {
     try {
@@ -2379,27 +2713,24 @@ function copyToClipboardFallback(text, successMsg, failMsg) {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      const successful = document.execCommand('copy');
+      const successful = document.execCommand("copy");
       document.body.removeChild(textArea);
-      if (successful) {
-        setStatus(successMsg);
-      } else {
-        setStatus(failMsg, true);
-      }
+      finish(successful);
     } catch (err) {
-      console.error('Fallback: Oops, unable to copy', err);
-      setStatus(failMsg, true);
+      console.error("Fallback: Oops, unable to copy", err);
+      finish(false);
     }
   }
 }
 
 function copyAiFormattingPrompt() {
   const prompt = buildAiFormattingPromptWithSetup();
-  copyToClipboardFallback(
-    prompt,
-    t("javascriptStrings.aiCopyPrompt.success"),
-    t("javascriptStrings.aiCopyPrompt.fail")
-  );
+  const idea = (aiIdeaInput?.value || "").trim();
+  const success = idea
+    ? t("javascriptStrings.aiCopyPrompt.success")
+    : t("javascriptStrings.aiCopyPrompt.copiedNoIdea");
+  const fail = t("javascriptStrings.aiCopyPrompt.fail");
+  copyToClipboardFallback(prompt, success, fail, (ok) => setAiFlowStatus(ok ? success : fail, !ok));
 }
 
 function copyFvaLmaSummary() {
@@ -2479,32 +2810,46 @@ addSpreadButton.addEventListener("click", () => addSpread());
 parseAiButton.addEventListener("click", () => {
   const raw = aiInput.value.trim();
   if (!raw) {
-    setStatus(t("javascriptStrings.exportStatus.pasteTextFirst"), true);
+    const message = t("javascriptStrings.exportStatus.pasteTextFirst");
+    setStatus(message, true);
+    setAiFlowStatus(message, true);
     return;
   }
 
   const parsed = parseAiFormattedText(raw);
-  if (parsed.title) {
-    bookTitleInput.value = parsed.title;
-  }
-  if (parsed.eccArea) {
-    eccAreaInput.value = parsed.eccArea;
-  }
-  if (parsed.activityPrompt) {
-    activityPromptInput.value = parsed.activityPrompt;
-  }
+  if (parsed.title) bookTitleInput.value = parsed.title;
+  if (parsed.eccArea) eccAreaInput.value = parsed.eccArea;
+  if (parsed.activityPrompt) activityPromptInput.value = parsed.activityPrompt;
+
+  const requestedPages = updateAiPageCountSummary({ snap: true });
+  const requestedSpreads = requestedPages / 2;
 
   releaseAllSpreadImages();
   spreadsContainer.innerHTML = "";
-  parsed.spreads.forEach((s) => addSpread(s));
 
   if (!parsed.spreads.length) {
     addSpread();
-    setStatus(t("javascriptStrings.exportStatus.noSpreadsFound"), true);
+    const message = t("javascriptStrings.exportStatus.noSpreadsFound");
+    setStatus(message, true);
+    setAiFlowStatus(message, true);
+    renderAppliedAiTheme(null);
     renderPreview();
     return;
   }
-  setStatus(t("javascriptStrings.exportStatus.parsedSpreads", { n: parsed.spreads.length }));
+
+  const themeResult = aiThemeMode() === "ai" ? applyParsedAiTheme(parsed.theme) : "skipped";
+  if (themeResult === "skipped") renderAppliedAiTheme(null);
+  parsed.spreads.forEach((s) => addSpread(s));
+
+  let message = aiParseStatusMessage(themeResult, parsed.spreads.length, parsed.theme?.name || "");
+  if (parsed.spreads.length !== requestedSpreads) {
+    message = `${message} ${t("javascriptStrings.exportStatus.pageCountMismatch", {
+      pages: requestedPages,
+      spreads: requestedSpreads
+    })}`;
+  }
+  setStatus(message);
+  setAiFlowStatus(message, false);
   renderPreview();
   performAutosaveDraft();
   enterWorkspace();
@@ -2695,6 +3040,9 @@ export function applyLocaleRefresh() {
   renderDraftsList();
   renderStartDrafts();
   refreshPathCopy();
+  updateAiPageCountSummary({ snap: false });
+  syncAiThemeChoice();
+  if (lastAppliedAiTheme) renderAppliedAiTheme(lastAppliedAiTheme);
   if (openDrawerName && DRAWER_META[openDrawerName]) {
     const titleEl = document.getElementById("appDrawerTitle");
     const hintEl = document.getElementById("appDrawerHint");
@@ -2782,6 +3130,7 @@ export function bootstrap() {
   addSpread();
   renderPreview();
   initAppShell();
+  initAiBrief();
   setAppView("start");
   setStatus(t("javascriptStrings.exportStatus.ready"));
 
