@@ -67,7 +67,7 @@ OCR and background removal run entirely in the browser. No book images are uploa
 
 1. Open `index.html` (or deploy root to GitHub Pages).
 2. Set title and style options.
-3. Add spreads manually, or paste formatted text and click **Parse Into Spreads**.
+3. Add spreads manually, or use **Write with AI**: describe the book, set the number of pages, choose whether the AI picks a color theme, copy the prompt, paste the reply, and click **Build spreads from reply**.
 4. For each spread, optionally upload 1 to 4 odd-page images.
 5. Click **Refresh Preview** to check layout.
 6. Click **Download PowerPoint (.pptx)**.
@@ -77,31 +77,11 @@ OCR and background removal run entirely in the browser. No book images are uploa
 
 The in-app **Print / Save as PDF** control is commented out in `index.html` and `app.js` so it can be restored later. The `@media print` rules in `styles.css` and the `afterprint`-based cleanup in the commented handler are still there for that path.
 
-## AI Formatting Prompt
+## Write with AI
 
-Use this prompt with any AI assistant (Gemini, ChatGPT, Claude, etc.) to generate formatted text for the CVI Book Builder. Paste the AI output into the **AI formatted text** field and click **Parse Into Spreads**.
+On **Write with AI**, describe the book, set **Number of pages** (story pages and picture pages come in pairs, plus a cover), and choose a **color theme**. **Let the AI choose a theme** asks for one high-contrast palette and applies it to the book colors when the reply includes the theme tags. **Keep the colors I already set** leaves Style colors alone. Optional color notes and “anything else” lines are included in the copied prompt. If the book already has spreads, the prompt includes that text so a later copy can ask for changes.
 
-```
-You are helping create CVI-appropriate story books for children with cortical visual impairment. Output your response using EXACTLY these tags. Do not add any other formatting or commentary.
-
-TITLE: [Book title]
-
-ECC_AREA: [ECC area focus, e.g., Compensatory Access, Self-Determination]
-
-ACTIVITY_PROMPT: [One-sentence sensory activity suggestion, e.g., Create a feely box with a ball and a dog toy.]
-
-SPREAD:
-STORY: [Story text for the even page. Simple, concrete language. One or two sentences per spread.]
-ODD_TEXT: [Single keyword or short phrase for the odd slide—the main concept or object]
-SALIENT_FEATURES: [2–4 salient features: shape, color, texture, movement, or other visually distinctive qualities. Comma-separated.]
-
-SPREAD:
-STORY: [Next spread's story text.]
-ODD_TEXT: [Keyword for this spread.]
-SALIENT_FEATURES: [Salient features for this spread.]
-
-[Repeat SPREAD / STORY / ODD_TEXT / SALIENT_FEATURES for each spread.]
-```
+Paste the copied prompt into any assistant (Gemini, ChatGPT, Claude, and so on). Paste the tagged reply back and click **Build spreads from reply**.
 
 ### Tag reference
 
@@ -110,12 +90,18 @@ SALIENT_FEATURES: [Salient features for this spread.]
 | `TITLE:` | Book title (one line) |
 | `ECC_AREA:` | ECC area focus (one line) |
 | `ACTIVITY_PROMPT:` | One-sentence sensory activity for the Activity Extensions slide |
+| `THEME_NAME:` | Short name for the AI-chosen palette (only when the AI chooses colors) |
+| `PICTURE_BG:` | Picture page background, `#RRGGBB` |
+| `PICTURE_TEXT:` | Picture page text, `#RRGGBB`, strong contrast against the background |
+| `PICTURE_BORDER:` | Outline around the picture page text, `#RRGGBB` |
+| `STORY_TEXT:` | Story text on the white story page, `#RRGGBB` |
 | `SPREAD:` | Marks the start of a new spread |
-| `STORY:` | Story text for the even page |
-| `ODD_TEXT:` | Keyword or short phrase for the odd slide |
+| `STORY:` | Story text for the story page |
+| `ODD_TEXT:` | Keyword or short phrase for the picture page |
 | `SALIENT_FEATURES:` | Comma-separated salient features for CVI |
+| `IMAGE_PROMPT:` | Short prompt for an external image generator |
 
-After parsing, add images in each spread before export.
+Low-contrast theme colors are ignored so a CVI book does not pick up an unreadable palette. After building spreads, add images in each spread before export.
 
 ## Privacy
 
