@@ -1357,10 +1357,38 @@ function assignDisplayImage(img, file, kind) {
   const generation = (Number(img.dataset.displayGen) || 0) + 1;
   img.dataset.displayGen = String(generation);
   img.decoding = "async";
-  const apply = (urls) => {
-    if (!img.isConnected || img.dataset.displayGen !== String(generation)) return;
-    img.src = kind === "thumb" ? urls.thumbUrl : urls.previewUrl;
+
+  // Thumbnails and the live preview are created detached and inserted by the
+  // caller. A cached photo used to be applied immediately, see a disconnected
+  // image, and leave it with no src. The next edit (or Refresh Preview) then
+  // showed the filename as a broken image while the old thumbnail stayed up.
+  const paintWhenInserted = (paint) => {
+    if (img.dataset.displayGen !== String(generation)) return;
+    if (img.isConnected) {
+      paint();
+      return;
+    }
+    queueMicrotask(() => {
+      if (img.dataset.displayGen !== String(generation)) return;
+      if (img.isConnected) {
+        paint();
+        return;
+      }
+      requestAnimationFrame(() => {
+        if (img.dataset.displayGen !== String(generation) || !img.isConnected) return;
+        paint();
+      });
+    });
   };
+
+  const apply = (urls) => {
+    const url = kind === "thumb" ? urls.thumbUrl : urls.previewUrl;
+    if (!url) return;
+    paintWhenInserted(() => {
+      img.src = url;
+    });
+  };
+
   const ready = resolvedDisplayImages.get(file);
   if (ready) {
     apply(ready);
@@ -1368,10 +1396,13 @@ function assignDisplayImage(img, file, kind) {
   }
   ensureDisplayImages(file).then(apply).catch((err) => {
     console.error(err);
-    if (!img.isConnected || img.dataset.displayGen !== String(generation)) return;
-    const fallback = URL.createObjectURL(file);
-    img.onload = () => URL.revokeObjectURL(fallback);
-    img.src = fallback;
+    paintWhenInserted(() => {
+      const fallback = URL.createObjectURL(file);
+      const revoke = () => URL.revokeObjectURL(fallback);
+      img.onload = revoke;
+      img.onerror = revoke;
+      img.src = fallback;
+    });
   });
 }
 
