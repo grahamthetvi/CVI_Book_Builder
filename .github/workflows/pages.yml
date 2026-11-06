@@ -10,15 +10,17 @@ permissions:
   pages: write
   id-token: write
 
+# Let an in-flight publish finish. Cancelling it leaves GitHub Pages
+# stuck in deployment_queued / updating_pages until the next attempt.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,6 +34,19 @@ jobs:
         with:
           path: .
 
+      # deploy-pages polls for 10 minutes, then aborts. Pages sometimes
+      # stays queued or on updating_pages for that whole window even
+      # when the artifact is tiny. One retry usually gets through.
       - name: Deploy to GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Wait for the cancelled Pages deployment to clear
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+
+      - name: Retry deploy to GitHub Pages
+        id: deployment-retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
